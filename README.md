@@ -44,3 +44,11 @@ For the React frontend, you need to install the required JavaScript libraries. A
 npm install
 
 This will install React and any dependencies listed in the package.json file.
+
+# Authors
+
+Dhruv Patel dhruvbp@email.sc.edu
+Basith Penna-Hakkim basith@email.sc.edu
+Logan Praylow lpraylow@email.sc.edu
+Jakub Sykora jsykora@email.sc.edu
+Brendan McNichols mcnichob@email.sc.edu
