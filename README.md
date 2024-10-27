@@ -1,5 +1,6 @@
+# Project Name
 
-
+This webapp is designed to allow more social reading as well as to connect readers with more books that they will enjoy and communities that they are a part of.
 
 
 ## External Requirements
@@ -44,6 +45,41 @@ For the React frontend, you need to install the required JavaScript libraries. A
 npm install
 
 This will install React and any dependencies listed in the package.json file.
+
+pip install pipreqs
+pipreqs /path/to/project
+
+## Setup
+
+To download the setup just type in the following command in the terminal it will run all of the commands to set up the program
+
+pip install -r requirements.txt
+
+## Running
+
+To run the website on a local host type in the following command
+
+python manage.py runserver
+
+Once it is running the local address which is http://127.0.0.1:8000/ is where the page is running from
+
+Click on the link and this will load on a browser
+
+# Deployment
+
+The website will be deployed using Heroku at a later date
+
+# Testing
+
+TBD
+
+## Testing Technology
+
+TBD
+
+## Running Tests
+
+TBD
 
 # Authors
 
