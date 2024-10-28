@@ -46,12 +46,9 @@ npm install
 
 This will install React and any dependencies listed in the package.json file.
 
-pip install pipreqs
-pipreqs /path/to/project
-
 ## Setup
 
-To download the setup just type in the following command in the terminal it will run all of the commands to set up the program
+To download the setup just type in the following command from inside of the project directory in the terminal it will run all of the commands to set up the program
 
 pip install -r requirements.txt
 
