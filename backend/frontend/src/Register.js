@@ -1,27 +1,44 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const Register = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+function Register() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await axios.post('http://localhost:8000/api/register/', { username, password });
-            alert(response.data.message);
-        } catch (error) {
-            alert(error.response.data.error);
-        }
-    };
+  const handleRegisterClick = () => {
+    if (!username || !password) {
+      setError('Username and Password are required');
+      return;
+    }
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <input type="text" placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
-            <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-            <button type="submit">Register</button>
-        </form>
-    );
-};
+    setError('');
+    setSuccess('Account created successfully! Redirecting to login...');
+    setTimeout(() => navigate('/login'), 2000);  
+  };
+
+  return (
+    <div>
+      <h2>Create Account</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {success && <p style={{ color: 'green' }}>{success}</p>}
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button onClick={handleRegisterClick}>Create Account</button>
+    </div>
+  );
+}
 
 export default Register;

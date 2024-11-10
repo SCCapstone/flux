@@ -1,27 +1,49 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 
-const Login = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+function Login({ onLogin }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await axios.post('http://localhost:8000/api/login/', { username, password });
-            alert(response.data.message);
-        } catch (error) {
-            alert(error.response.data.error);
-        }
-    };
+  const handleLoginClick = () => {
+    if (!username || !password) {
+      setError('Username and Password are required');
+      return;
+    }
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <input type="text" placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
-            <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-            <button type="submit">Login</button>
-        </form>
-    );
-};
+    if (username === 'test' && password === 'password') {  
+      setError('');
+      onLogin();
+      navigate('/');
+    } else {
+      setError('Invalid username or password');
+    }
+  };
+
+  return (
+    <div>
+      <h2>Login</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button onClick={handleLoginClick}>Login</button>
+      <p>
+        Don't have an account? <Link to="/register">Create Account</Link>
+      </p>
+    </div>
+  );
+}
 
 export default Login;
