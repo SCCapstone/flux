@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Home from './Home';
 import Login from './Login';
 import Register from './Register';
+import BookDetails from './Book-Details';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -30,6 +31,10 @@ function App() {
         <Route
           path="/register"
           element={<Register />}
+        />
+        <Route
+          path="/bookdetails"
+          element={<BookDetails />}
         />
       </Routes>
     </Router>
