@@ -1,9 +1,16 @@
+import os
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import requests
+from django.conf import settings
+
+
+GOOGLE_BOOKS_API_KEY = settings.GOOGLE_BOOKS_API_KEY
+
 
 def register(request):
     if request.method == 'POST':
@@ -32,3 +39,29 @@ def home(request):
 def logout_user(request):
     logout(request)
     return redirect('login')  
+
+@csrf_exempt
+def search_books(request):
+    if request.method == 'GET':
+        print(f"API Key: {GOOGLE_BOOKS_API_KEY}")
+        query = request.GET.get('q', '')
+        if query:
+            url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={GOOGLE_BOOKS_API_KEY}"
+            response = requests.get(url)
+            if response.status_code == 200:
+                data = response.json()
+                books = []
+                for item in data.get('items', []):
+                    volume_info = item.get('volumeInfo', {})
+                    books.append({
+                        'title': volume_info.get('title', 'No Title'),
+                        'author': ', '.join(volume_info.get('authors', ['Unknown Author'])),
+                        'year': volume_info.get('publishedDate', 'N/A'),
+                        'description': volume_info.get('description', 'No Description'),
+                        'image': volume_info.get('imageLinks', {}).get('thumbnail', ''),
+                    })
+                return JsonResponse({'books': books})
+            else:
+                return JsonResponse({'error': 'Error fetching data from Google Books API'}, status=500)
+        return JsonResponse({'error': 'No search query provided'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
