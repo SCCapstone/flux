@@ -51,7 +51,6 @@ function BookDetails() {
 
   return (
     <div>
-      <h2>Book Details</h2>
       <p>Search for a book by ISBN, Title, or Author</p>
       
       <form onSubmit={searchBook}>

@@ -1,40 +1,27 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import Home from './Home';
-import Login from './Login';
-import Register from './Register';
-import BookDetails from './Book-Details';
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Home from './pages/Home';
+import { AuthContext } from './AuthContext'; // Use AuthContext
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-  };
+  const { isLoggedIn } = useContext(AuthContext); // Access login state
 
   return (
     <Router>
       <Routes>
-        {/* Redirect to Login if not logged in */}
         <Route
           path="/"
-          element={isLoggedIn ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />}
+          element={isLoggedIn ? <Home /> : <Navigate to="/login" />}
         />
         <Route
           path="/login"
-          element={<Login onLogin={handleLogin} />}
+          element={<Login />}
         />
         <Route
           path="/register"
           element={<Register />}
-        />
-        <Route
-          path="/bookdetails"
-          element={<BookDetails />}
         />
       </Routes>
     </Router>
