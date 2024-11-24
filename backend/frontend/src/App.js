@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
+import BookDetails from './pages/Book-Details';
 import { AuthContext } from './AuthContext'; // Use AuthContext
 
 function App() {
@@ -22,6 +23,10 @@ function App() {
         <Route
           path="/register"
           element={<Register />}
+        />
+        <Route
+          path="/bookdetails"
+          element={<BookDetails />}
         />
       </Routes>
     </Router>
