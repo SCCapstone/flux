@@ -3,7 +3,6 @@ from django.db import models
 class Book(models.Model):
     title = models.CharField(max_length=150)
     authorName = models.CharField(max_length=150)
-    #authorID = models.ForeignKey(User, on_delete.CASCADE, related_name="books")
     description = models.TextField()
     isbn10 = models.CharField(max_length=10)
     isbn13 = models.CharField(max_length=13)
