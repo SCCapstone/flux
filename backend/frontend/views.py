@@ -45,8 +45,13 @@ def search_books(request):
     if request.method == 'GET':
         print(f"API Key: {GOOGLE_BOOKS_API_KEY}")
         query = request.GET.get('q', '')
+        page = int(request.GET.get('page', 1))  # Default to page 1
+        sort_option = request.GET.get('sort', 'title')  # Default to sorting by title
+        max_results = 10  # Number of results per page
+        start_index = (page - 1) * max_results  # Calculate start index
+
         if query:
-            url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={GOOGLE_BOOKS_API_KEY}"
+            url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={GOOGLE_BOOKS_API_KEY}&maxResults=40"
             response = requests.get(url)
             if response.status_code == 200:
                 data = response.json()
@@ -55,12 +60,27 @@ def search_books(request):
                     volume_info = item.get('volumeInfo', {})
                     books.append({
                         'title': volume_info.get('title', 'No Title'),
+                        'genre': ', '.join(volume_info.get('categories', ['Unknown Genre'])),
                         'author': ', '.join(volume_info.get('authors', ['Unknown Author'])),
                         'year': volume_info.get('publishedDate', 'N/A'),
                         'description': volume_info.get('description', 'No Description'),
                         'image': volume_info.get('imageLinks', {}).get('thumbnail', ''),
                     })
-                return JsonResponse({'books': books})
+
+                    # Sort the books based on the sort_option
+                if sort_option == 'title':
+                    books.sort(key=lambda x: x['title'])
+                elif sort_option == 'author':
+                    books.sort(key=lambda x: x['author'])
+                elif sort_option == 'genre':
+                    books.sort(key=lambda x: x['genre'])
+                elif sort_option == 'year':
+                    books.sort(key=lambda x: x['year'])
+                
+                # Paginate the sorted books
+                paginated_books = books[start_index:start_index + max_results]
+
+                return JsonResponse({'books': paginated_books, 'page': page, 'sort': sort_option})
             else:
                 return JsonResponse({'error': 'Error fetching data from Google Books API'}, status=500)
         return JsonResponse({'error': 'No search query provided'}, status=400)
