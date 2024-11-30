@@ -13,6 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from .models import Profile
 from django.core.files.storage import default_storage
+from .models import Rating, Book
 import base64
 import os
 import time
@@ -207,3 +208,35 @@ def search_books(request):
                 return JsonResponse({'error': 'Error fetching data from Google Books API'}, status=500)
         return JsonResponse({'error': 'No search query provided'}, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rate_book(request):
+    user = request.user
+    book_id = request.data.get('book_id')
+    rating_value = request.data.get('rating')
+
+    if not book_id or not rating_value:
+        return Response({'error': 'Book ID and rating are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not (1 <= int(rating_value) <= 5):
+        return Response({'error': 'Rating must be between 1 and 5.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        book = Book.objects.get(id=book_id)
+        rating, created = Rating.objects.update_or_create(
+            user=user, book=book, defaults={'rating': rating_value}
+        )
+        return Response({'message': 'Rating submitted successfully.', 'rating': rating.rating})
+    except Book.DoesNotExist:
+        return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_book_ratings(request, book_id):
+    try:
+        book = Book.objects.get(id=book_id)
+        ratings = Rating.objects.filter(book=book)
+        avg_rating = ratings.aggregate(models.Avg('rating'))['rating__avg']
+        return Response({'average_rating': avg_rating, 'total_ratings': ratings.count()}, status=status.HTTP_200_OK)
+    except Book.DoesNotExist:
+        return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)

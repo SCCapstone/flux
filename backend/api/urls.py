@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from rest_framework_simplejwt.views import TokenRefreshView
+from .views import rate_book, get_book_ratings
 
 urlpatterns = [
     path('register/', views.register_user, name='register'),
@@ -10,4 +11,6 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('rate-book/', rate_book, name='rate_book'),
+    path('book/<int:book_id>/ratings/', get_book_ratings, name='get_book_ratings'),
 ]
