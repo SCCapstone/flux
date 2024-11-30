@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import '../styles/Book-Details.css';
 
 function BookDetails() {
   const [error, setError] = useState('');
@@ -49,39 +50,46 @@ function BookDetails() {
   };
 
 
-  return (
-    <div>
-      <p>Search for a book by ISBN, Title, or Author</p>
+
+return (
+  <div className="book-details-container">
+    <p>Search for a book by ISBN, Title, or Author</p>
+    
+    <form onSubmit={searchBook} className="search-form">
+      <select 
+        value={searchType} 
+        onChange={(e) => setSearchType(e.target.value)}
+      >
+        <option value="isbn">ISBN</option>
+        <option value="title">Title</option>
+        <option value="author">Author</option>
+      </select>
+
+      <input
+        type="text"
+        value={searchValue}
+        onChange={(e) => setSearchValue(e.target.value)}
+        placeholder={`Enter ${searchType}...`}
+      />
       
-      <form onSubmit={searchBook}>
-        <select 
-          value={searchType} 
-          onChange={(e) => setSearchType(e.target.value)}
-          style={{ marginRight: '10px' }}
-        >
-          <option value="isbn">ISBN</option>
-          <option value="title">Title</option>
-          <option value="author">Author</option>
-        </select>
+      <input type="submit" value="Search" disabled={loading} />
+    </form>
 
-        <input
-          type="text"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          placeholder={`Enter ${searchType}...`}
-          style={{ marginRight: '10px' }}
-        />
-        
-        <input type="submit" value="Search" disabled={loading} />
-      </form>
+    {error && <p className="error-message">{error}</p>}
+    {loading && <p className="loading-message">Loading...</p>}
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {loading && <p>Loading...</p>}
-
-      {book && (
-        <div>
-          <h2>Book Details</h2>
-          <h3>{book.title}</h3>
+    {book && (
+      <div className="book-details">
+        <h2>Book Details</h2>
+        <h3>{book.title}</h3>
+        {book.imageLinks && (
+          <img 
+            src={book.imageLinks.thumbnail}
+            alt={book.title}
+            className="book-image"
+          />
+        )}
+        <div className="book-info">
           {book.authors && (
             <p><strong>Authors:</strong> {book.authors.join(', ')}</p>
           )}
@@ -91,13 +99,6 @@ function BookDetails() {
           {book.description && (
             <p><strong>Description:</strong> {book.description}</p>
           )}
-          {book.imageLinks && (
-            <img 
-              src={book.imageLinks.thumbnail}
-              alt={book.title}
-              style={{ maxWidth: '200px' }}
-            />
-          )}
           {book.pageCount && (
             <p><strong>Pages:</strong> {book.pageCount}</p>
           )}
@@ -105,9 +106,10 @@ function BookDetails() {
             <p><strong>Categories:</strong> {book.categories.join(', ')}</p>
           )}
         </div>
-      )}
-    </div>
-  );
+      </div>
+    )}
+  </div>
+);
 }
 
 export default BookDetails;

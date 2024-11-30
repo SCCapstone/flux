@@ -1,0 +1,84 @@
+.book-details-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+  }
+  
+  .search-form {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  
+  .search-form select {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 120px;
+  }
+  
+  .search-form input[type="text"] {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .search-form input[type="submit"] {
+    padding: 12px 24px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .search-form input[type="submit"]:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .book-details {
+    background-color: white;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .book-details h2 {
+    color: #333;
+    margin-bottom: 16px;
+  }
+  
+  .book-details h3 {
+    color: #444;
+    margin-bottom: 12px;
+  }
+  
+  .book-image {
+    float: right;
+    margin: 0 0 20px 20px;
+    max-width: 200px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .book-info p {
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+  
+  .loading-message {
+    text-align: center;
+    color: #666;
+    margin: 20px 0;
+  }
+  
+  .error-message {
+    color: #d32f2f;
+    text-align: center;
+    margin: 20px 0;
+    padding: 12px;
+    background-color: #ffebee;
+    border-radius: 4px;
+  }

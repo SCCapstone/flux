@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext'; // Import AuthContext
+import '../styles/Login.css'; 
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -35,32 +36,30 @@ const Login = () => {
     }
   };
 
-  return (
-    <div>
-      <h2>Login</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <br />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <br />
-        <button type="submit">Login</button>
-      </form>
-      <p>
-        Don't have an account? <a href="/register">Create Account</a>
-      </p>
-    </div>
-  );
+return (
+  <div className="login-container">
+    <h2>Login</h2>
+    {error && <p className="error-message">{error}</p>}
+    <form className="login-form" onSubmit={handleSubmit}>
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button type="submit">Login</button>
+    </form>
+    <p className="register-link">
+      Don't have an account? <a href="/register">Create Account</a>
+    </p>
+  </div>
+);
 };
 
 export default Login;
