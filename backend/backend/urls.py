@@ -1,11 +1,12 @@
 from django.contrib import admin
-from django.urls import path
-from . import views  # Import views from the same backend folder
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/register/', views.register_user, name='register'),
-    path('api/login/', views.login_user, name='login'),
-    path('api/logout/', views.logout_user, name='logout'),
-    path('api/search/', views.search_books, name='search_books'),
+    path('api/', include('api.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
