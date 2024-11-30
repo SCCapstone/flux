@@ -26,7 +26,7 @@ function App() {
           element={<Register />}
         />
         <Route
-          path="/bookdetails"
+          path="/book-details"
           element={<BookDetails />}
         />
         <Route

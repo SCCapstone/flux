@@ -1,37 +1,43 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { AuthContext } from '../AuthContext'; // Import AuthContext for global state management
+import { AuthContext } from '../AuthContext';
+import '../styles/Home.css';
 
 const Home = () => {
-  const { handleLogout } = useContext(AuthContext); // Access the logout function from context
+  const { handleLogout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [page, setPage] = useState(1); // Current page
-  const [sortMenuVisible, setSortMenuVisible] = useState(false); // Toggle for sort menu
-  const [sortOption, setSortOption] = useState('title'); // Default sort option
+  const [page, setPage] = useState(1);
+  const [sortMenuVisible, setSortMenuVisible] = useState(false);
+  const [sortOption, setSortOption] = useState('title');
 
-  // Logout functionality
   const handleLogoutClick = async () => {
     try {
-      // Send a POST request to the logout endpoint with CSRF token
       await axios.post('http://127.0.0.1:8000/api/logout/', {}, {
         headers: {
-          'X-CSRFToken': getCookie('csrftoken'), // Include CSRF token in the headers
+          'X-CSRFToken': getCookie('csrftoken'),
         },
       });
-      handleLogout(); // Update the global authentication state
-      navigate('/login'); // Redirect to the login page
+      handleLogout();
+      navigate('/login');
     } catch (error) {
       console.error('Logout error:', error.response || error.message);
       alert('Failed to logout. Please try again.');
     }
   };
 
-  // Utility function to retrieve the CSRF token from cookies
+  const goToProfile = () => {
+    navigate('/profile');
+  };
+
+  const goToBookDetails = () => {
+    navigate('/book-details');
+  };
+
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -47,13 +53,14 @@ const Home = () => {
     return cookieValue;
   }
 
-  // Fetch books from the backend
   const fetchBooks = async (searchQuery, pageNumber, sort) => {
     setLoading(true);
     setError('');
     setBooks([]);
     try {
-      const response = await fetch(`http://localhost:8000/api/search/?q=${searchQuery}&page=${pageNumber}&sort=${sort}`);
+      const response = await fetch(
+        `http://localhost:8000/api/search/?q=${searchQuery}&page=${pageNumber}&sort=${sort}`
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch books');
       }
@@ -66,14 +73,12 @@ const Home = () => {
     }
   };
 
-  // Search functionality
   const handleSearch = () => {
     if (!query.trim()) return;
-    setPage(1); // Reset to page 1
+    setPage(1);
     fetchBooks(query, 1, sortOption);
   };
 
-  // Pagination controls
   const handleNextPage = () => {
     const nextPage = page + 1;
     setPage(nextPage);
@@ -86,86 +91,86 @@ const Home = () => {
     fetchBooks(query, prevPage, sortOption);
   };
 
-  // Sort menu controls
   const toggleSortMenu = () => {
     setSortMenuVisible(!sortMenuVisible);
   };
 
   const handleSort = (option) => {
-    setSortOption(option); // Update sort option
-    setPage(1); // Reset to page 1
-    fetchBooks(query, 1, option); // Fetch books with the new sort option
-    setSortMenuVisible(false); // Close the sort menu after selection
+    setSortOption(option);
+    setPage(1);
+    fetchBooks(query, 1, option);
+    setSortMenuVisible(false);
   };
 
   return (
-    <div>
-      <h1>Welcome to the Home Page</h1>
-      <p>You are now logged in.</p>
-      <button onClick={handleLogoutClick}>Logout</button>
+    <div className="home-container">
+      <div className="header">
+        <h1>Welcome to the Book Library</h1>
+        <div className="nav-buttons">
+          <button className="nav-button" onClick={goToProfile}>
+            My Profile
+          </button>
+          <button className="nav-button" onClick={goToBookDetails}>
+            Book Details
+          </button>
+          <button className="logout-button" onClick={handleLogoutClick}>
+            Logout
+          </button>
+        </div>
+      </div>
 
-      <div>
+      <div className="search-section">
         <input
           type="text"
+          className="search-input"
           placeholder="Search for books"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button onClick={handleSearch}>Search</button>
+        <button className="search-button" onClick={handleSearch}>
+          Search
+        </button>
       </div>
 
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {loading && <p className="loading-message">Loading...</p>}
+      {error && <p className="error-message">{error}</p>}
 
-      {/* Sort Menu */}
-      <div style={{ margin: '20px 0', position: 'relative' }}>
-        <button onClick={toggleSortMenu}>Sort by: {sortOption}</button>
+      <div className="sort-menu">
+        <button className="sort-button" onClick={toggleSortMenu}>
+          Sort by: {sortOption}
+        </button>
         {sortMenuVisible && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              background: '#fff',
-              border: '1px solid #ccc',
-              boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-              zIndex: 1,
-            }}
-          >
-            <button onClick={() => handleSort('title')} style={{ display: 'block', padding: '10px' }}>
-              Title
-            </button>
-            <button onClick={() => handleSort('author')} style={{ display: 'block', padding: '10px' }}>
-              Author
-            </button>
-            <button onClick={() => handleSort('genre')} style={{ display: 'block', padding: '10px' }}>
-              Genre
-            </button>
-            <button onClick={() => handleSort('year')} style={{ display: 'block', padding: '10px' }}>
-              Year
-            </button>
+          <div className="sort-dropdown">
+            <button onClick={() => handleSort('title')}>Title</button>
+            <button onClick={() => handleSort('author')}>Author</button>
+            <button onClick={() => handleSort('genre')}>Genre</button>
+            <button onClick={() => handleSort('year')}>Year</button>
           </div>
         )}
       </div>
 
-      {/* Display Books */}
-      <div style={{ marginTop: '20px' }}>
+      <div className="book-grid">
         {books.map((book, index) => (
-          <div key={index} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
-            <h3>{book.title}</h3>
-            <p><strong>Genre:</strong> {book.genre}</p>
-            <p><strong>Author:</strong> {book.author}</p>
-            <p><strong>Year:</strong> {book.year}</p>
-            <p><strong>Description:</strong> {book.description}</p>
-            {book.image && <img src={book.image} alt={book.title} style={{ maxWidth: '150px' }} />}
+          <div key={index} className="book-card">
+            {book.image && (
+              <img src={book.image} alt={book.title} className="book-cover" />
+            )}
+            <div className="book-info">
+              <h3 className="book-title">{book.title}</h3>
+              <p className="book-author"><strong>Author:</strong> {book.author}</p>
+              <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
+              <p className="book-year"><strong>Year:</strong> {book.year}</p>
+              <p className="book-description">{book.description}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Pagination Controls */}
-      <div style={{ marginTop: '20px' }}>
-        <button onClick={handlePreviousPage} disabled={page === 1}>Previous</button>
-        <span style={{ margin: '0 10px' }}>Page {page}</span>
+      <div className="pagination">
+        <button onClick={handlePreviousPage} disabled={page === 1}>
+          Previous
+        </button>
+        <span className="page-number">Page {page}</span>
         <button onClick={handleNextPage}>Next</button>
       </div>
     </div>
