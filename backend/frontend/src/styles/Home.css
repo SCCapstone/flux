@@ -177,6 +177,7 @@
   margin: 0 0 8px 0;
   font-size: 18px;
   color: #1976D2;
+  cursor: pointer;
 }
 
 .book-author,
