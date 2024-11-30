@@ -24,9 +24,10 @@ const Login = () => {
         username,
         password,
       });
+      console.log('Login response data:', response.data);
 
       if (response.status === 200) {
-        handleLogin(); // Update global state
+        handleLogin(response.data); // Update global state with user data
         navigate('/'); // Redirect to home
       }
     } catch (err) {

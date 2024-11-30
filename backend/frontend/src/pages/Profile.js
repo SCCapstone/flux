@@ -1,71 +1,80 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState, useContext } from 'react';
+import { AuthContext } from '../AuthContext';
 
-const UserProfile = () => {
-    const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
+const Profile = () => {
+  const { user } = useContext(AuthContext);
+  const [profile, setProfile] = useState({ username: '', email: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    // Fetch profile data
-    useEffect(() => {
-        fetch("/api/profile/")
-            .then((response) => response.json())
-            .then((data) => {
-                setProfile(data);
-                setLoading(false);
-            })
-            .catch((error) => console.error("Error fetching profile:", error));
-    }, []);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.token) {
+        setLoading(false);
+        setError('No authentication token found');
+        return;
+      }
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
+      try {
+        console.log('Fetching with token:', user.token);
+        const response = await fetch('http://127.0.0.1:8000/api/profile/', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'application/json',
+          }
+        });
 
-    return (
-        <div className="profile-container">
-            <header className="profile-header">
-                <h1>Personal Profile</h1>
-                <Link to="/" className="go-back">
-                    &lt; Go Back
-                </Link>
-            </header>
-            <div className="profile-details">
-                <img
-                    src={profile.profile_picture || "/default-avatar.png"}
-                    alt={`${profile.name}'s Profile`}
-                    className="profile-picture"
-                />
-                <h2>{profile.name}</h2>
-                <p>{profile.bio}</p>
-                <div className="profile-stats">
-                    <p>
-                        <strong>{profile.ratings}</strong> Ratings
-                    </p>
-                    <p>
-                        <strong>{profile.reviews}</strong> Reviews
-                    </p>
-                </div>
-                <div className="profile-actions">
-                    <Link to="/profile/edit" className="edit-profile">
-                        Edit Profile
-                    </Link>
-                    <button className="logout-button">Logout</button>
-                </div>
-            </div>
-            <div className="favorite-books">
-                <h3>Favorite Books</h3>
-                <div className="book-list">
-                    {profile.favorite_books.map((book) => (
-                        <img
-                            key={book.id}
-                            src={book.cover}
-                            alt={book.title}
-                            className="book-cover"
-                        />
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Profile data received:', data);
+        
+        if (data.username && data.email) {
+          setProfile(data);
+        } else {
+          console.warn('Received data is missing required fields:', data);
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  if (!user) {
+    return <p>Please log in to view your profile.</p>;
+  }
+
+  if (loading) {
+    return <p>Loading profile...</p>;
+  }
+
+  if (error) {
+    return <p>Error loading profile: {error}</p>;
+  }
+
+  return (
+    <div>
+      <h1>Profile</h1>
+      <div style={{ marginBottom: '20px' }}>
+        <p><strong>Username:</strong> {profile.username || 'Not available'}</p>
+        <p><strong>Email:</strong> {profile.email || 'Not available'}</p>
+      </div>
+      
+      <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f5f5f5' }}>
+        <h3>Debug Information</h3>
+        <p>Auth Status: {user ? 'Authenticated' : 'Not authenticated'}</p>
+        <p>Profile State: {JSON.stringify(profile, null, 2)}</p>
+      </div>
+    </div>
+  );
 };
 
-export default UserProfile;
+export default Profile;
