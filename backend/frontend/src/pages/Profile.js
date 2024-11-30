@@ -1,15 +1,24 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../AuthContext';
+import '../styles/Profile.css';
 
 const Profile = () => {
   const { user, handleLogin } = useContext(AuthContext);
-  const [profile, setProfile] = useState({ username: '', email: '' });
+  const [profile, setProfile] = useState({ 
+    username: '', 
+    email: '', 
+    bio: '', 
+    profile_image: null 
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
+    bio: '',
+    profile_image: ''
   });
+  const [previewImage, setPreviewImage] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -27,12 +36,37 @@ const Profile = () => {
           setFormData({
             username: data.username,
             email: data.email,
-            password: ''
+            password: '',
+            bio: data.bio || '',
+            profile_image: ''
           });
+          setPreviewImage(data.profile_image);
         })
         .catch(err => console.error('Error fetching profile:', err));
     }
   }, [user]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+        setFormData({
+          ...formData,
+          profile_image: reader.result
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -45,17 +79,13 @@ const Profile = () => {
     setFormData({
       username: profile.username,
       email: profile.email,
-      password: ''
+      password: '',
+      bio: profile.bio || '',
+      profile_image: ''
     });
+    setPreviewImage(profile.profile_image);
     setError('');
     setSuccess('');
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
   };
 
   const handleSubmit = async (e) => {
@@ -79,7 +109,9 @@ const Profile = () => {
         setSuccess('Profile updated successfully');
         setProfile({
           username: data.user.username,
-          email: data.user.email
+          email: data.user.email,
+          bio: data.user.bio,
+          profile_image: data.user.profile_image
         });
         handleLogin({
           ...user,
@@ -87,6 +119,7 @@ const Profile = () => {
           username: data.user.username,
           email: data.user.email
         });
+        setPreviewImage(data.user.profile_image);
         setIsEditing(false);
       } else {
         setError(data.error || 'Failed to update profile');
@@ -97,81 +130,111 @@ const Profile = () => {
   };
 
   if (!user) {
-    return <p>Please log in to view your profile.</p>;
+    return <p className="profile-container">Please log in to view your profile.</p>;
   }
 
   return (
-    <div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-md">
-      <h1 className="text-2xl font-bold mb-6">Profile</h1>
+    <div className="profile-container">
+      <div className="profile-header">
+        <h1>Profile</h1>
+      </div>
       
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      {success && <p className="text-green-500 mb-4">{success}</p>}
+      {error && <div className="alert alert-error">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
+
+      <div className="profile-image-container">
+        <img 
+          src={previewImage || '/default-profile.png'} 
+          alt="Profile" 
+          className="profile-image"
+        />
+      </div>
 
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Username:</label>
+        <form onSubmit={handleSubmit} className="profile-form">
+          <div className="form-group">
+            <label>Profile Image:</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="file-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Username:</label>
             <input
               type="text"
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
               required
             />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email:</label>
+          <div className="form-group">
+            <label>Email:</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
               required
             />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              New Password (leave blank to keep current):
-            </label>
+          <div className="form-group">
+            <label>Bio:</label>
+            <textarea
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
+              className="bio-input"
+              rows="4"
+              placeholder="Tell us about yourself..."
+            />
+          </div>
+
+          <div className="form-group">
+            <label>New Password (leave blank to keep current):</label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
             />
           </div>
 
-          <div className="flex space-x-4">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
+          <div className="button-group">
+            <button type="submit" className="btn btn-primary">
               Save Changes
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              className="btn btn-secondary"
             >
               Cancel
             </button>
           </div>
         </form>
       ) : (
-        <div className="space-y-4">
+        <div className="profile-info">
           <p><strong>Username:</strong> {profile.username}</p>
           <p><strong>Email:</strong> {profile.email}</p>
-          <button
-            onClick={handleEdit}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Edit Profile
-          </button>
+          <div className="bio-section">
+            <h3>Bio</h3>
+            <p>{profile.bio || 'No bio yet...'}</p>
+          </div>
+          <div className="button-group">
+            <button
+              onClick={handleEdit}
+              className="btn btn-primary"
+            >
+              Edit Profile
+            </button>
+          </div>
         </div>
       )}
     </div>
