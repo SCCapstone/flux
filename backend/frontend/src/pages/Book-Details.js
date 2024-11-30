@@ -98,11 +98,11 @@ return (
                 />
             )}
             <div className="book-info">
-              {book.authors && (
-                  <p><strong>Authors:</strong> {book.authors.join(', ')}</p>
+              {book.author && (
+                  <p><strong>Authors:</strong> {book.author}</p>
               )}
-              {book.publishedDate && (
-                  <p><strong>Published Date:</strong> {book.publishedDate}</p>
+              {book.year && (
+                  <p><strong>Published Date:</strong> {book.year}</p>
               )}
               {book.description && (
                   <p><strong>Description:</strong> {book.description}</p>
@@ -110,8 +110,8 @@ return (
               {book.pageCount && (
                   <p><strong>Pages:</strong> {book.pageCount}</p>
               )}
-              {book.categories && (
-                  <p><strong>Categories:</strong> {book.categories.join(', ')}</p>
+              {book.genre && (
+                  <p><strong>Genres:</strong> {book.genre}</p>
               )}
             </div>
           </div>
