@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import BookDetails from './pages/Book-Details';
+import Profile from './pages/Profile'; // Import Profile component
 import { AuthContext } from './AuthContext'; // Use AuthContext
 
 function App() {
@@ -27,6 +28,10 @@ function App() {
         <Route
           path="/bookdetails"
           element={<BookDetails />}
+        />
+        <Route
+          path="/profile"
+          element={isLoggedIn ? <Profile /> : <Navigate to="/login" />} // Protect Profile route
         />
       </Routes>
     </Router>
