@@ -156,7 +156,8 @@ const Home = () => {
               <img src={book.image} alt={book.title} className="book-cover" />
             )}
             <div className="book-info">
-              <h3 className="book-title">{book.title}</h3>
+              <h3 className="book-title" onClick={() => navigate('/book-details', { state: { book } })}
+          style={{ cursor: 'pointer', color: '#0066cc' }}>{book.title}</h3>
               <p className="book-author"><strong>Author:</strong> {book.author}</p>
               <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
               <p className="book-year"><strong>Year:</strong> {book.year}</p>

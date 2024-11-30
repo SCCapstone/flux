@@ -1,17 +1,26 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import './Home';
 import '../styles/Book-Details.css';
 
 function BookDetails() {
   const [error, setError] = useState('');
   const [searchType, setSearchType] = useState('isbn')
   const [searchValue, setSearchValue] = useState('');
-  const [book, setBook] = useState('');
+  const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const locationRouter = useLocation();
   const baseUrl = 'https://www.googleapis.com/books/v1/volumes?q=';
   const apiKey = '&key=AIzaSyAOo9-IH2Ox7xDLtPt58X-I7J6_174tA5s';
+
+  //Get book data that was sent from home page
+  useEffect(() => {
+    if (locationRouter.state?.book) {
+      setBook(locationRouter.state.book);
+    }
+  }, [locationRouter]);
 
   const getSearchPrefix = () => {
     switch(searchType) {
@@ -50,65 +59,64 @@ function BookDetails() {
   };
 
 
-
 return (
-  <div className="book-details-container">
-    <p>Search for a book by ISBN, Title, or Author</p>
-    
-    <form onSubmit={searchBook} className="search-form">
-      <select 
-        value={searchType} 
-        onChange={(e) => setSearchType(e.target.value)}
-      >
-        <option value="isbn">ISBN</option>
-        <option value="title">Title</option>
-        <option value="author">Author</option>
-      </select>
+    <div className="book-details-container">
+      <p>Search for a book by ISBN, Title, or Author</p>
 
-      <input
-        type="text"
-        value={searchValue}
-        onChange={(e) => setSearchValue(e.target.value)}
-        placeholder={`Enter ${searchType}...`}
-      />
-      
-      <input type="submit" value="Search" disabled={loading} />
-    </form>
+      <form onSubmit={searchBook} className="search-form">
+        <select
+            value={searchType}
+            onChange={(e) => setSearchType(e.target.value)}
+        >
+          <option value="isbn">ISBN</option>
+          <option value="title">Title</option>
+          <option value="author">Author</option>
+        </select>
 
-    {error && <p className="error-message">{error}</p>}
-    {loading && <p className="loading-message">Loading...</p>}
+        <input
+            type="text"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder={`Enter ${searchType}...`}
+        />
 
-    {book && (
-      <div className="book-details">
-        <h2>Book Details</h2>
-        <h3>{book.title}</h3>
-        {book.imageLinks && (
-          <img 
-            src={book.imageLinks.thumbnail}
-            alt={book.title}
-            className="book-image"
-          />
-        )}
-        <div className="book-info">
-          {book.authors && (
-            <p><strong>Authors:</strong> {book.authors.join(', ')}</p>
-          )}
-          {book.publishedDate && (
-            <p><strong>Published Date:</strong> {book.publishedDate}</p>
-          )}
-          {book.description && (
-            <p><strong>Description:</strong> {book.description}</p>
-          )}
-          {book.pageCount && (
-            <p><strong>Pages:</strong> {book.pageCount}</p>
-          )}
-          {book.categories && (
-            <p><strong>Categories:</strong> {book.categories.join(', ')}</p>
-          )}
-        </div>
-      </div>
-    )}
-  </div>
+        <input type="submit" value="Search" disabled={loading}/>
+      </form>
+
+      {error && <p className="error-message">{error}</p>}
+      {loading && <p className="loading-message">Loading...</p>}
+
+      {book && (
+          <div className="book-details">
+            <h2>Book Details</h2>
+            <h3>{book.title}</h3>
+            {book.image && (
+                <img
+                    src={book.image}
+                    alt={book.title}
+                    className="book-image"
+                />
+            )}
+            <div className="book-info">
+              {book.authors && (
+                  <p><strong>Authors:</strong> {book.authors.join(', ')}</p>
+              )}
+              {book.publishedDate && (
+                  <p><strong>Published Date:</strong> {book.publishedDate}</p>
+              )}
+              {book.description && (
+                  <p><strong>Description:</strong> {book.description}</p>
+              )}
+              {book.pageCount && (
+                  <p><strong>Pages:</strong> {book.pageCount}</p>
+              )}
+              {book.categories && (
+                  <p><strong>Categories:</strong> {book.categories.join(', ')}</p>
+              )}
+            </div>
+          </div>
+      )}
+    </div>
 );
 }
 
