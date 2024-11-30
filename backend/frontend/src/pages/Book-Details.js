@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { useContext } from 'react';
+import { AuthContext } from '../AuthContext';
 import './Home';
 import '../styles/Book-Details.css';
+import StarRating from '../components/StarRating';
 
 function BookDetails() {
+  const { user } = useContext(AuthContext);
   const [error, setError] = useState('');
   const [searchType, setSearchType] = useState('isbn')
   const [searchValue, setSearchValue] = useState('');
@@ -14,6 +19,10 @@ function BookDetails() {
   const locationRouter = useLocation();
   const baseUrl = 'https://www.googleapis.com/books/v1/volumes?q=';
   const apiKey = '&key=AIzaSyAOo9-IH2Ox7xDLtPt58X-I7J6_174tA5s';
+
+  const [rating, setRating] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalRatings, setTotalRatings] = useState(0);
 
   //Get book data that was sent from home page
   useEffect(() => {
@@ -58,6 +67,47 @@ function BookDetails() {
     }
   };
 
+  useEffect(() => {
+    if (book && book.id) {
+        const fetchRatings = async () => {
+            const response = await axios.get(`http://127.0.0.1:8000/api/book/${book.id}/ratings/`);
+            setAverageRating(response.data.average_rating);
+            setTotalRatings(response.data.total_ratings);
+        };
+        fetchRatings();
+    }
+}, [book]);
+
+const handleRatingSubmit = async (newRating) => {
+  if (!book || !book.id) {
+      console.error('Book ID is missing. Cannot submit rating.');
+      return;
+  }
+
+  try {
+      console.log('Submitting rating:', { book_id: book.id, rating: newRating });
+      const response = await axios.post(
+          'http://127.0.0.1:8000/api/rate-book/',
+          { book_id: book.id, rating: newRating },
+          { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+      console.log('Rating submitted successfully:', response.data);
+      setRating(newRating);
+  } catch (err) {
+      console.error('Error submitting rating:', err.response?.data || err.message);
+      alert('Failed to submit rating. Please try again.');
+  }
+};
+
+
+if (!book) {
+  return (
+      <div>
+          <p>Book details are not available. Please go back and select a book.</p>
+          <button onClick={() => navigate('/')}>Go Back</button>
+      </div>
+  );
+}
 
 return (
     <div className="book-details-container">
@@ -116,6 +166,13 @@ return (
             </div>
           </div>
       )}
+      <h3>Rate this Book</h3>
+      <StarRating
+        totalStars={5}
+        value={rating}
+        onRatingChange={(value) => handleRatingSubmit(value)}
+      />
+      <p>Average Rating: {averageRating || 'No ratings yet'} ({totalRatings} ratings)</p>
     </div>
 );
 }

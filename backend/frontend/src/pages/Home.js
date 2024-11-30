@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../AuthContext';
+import StarRating from '../components/StarRating';
 import '../styles/Home.css';
 
 const Home = () => {
@@ -161,6 +162,11 @@ const Home = () => {
               <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
               <p className="book-year"><strong>Year:</strong> {book.year}</p>
               <p className="book-description">{book.description}</p>
+              <StarRating
+                totalStars={5}
+                value={book.average_rating || 0} // Replace with the book's average rating
+                onRatingChange={(newRating) => console.log(`Rated ${book.title}: ${newRating}`)}
+              />
             </div>
           </div>
         ))}

@@ -21,3 +21,14 @@ class Profile(models.Model):
     
     def __str__(self):
         return f"{self.user.username}'s profile"
+    
+class Rating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField()  # Values: 1 to 5
+
+    class Meta:
+        unique_together = ('user', 'book')
+
+    def __str__(self):
+        return f"{self.user.username} rated {self.book.title} as {self.rating}"

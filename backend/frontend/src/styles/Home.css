@@ -231,6 +231,17 @@
   color: #666;
 }
 
+.star {
+  font-size: 24px;
+  color: #ffd700; 
+  margin: 0 2px;
+  cursor: pointer;
+}
+
+.star:hover {
+  color: #ffc107; 
+}
+
 @media (max-width: 768px) {
   .header {
     flex-direction: column;
