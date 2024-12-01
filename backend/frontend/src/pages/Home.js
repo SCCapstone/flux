@@ -10,6 +10,9 @@ const Home = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
+  const [favorites, setFavorites] = useState(() => {
+    return JSON.parse(localStorage.getItem('favorites')) || [];
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
@@ -35,6 +38,10 @@ const Home = () => {
     navigate('/profile');
   };
 
+  const goToFavorites = () => {
+    navigate('/favorites');
+  };
+
   const goToBookDetails = () => {
     navigate('/book-details');
   };
@@ -45,7 +52,7 @@ const Home = () => {
       const cookies = document.cookie.split(';');
       for (let i = 0; i < cookies.length; i++) {
         const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        if (cookie.startsWith(`${name}=`)) {
           cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
           break;
         }
@@ -103,6 +110,15 @@ const Home = () => {
     setSortMenuVisible(false);
   };
 
+  const handleFavorite = (book) => {
+    const isFavorite = favorites.some((fav) => fav.title === book.title);
+    const updatedFavorites = isFavorite
+      ? favorites.filter((fav) => fav.title !== book.title)
+      : [...favorites, book];
+    setFavorites(updatedFavorites);
+    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+  };
+
   return (
     <div className="home-container">
       <div className="header">
@@ -113,6 +129,9 @@ const Home = () => {
           </button>
           <button className="nav-button" onClick={goToBookDetails}>
             Book Details
+          </button>
+          <button className="nav-button" onClick={goToFavorites}>
+            Favorites
           </button>
           <button className="logout-button" onClick={handleLogoutClick}>
             Logout
@@ -167,6 +186,14 @@ const Home = () => {
                 value={book.average_rating || 0} // Replace with the book's average rating
                 onRatingChange={(newRating) => console.log(`Rated ${book.title}: ${newRating}`)}
               />
+              <button
+                className="nav-button"
+                onClick={() => handleFavorite(book)}
+              >
+                {favorites.some((fav) => fav.title === book.title)
+                  ? 'Remove from Favorites'
+                  : 'Add to Favorites'}
+              </button>
             </div>
           </div>
         ))}

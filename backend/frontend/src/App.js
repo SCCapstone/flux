@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import BookDetails from './pages/Book-Details';
 import Profile from './pages/Profile'; // Import Profile component
+import Favorites from './pages/Favorites'; // Import Favorites page
 import { AuthContext } from './AuthContext'; // Use AuthContext
 
 function App() {
@@ -32,6 +33,10 @@ function App() {
         <Route
           path="/profile"
           element={isLoggedIn ? <Profile /> : <Navigate to="/login" />} // Protect Profile route
+        />
+        <Route
+          path="/favorites"
+          element={isLoggedIn ? <Favorites /> : <Navigate to="/login" />} // Protect Favorites route
         />
       </Routes>
     </Router>
