@@ -4,6 +4,8 @@ import axios from 'axios';
 import { AuthContext } from '../AuthContext';
 import StarRating from '../components/StarRating';
 import '../styles/Home.css';
+import { FetchBooks } from '../components/FetchBooks';
+import DisplayBooks from "../components/DisplayBooks.js";
 
 const Home = () => {
   const { handleLogout } = useContext(AuthContext);
@@ -61,19 +63,30 @@ const Home = () => {
     return cookieValue;
   }
 
-  const fetchBooks = async (searchQuery, pageNumber, sort) => {
+  const handleSearch = async () => {
+    if (!query.trim()) return;
     setLoading(true);
     setError('');
     setBooks([]);
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/search/?q=${searchQuery}&page=${pageNumber}&sort=${sort}`
-      );
-      if (!response.ok) {
-        throw new Error('Failed to fetch books');
-      }
-      const data = await response.json();
-      setBooks(data.books || []);
+      const books = await FetchBooks(query, 1, sortOption);
+      setBooks(books);
+      setPage(1);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+};
+
+  const handleNextPage = async () => {
+    const nextPage = page + 1;
+    setLoading(true);
+    setError('');
+    try {
+      const books = await FetchBooks(query, nextPage, sortOption);
+      setBooks(books);
+      setPage(nextPage);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -81,34 +94,41 @@ const Home = () => {
     }
   };
 
-  const handleSearch = () => {
-    if (!query.trim()) return;
-    setPage(1);
-    fetchBooks(query, 1, sortOption);
-  };
-
-  const handleNextPage = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchBooks(query, nextPage, sortOption);
-  };
-
-  const handlePreviousPage = () => {
+  const handlePreviousPage = async () => {
     const prevPage = Math.max(1, page - 1);
-    setPage(prevPage);
-    fetchBooks(query, prevPage, sortOption);
+    setLoading(true);
+    setError('');
+    try {
+      const books = await FetchBooks(query, prevPage, sortOption);
+      setBooks(books);
+      setPage(prevPage);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSort = async (option) => {
+    setSortOption(option);
+    setLoading(true);
+    setError('');
+    try {
+      const books = await FetchBooks(query, 1, option);
+      setBooks(books);
+      setPage(1);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setSortMenuVisible(false);
+    }
   };
 
   const toggleSortMenu = () => {
     setSortMenuVisible(!sortMenuVisible);
   };
 
-  const handleSort = (option) => {
-    setSortOption(option);
-    setPage(1);
-    fetchBooks(query, 1, option);
-    setSortMenuVisible(false);
-  };
 
   const handleFavorite = (book) => {
     const isFavorite = favorites.some((fav) => fav.title === book.title);
@@ -152,9 +172,6 @@ const Home = () => {
         </button>
       </div>
 
-      {loading && <p className="loading-message">Loading...</p>}
-      {error && <p className="error-message">{error}</p>}
-
       <div className="sort-menu">
         <button className="sort-button" onClick={toggleSortMenu}>
           Sort by: {sortOption}
@@ -169,35 +186,13 @@ const Home = () => {
         )}
       </div>
 
-      <div className="book-grid">
-        {books.map((book, index) => (
-          <div key={index} className="book-card">
-            {book.image && (
-              <img src={book.image} alt={book.title} className="book-cover" />
-            )}
-            <div className="book-info">
-              <h3 className="book-title" onClick={() => navigate('/book-details', { state: { book } })}>{book.title}</h3>
-              <p className="book-author"><strong>Author:</strong> {book.author}</p>
-              <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
-              <p className="book-year"><strong>Year:</strong> {book.year}</p>
-              <p className="book-description">{book.description}</p>
-              <StarRating
-                totalStars={5}
-                value={book.average_rating || 0} // Replace with the book's average rating
-                onRatingChange={(newRating) => console.log(`Rated ${book.title}: ${newRating}`)}
-              />
-              <button
-                className="nav-button"
-                onClick={() => handleFavorite(book)}
-              >
-                {favorites.some((fav) => fav.title === book.title)
-                  ? 'Remove from Favorites'
-                  : 'Add to Favorites'}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <DisplayBooks
+        books={books}
+        favorites={favorites}
+        handleFavorite={handleFavorite}
+        loading={loading}
+        error={error}
+      />
 
       <div className="pagination">
         <button onClick={handlePreviousPage} disabled={page === 1}>

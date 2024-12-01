@@ -1,0 +1,56 @@
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.book-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: white;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.book-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.book-cover {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.book-info {
+  color: #333;
+}
+
+.book-title {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #1976D2;
+  cursor: pointer;
+}
+
+.book-author,
+.book-genre,
+.book-year {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.book-description {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+  max-height: 4.2em; /* 3 lines */
+  overflow: hidden;
+  position: relative;
+  text-overflow: ellipsis;
+}
