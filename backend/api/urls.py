@@ -14,4 +14,7 @@ urlpatterns = [
     path('rate-book/', rate_book, name='rate_book'),
     path('book/<int:book_id>/ratings/', get_book_ratings, name='get_book_ratings'),
     path('books/create-or-get/', views.create_or_get_book, name='create_or_get_book'),
+    path('favorites/', views.get_favorites, name='get_favorites'),
+    path('favorites/add/', views.add_favorite, name='add_favorite'),
+    path('favorites/remove/', views.remove_favorite, name='remove_favorite'),
 ]

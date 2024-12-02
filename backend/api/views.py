@@ -13,7 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from .models import Profile
 from django.core.files.storage import default_storage
-from .models import Rating, Book
+from .models import Rating, Book, Favorite
 import base64
 import os
 import time
@@ -264,3 +264,54 @@ def create_or_get_book(request):
         'title': book.title,
         'author': book.author
     })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_favorites(request):
+    favorites = Favorite.objects.filter(user=request.user).select_related('book')
+    books = [
+        {
+            'id': fav.book.id,
+            'google_books_id': fav.book.google_books_id,
+            'title': fav.book.title,
+            'author': fav.book.author,
+            'description': fav.book.description,
+            'genre': fav.book.genre,
+            'image': fav.book.image,
+            'year': fav.book.year
+        }
+        for fav in favorites
+    ]
+    return Response(books)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_favorite(request):
+    book_data = request.data
+    book, created = Book.objects.get_or_create(
+        google_books_id=book_data['id'],
+        defaults={
+            'title': book_data.get('title', ''),
+            'author': book_data.get('author', ''),
+            'description': book_data.get('description', ''),
+            'genre': book_data.get('genre', ''),
+            'image': book_data.get('image', ''),
+            'year': book_data.get('year', '')
+        }
+    )
+    favorite, created = Favorite.objects.get_or_create(user=request.user, book=book)
+    return Response({'message': 'Book added to favorites'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def remove_favorite(request):
+    book_id = request.data.get('book_id')
+    try:
+        favorite = Favorite.objects.get(
+            user=request.user,
+            book__google_books_id=book_id
+        )
+        favorite.delete()
+        return Response({'message': 'Book removed from favorites'})
+    except Favorite.DoesNotExist:
+        return Response({'error': 'Favorite not found'}, status=404)
