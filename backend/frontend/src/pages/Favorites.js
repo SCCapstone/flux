@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo } from 'react';
+import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
 import '../styles/Favorites.css';
@@ -6,13 +6,33 @@ import '../styles/Favorites.css';
 const Favorites = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const [favorites, setFavorites] = useState(() => {
-    return JSON.parse(localStorage.getItem(`favorites_${user?.username}`)) || [];
-  });
+  const [favorites, setFavorites] = useState([]);
   const [activeFilters, setActiveFilters] = useState({
     decade: 'all',
     genre: 'all'
   });
+
+  useEffect(() => {
+    if (user?.token) {
+      fetchFavorites();
+    }
+  }, [user]);
+
+  const fetchFavorites = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/favorites/', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setFavorites(data);
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    }
+  };
 
   const { uniqueGenres, uniqueDecades } = useMemo(() => {
     const genres = new Set(favorites.map(book => book.genre));
@@ -25,10 +45,23 @@ const Favorites = () => {
     };
   }, [favorites]);
 
-  const handleRemove = (book) => {
-    const updatedFavorites = favorites.filter((fav) => fav.id !== book.id);
-    setFavorites(updatedFavorites);
-    localStorage.setItem(`favorites_${user?.username}`, JSON.stringify(updatedFavorites));
+  const handleRemove = async (book) => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/favorites/remove/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ book_id: book.google_books_id }),
+      });
+
+      if (response.ok) {
+        fetchFavorites();
+      }
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+    }
   };
 
   const handleBookDetails = (book) => {
