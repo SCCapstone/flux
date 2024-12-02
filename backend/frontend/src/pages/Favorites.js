@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
 import '../styles/Favorites.css';
 
 const Favorites = () => {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [favorites, setFavorites] = useState(() => {
-    return JSON.parse(localStorage.getItem('favorites')) || [];
+    // Use user-specific key for favorites
+    return JSON.parse(localStorage.getItem(`favorites_${user?.username}`)) || [];
   });
   const [sortOption, setSortOption] = useState('title');
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
 
   const handleRemove = (book) => {
-    const updatedFavorites = favorites.filter((fav) => fav.title !== book.title);
+    const updatedFavorites = favorites.filter((fav) => fav.id !== book.id);
     setFavorites(updatedFavorites);
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    localStorage.setItem(`favorites_${user?.username}`, JSON.stringify(updatedFavorites));
   };
 
   const handleBookDetails = (book) => {
@@ -28,7 +31,7 @@ const Favorites = () => {
     setSortOption(option);
 
     const sortedFavorites = [...favorites].sort((a, b) => {
-      if (option === 'title' || option === 'author' || option === 'genre'|| option === 'year') {
+      if (option === 'title' || option === 'author' || option === 'genre' || option === 'year') {
         return a[option].localeCompare(b[option]);
       }
       return 0;
@@ -52,7 +55,6 @@ const Favorites = () => {
         </div>
       </div>
 
-      {/* Sort Menu */}
       <div className="sort-menu">
         <button className="sort-button" onClick={toggleSortMenu}>
           Sort by: {sortOption}

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
 
 export const AuthContext = createContext();
 
@@ -14,6 +14,10 @@ const AuthProvider = ({ children }) => {
   };
 
   const handleLogout = () => {
+    // Clear user-specific favorites when logging out
+    if (user?.username) {
+      localStorage.removeItem(`favorites_${user.username}`);
+    }
     setUser(null);
     setIsLoggedIn(false);
     localStorage.removeItem('user');
