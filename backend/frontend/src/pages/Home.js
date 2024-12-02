@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../AuthContext';
@@ -10,13 +10,34 @@ const Home = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
-  const [favorites, setFavorites] = useState(() => {
-    return JSON.parse(localStorage.getItem(`favorites_${user?.username}`)) || [];
-  });
+  const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [filterType, setFilterType] = useState('title');
+
+  // Fetch favorites when component mounts or user changes
+  useEffect(() => {
+    if (user?.token) {
+      fetchFavorites();
+    }
+  }, [user]);
+
+  const fetchFavorites = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/favorites/', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setFavorites(data);
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    }
+  };
 
   const handleLogoutClick = async () => {
     try {
@@ -33,17 +54,9 @@ const Home = () => {
     }
   };
 
-  const goToProfile = () => {
-    navigate('/profile');
-  };
-
-  const goToFavorites = () => {
-    navigate('/favorites');
-  };
-
-  const goToBookDetails = () => {
-    navigate('/book-details');
-  };
+  const goToProfile = () => navigate('/profile');
+  const goToFavorites = () => navigate('/favorites');
+  const goToBookDetails = () => navigate('/book-details');
 
   function getCookie(name) {
     let cookieValue = null;
@@ -114,13 +127,27 @@ const Home = () => {
     }
   };
 
-  const handleFavorite = (book) => {
-    const isFavorite = favorites.some((fav) => fav.id === book.id);
-    const updatedFavorites = isFavorite
-      ? favorites.filter((fav) => fav.id !== book.id)
-      : [...favorites, book];
-    setFavorites(updatedFavorites);
-    localStorage.setItem(`favorites_${user?.username}`, JSON.stringify(updatedFavorites));
+  const handleFavorite = async (book) => {
+    if (!user?.token) return;
+
+    const isFavorite = favorites.some((fav) => fav.google_books_id === book.id);
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/favorites/${isFavorite ? 'remove' : 'add'}/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(isFavorite ? { book_id: book.id } : book),
+      });
+
+      if (response.ok) {
+        // Refresh favorites after adding/removing
+        fetchFavorites();
+      }
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+    }
   };
 
   return (
@@ -193,7 +220,7 @@ const Home = () => {
                 className="nav-button"
                 onClick={() => handleFavorite(book)}
               >
-                {favorites.some((fav) => fav.id === book.id)
+                {favorites.some((fav) => fav.google_books_id === book.id)
                   ? 'Remove from Favorites'
                   : 'Add to Favorites'}
               </button>
