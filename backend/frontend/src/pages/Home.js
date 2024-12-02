@@ -6,18 +6,17 @@ import StarRating from '../components/StarRating';
 import '../styles/Home.css';
 
 const Home = () => {
-  const { handleLogout } = useContext(AuthContext);
+  const { user, handleLogout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
   const [favorites, setFavorites] = useState(() => {
-    return JSON.parse(localStorage.getItem('favorites')) || [];
+    return JSON.parse(localStorage.getItem(`favorites_${user?.username}`)) || [];
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
-  const [sortMenuVisible, setSortMenuVisible] = useState(false);
-  const [sortOption, setSortOption] = useState('title');
+  const [filterType, setFilterType] = useState('title');
 
   const handleLogoutClick = async () => {
     try {
@@ -61,17 +60,24 @@ const Home = () => {
     return cookieValue;
   }
 
-  const fetchBooks = async (searchQuery, pageNumber, sort) => {
+  const fetchBooks = async (searchQuery, pageNumber, filter) => {
     setLoading(true);
     setError('');
-    setBooks([]);
     try {
+      const queryParams = new URLSearchParams({
+        q: searchQuery,
+        page: pageNumber,
+        filterType: filter
+      });
+      
       const response = await fetch(
-        `http://localhost:8000/api/search/?q=${searchQuery}&page=${pageNumber}&sort=${sort}`
+        `http://localhost:8000/api/search/?${queryParams.toString()}`
       );
+      
       if (!response.ok) {
         throw new Error('Failed to fetch books');
       }
+      
       const data = await response.json();
       setBooks(data.books || []);
     } catch (err) {
@@ -81,42 +87,40 @@ const Home = () => {
     }
   };
 
-  const handleSearch = () => {
+  const handleSearch = (e) => {
+    e.preventDefault();
     if (!query.trim()) return;
     setPage(1);
-    fetchBooks(query, 1, sortOption);
+    fetchBooks(query, 1, filterType);
   };
 
   const handleNextPage = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchBooks(query, nextPage, sortOption);
+    fetchBooks(query, nextPage, filterType);
   };
 
   const handlePreviousPage = () => {
     const prevPage = Math.max(1, page - 1);
     setPage(prevPage);
-    fetchBooks(query, prevPage, sortOption);
+    fetchBooks(query, prevPage, filterType);
   };
 
-  const toggleSortMenu = () => {
-    setSortMenuVisible(!sortMenuVisible);
-  };
-
-  const handleSort = (option) => {
-    setSortOption(option);
-    setPage(1);
-    fetchBooks(query, 1, option);
-    setSortMenuVisible(false);
+  const handleFilterChange = (filter) => {
+    setFilterType(filter);
+    if (query.trim()) {
+      setPage(1);
+      fetchBooks(query, 1, filter);
+    }
   };
 
   const handleFavorite = (book) => {
-    const isFavorite = favorites.some((fav) => fav.title === book.title);
+    const isFavorite = favorites.some((fav) => fav.id === book.id);
     const updatedFavorites = isFavorite
-      ? favorites.filter((fav) => fav.title !== book.title)
+      ? favorites.filter((fav) => fav.id !== book.id)
       : [...favorites, book];
     setFavorites(updatedFavorites);
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    localStorage.setItem(`favorites_${user?.username}`, JSON.stringify(updatedFavorites));
   };
 
   return (
@@ -140,34 +144,33 @@ const Home = () => {
       </div>
 
       <div className="search-section">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search for books"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button className="search-button" onClick={handleSearch}>
-          Search
-        </button>
+        <form onSubmit={handleSearch} className="search-controls">
+          <select
+            className="filter-select"
+            value={filterType}
+            onChange={(e) => handleFilterChange(e.target.value)}
+          >
+            <option value="title">Search by Title</option>
+            <option value="author">Search by Author</option>
+            <option value="genre">Search by Genre</option>
+          </select>
+
+          <input
+            type="text"
+            className="search-input"
+            placeholder={`Search by ${filterType}...`}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          
+          <button type="submit" className="search-button">
+            Search
+          </button>
+        </form>
       </div>
 
       {loading && <p className="loading-message">Loading...</p>}
       {error && <p className="error-message">{error}</p>}
-
-      <div className="sort-menu">
-        <button className="sort-button" onClick={toggleSortMenu}>
-          Sort by: {sortOption}
-        </button>
-        {sortMenuVisible && (
-          <div className="sort-dropdown">
-            <button onClick={() => handleSort('title')}>Title</button>
-            <button onClick={() => handleSort('author')}>Author</button>
-            <button onClick={() => handleSort('genre')}>Genre</button>
-            <button onClick={() => handleSort('year')}>Year</button>
-          </div>
-        )}
-      </div>
 
       <div className="book-grid">
         {books.map((book, index) => (
@@ -183,14 +186,14 @@ const Home = () => {
               <p className="book-description">{book.description}</p>
               <StarRating
                 totalStars={5}
-                value={book.average_rating || 0} // Replace with the book's average rating
+                value={book.average_rating || 0}
                 onRatingChange={(newRating) => console.log(`Rated ${book.title}: ${newRating}`)}
               />
               <button
                 className="nav-button"
                 onClick={() => handleFavorite(book)}
               >
-                {favorites.some((fav) => fav.title === book.title)
+                {favorites.some((fav) => fav.id === book.id)
                   ? 'Remove from Favorites'
                   : 'Add to Favorites'}
               </button>
