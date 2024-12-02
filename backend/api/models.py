@@ -2,14 +2,15 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Book(models.Model):
+    google_books_id = models.CharField(max_length=100, unique=True)
     title = models.CharField(max_length=150)
-    authorName = models.CharField(max_length=150)
-    description = models.TextField()
-    isbn10 = models.CharField(max_length=10)
-    isbn13 = models.CharField(max_length=13)
-    genre = models.CharField(max_length=100)
-    coverIMG = models.URLField(max_length=200)
-    publishedDate = models.DateField()
+    author = models.CharField(max_length=150)
+    description = models.TextField(blank=True, null=True)
+    isbn10 = models.CharField(max_length=10, blank=True, null=True)
+    isbn13 = models.CharField(max_length=13, blank=True, null=True)
+    genre = models.CharField(max_length=100, blank=True, null=True)
+    image = models.URLField(max_length=200, blank=True, null=True)
+    year = models.CharField(max_length=4, blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -25,7 +26,7 @@ class Profile(models.Model):
 class Rating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    rating = models.PositiveSmallIntegerField()  # Values: 1 to 5
+    rating = models.PositiveSmallIntegerField()
 
     class Meta:
         unique_together = ('user', 'book')

@@ -242,3 +242,25 @@ def get_book_ratings(request, book_id):
         return Response({'average_rating': avg_rating, 'total_ratings': ratings.count()}, status=status.HTTP_200_OK)
     except Book.DoesNotExist:
         return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_or_get_book(request):
+    google_books_id = request.data.get('google_books_id')
+    if not google_books_id:
+        return Response({'error': 'Google Books ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    book, created = Book.objects.get_or_create(
+        google_books_id=google_books_id,
+        defaults={
+            'title': request.data.get('title', ''),
+            'author': request.data.get('author', ''),
+
+        }
+    )
+    return Response({
+        'id': book.id,
+        'google_books_id': book.google_books_id,
+        'title': book.title,
+        'author': book.author
+    })
