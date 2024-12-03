@@ -28,7 +28,8 @@ const DisplayBooks = ({ books, favorites, handleFavorite, loading, error }) => {
           <div className="book-info">
             <h3 className="book-title"
               onClick={() => navigate('/book-details', { state: { book } })}>{book.title}</h3>
-            <p className="author-name">{book.author}</p>
+            <p className="author-name"
+               onClick={() => navigate('/author-details', { state: { book } })}>{book.author}</p>
             <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
             <p className="book-year"><strong>Year:</strong> {book.year}</p>
             <p className="book-description">{book.description}</p>
