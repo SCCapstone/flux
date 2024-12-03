@@ -1,42 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
 import '../styles/Favorites.css';
 
 const Favorites = () => {
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState(() => {
-    return JSON.parse(localStorage.getItem('favorites')) || [];
+  const { user } = useContext(AuthContext);
+  const [favorites, setFavorites] = useState([]);
+  const [activeFilters, setActiveFilters] = useState({
+    decade: 'all',
+    genre: 'all'
   });
-  const [sortOption, setSortOption] = useState('title');
-  const [sortMenuVisible, setSortMenuVisible] = useState(false);
 
-  const handleRemove = (book) => {
-    const updatedFavorites = favorites.filter((fav) => fav.title !== book.title);
-    setFavorites(updatedFavorites);
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+  useEffect(() => {
+    if (user?.token) {
+      fetchFavorites();
+    }
+  }, [user]);
+
+  const fetchFavorites = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/favorites/', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setFavorites(data);
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    }
+  };
+
+  const { uniqueGenres, uniqueDecades } = useMemo(() => {
+    const genres = new Set(favorites.map(book => book.genre));
+    const decades = new Set(
+      favorites.map(book => `${Math.floor(parseInt(book.year) / 10) * 10}s`)
+    );
+    return {
+      uniqueGenres: ['all', ...Array.from(genres)].sort(),
+      uniqueDecades: ['all', ...Array.from(decades)].sort()
+    };
+  }, [favorites]);
+
+  const handleRemove = async (book) => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/favorites/remove/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ book_id: book.google_books_id }),
+      });
+
+      if (response.ok) {
+        fetchFavorites();
+      }
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+    }
   };
 
   const handleBookDetails = (book) => {
     navigate('/book-details', { state: { book } });
   };
 
-  const toggleSortMenu = () => {
-    setSortMenuVisible(!sortMenuVisible);
+  const handleFilterChange = (filterType, value) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
   };
 
-  const handleSort = (option) => {
-    setSortOption(option);
-
-    const sortedFavorites = [...favorites].sort((a, b) => {
-      if (option === 'title' || option === 'author' || option === 'genre'|| option === 'year') {
-        return a[option].localeCompare(b[option]);
-      }
-      return 0;
+  const filteredBooks = useMemo(() => {
+    return favorites.filter(book => {
+      const matchesDecade = activeFilters.decade === 'all' || 
+        `${Math.floor(parseInt(book.year) / 10) * 10}s` === activeFilters.decade;
+      const matchesGenre = activeFilters.genre === 'all' || 
+        book.genre === activeFilters.genre;
+      return matchesDecade && matchesGenre;
     });
-
-    setFavorites(sortedFavorites);
-    setSortMenuVisible(false);
-  };
+  }, [favorites, activeFilters]);
 
   return (
     <div className="favorites-container">
@@ -52,24 +99,41 @@ const Favorites = () => {
         </div>
       </div>
 
-      {/* Sort Menu */}
-      <div className="sort-menu">
-        <button className="sort-button" onClick={toggleSortMenu}>
-          Sort by: {sortOption}
-        </button>
-        {sortMenuVisible && (
-          <div className="sort-dropdown">
-            <button onClick={() => handleSort('title')}>Title</button>
-            <button onClick={() => handleSort('author')}>Author</button>
-            <button onClick={() => handleSort('genre')}>Genre</button>
-            <button onClick={() => handleSort('year')}>Year</button>
+      <div className="controls-container">
+        <div className="filters">
+          <div className="filter-group">
+            <label>Decade:</label>
+            <select 
+              value={activeFilters.decade}
+              onChange={(e) => handleFilterChange('decade', e.target.value)}
+            >
+              {uniqueDecades.map(decade => (
+                <option key={decade} value={decade}>
+                  {decade === 'all' ? 'All Decades' : decade}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
+
+          <div className="filter-group">
+            <label>Genre:</label>
+            <select 
+              value={activeFilters.genre}
+              onChange={(e) => handleFilterChange('genre', e.target.value)}
+            >
+              {uniqueGenres.map(genre => (
+                <option key={genre} value={genre}>
+                  {genre === 'all' ? 'All Genres' : genre}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="favorites-grid">
-        {favorites.length > 0 ? (
-          favorites.map((book, index) => (
+        {filteredBooks.length > 0 ? (
+          filteredBooks.map((book, index) => (
             <div key={index} className="favorite-card">
               {book.image && (
                 <img src={book.image} alt={book.title} className="favorite-cover" />
@@ -100,7 +164,11 @@ const Favorites = () => {
             </div>
           ))
         ) : (
-          <p className="no-favorites-message">You have no favorite books.</p>
+          <p className="no-favorites-message">
+            {favorites.length === 0 
+              ? "You have no favorite books."
+              : "No books match the selected filters."}
+          </p>
         )}
       </div>
     </div>

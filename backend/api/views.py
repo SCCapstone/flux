@@ -13,7 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from .models import Profile
 from django.core.files.storage import default_storage
-from .models import Rating, Book
+from .models import Rating, Book, Favorite
 import base64
 import os
 import time
@@ -168,13 +168,24 @@ def profile_view(request):
 def search_books(request):
     if request.method == 'GET':
         query = request.GET.get('q', '')
-        page = int(request.GET.get('page', 1))  # Default to page 1
-        sort_option = request.GET.get('sort', 'title')  # Default to sorting by title
-        max_results = 10  # Number of results per page
-        start_index = (page - 1) * max_results  # Calculate start index
+        page = int(request.GET.get('page', 1))
+        filter_type = request.GET.get('filterType', 'title')
+        max_results = 10
+        start_index = (page - 1) * max_results
 
         if query:
-            url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={GOOGLE_BOOKS_API_KEY}&maxResults=40"
+            # Construct the query based on filter type using Google Books API search operators
+            if filter_type == 'author':
+                formatted_query = f'inauthor:"{query}"'
+            elif filter_type == 'title':
+                formatted_query = f'intitle:"{query}"'
+            elif filter_type == 'genre':
+                formatted_query = f'subject:"{query}"'
+            else:
+                formatted_query = query
+
+            url = f"https://www.googleapis.com/books/v1/volumes?q={formatted_query}&key={GOOGLE_BOOKS_API_KEY}&maxResults=40"
+            
             response = requests.get(url)
             if response.status_code == 200:
                 data = response.json()
@@ -182,28 +193,19 @@ def search_books(request):
                 for item in data.get('items', []):
                     volume_info = item.get('volumeInfo', {})
                     books.append({
+                        'id': item.get('id'),
                         'title': volume_info.get('title', 'No Title'),
                         'genre': ', '.join(volume_info.get('categories', ['Unknown Genre'])),
                         'author': ', '.join(volume_info.get('authors', ['Unknown Author'])),
-                        'year': volume_info.get('publishedDate', 'N/A'),
+                        'year': volume_info.get('publishedDate', 'N/A')[:4] if volume_info.get('publishedDate') else 'N/A',
                         'description': volume_info.get('description', 'No Description'),
                         'image': volume_info.get('imageLinks', {}).get('thumbnail', ''),
                     })
 
-                    # Sort the books based on the sort_option
-                if sort_option == 'title':
-                    books.sort(key=lambda x: x['title'])
-                elif sort_option == 'author':
-                    books.sort(key=lambda x: x['author'])
-                elif sort_option == 'genre':
-                    books.sort(key=lambda x: x['genre'])
-                elif sort_option == 'year':
-                    books.sort(key=lambda x: x['year'])
-                
-                # Paginate the sorted books
+                # Paginate the books
                 paginated_books = books[start_index:start_index + max_results]
 
-                return JsonResponse({'books': paginated_books, 'page': page, 'sort': sort_option})
+                return JsonResponse({'books': paginated_books, 'page': page})
             else:
                 return JsonResponse({'error': 'Error fetching data from Google Books API'}, status=500)
         return JsonResponse({'error': 'No search query provided'}, status=400)
@@ -240,3 +242,76 @@ def get_book_ratings(request, book_id):
         return Response({'average_rating': avg_rating, 'total_ratings': ratings.count()}, status=status.HTTP_200_OK)
     except Book.DoesNotExist:
         return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_or_get_book(request):
+    google_books_id = request.data.get('google_books_id')
+    if not google_books_id:
+        return Response({'error': 'Google Books ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    book, created = Book.objects.get_or_create(
+        google_books_id=google_books_id,
+        defaults={
+            'title': request.data.get('title', ''),
+            'author': request.data.get('author', ''),
+
+        }
+    )
+    return Response({
+        'id': book.id,
+        'google_books_id': book.google_books_id,
+        'title': book.title,
+        'author': book.author
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_favorites(request):
+    favorites = Favorite.objects.filter(user=request.user).select_related('book')
+    books = [
+        {
+            'id': fav.book.id,
+            'google_books_id': fav.book.google_books_id,
+            'title': fav.book.title,
+            'author': fav.book.author,
+            'description': fav.book.description,
+            'genre': fav.book.genre,
+            'image': fav.book.image,
+            'year': fav.book.year
+        }
+        for fav in favorites
+    ]
+    return Response(books)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_favorite(request):
+    book_data = request.data
+    book, created = Book.objects.get_or_create(
+        google_books_id=book_data['id'],
+        defaults={
+            'title': book_data.get('title', ''),
+            'author': book_data.get('author', ''),
+            'description': book_data.get('description', ''),
+            'genre': book_data.get('genre', ''),
+            'image': book_data.get('image', ''),
+            'year': book_data.get('year', '')
+        }
+    )
+    favorite, created = Favorite.objects.get_or_create(user=request.user, book=book)
+    return Response({'message': 'Book added to favorites'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def remove_favorite(request):
+    book_id = request.data.get('book_id')
+    try:
+        favorite = Favorite.objects.get(
+            user=request.user,
+            book__google_books_id=book_id
+        )
+        favorite.delete()
+        return Response({'message': 'Book removed from favorites'})
+    except Favorite.DoesNotExist:
+        return Response({'error': 'Favorite not found'}, status=404)

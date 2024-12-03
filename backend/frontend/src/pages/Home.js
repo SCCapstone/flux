@@ -1,25 +1,43 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../AuthContext';
 import StarRating from '../components/StarRating';
 import '../styles/Home.css';
-import { FetchBooks } from '../components/FetchBooks';
-import DisplayBooks from "../components/DisplayBooks.js";
 
 const Home = () => {
-  const { handleLogout } = useContext(AuthContext);
+  const { user, handleLogout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
-  const [favorites, setFavorites] = useState(() => {
-    return JSON.parse(localStorage.getItem('favorites')) || [];
-  });
+  const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
-  const [sortMenuVisible, setSortMenuVisible] = useState(false);
-  const [sortOption, setSortOption] = useState('title');
+  const [filterType, setFilterType] = useState('title');
+
+  // Fetch favorites when component mounts or user changes
+  useEffect(() => {
+    if (user?.token) {
+      fetchFavorites();
+    }
+  }, [user]);
+
+  const fetchFavorites = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/favorites/', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setFavorites(data);
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    }
+  };
 
   const handleLogoutClick = async () => {
     try {
@@ -36,17 +54,9 @@ const Home = () => {
     }
   };
 
-  const goToProfile = () => {
-    navigate('/profile');
-  };
-
-  const goToFavorites = () => {
-    navigate('/favorites');
-  };
-
-  const goToBookDetails = () => {
-    navigate('/book-details');
-  };
+  const goToProfile = () => navigate('/profile');
+  const goToFavorites = () => navigate('/favorites');
+  const goToBookDetails = () => navigate('/book-details');
 
   function getCookie(name) {
     let cookieValue = null;
@@ -55,7 +65,7 @@ const Home = () => {
       for (let i = 0; i < cookies.length; i++) {
         const cookie = cookies[i].trim();
         if (cookie.startsWith(`${name}=`)) {
-          cookieValue = decodeURIComponent(cookie.substring(name.lengtrh + 1));
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
           break;
         }
       }
@@ -63,80 +73,81 @@ const Home = () => {
     return cookieValue;
   }
 
-  const handleSearch = async () => {
+  const fetchBooks = async (searchQuery, pageNumber, filter) => {
+    setLoading(true);
+    setError('');
+    try {
+      const queryParams = new URLSearchParams({
+        q: searchQuery,
+        page: pageNumber,
+        filterType: filter
+      });
+      
+      const response = await fetch(
+        `http://localhost:8000/api/search/?${queryParams.toString()}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch books');
+      }
+      
+      const data = await response.json();
+      setBooks(data.books || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
     if (!query.trim()) return;
-    setLoading(true);
-    setError('');
-    setBooks([]);
-    try {
-      const books = await FetchBooks(query, 1, sortOption);
-      setBooks(books);
-      setPage(1);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-};
+    setPage(1);
+    fetchBooks(query, 1, filterType);
+  };
 
-  const handleNextPage = async () => {
+  const handleNextPage = () => {
     const nextPage = page + 1;
-    setLoading(true);
-    setError('');
-    try {
-      const books = await FetchBooks(query, nextPage, sortOption);
-      setBooks(books);
-      setPage(nextPage);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setPage(nextPage);
+    fetchBooks(query, nextPage, filterType);
   };
 
-  const handlePreviousPage = async () => {
+  const handlePreviousPage = () => {
     const prevPage = Math.max(1, page - 1);
-    setLoading(true);
-    setError('');
-    try {
-      const books = await FetchBooks(query, prevPage, sortOption);
-      setBooks(books);
-      setPage(prevPage);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setPage(prevPage);
+    fetchBooks(query, prevPage, filterType);
   };
 
-  const handleSort = async (option) => {
-    setSortOption(option);
-    setLoading(true);
-    setError('');
-    try {
-      const books = await FetchBooks(query, 1, option);
-      setBooks(books);
+  const handleFilterChange = (filter) => {
+    setFilterType(filter);
+    if (query.trim()) {
       setPage(1);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-      setSortMenuVisible(false);
+      fetchBooks(query, 1, filter);
     }
   };
 
-  const toggleSortMenu = () => {
-    setSortMenuVisible(!sortMenuVisible);
-  };
+  const handleFavorite = async (book) => {
+    if (!user?.token) return;
 
+    const isFavorite = favorites.some((fav) => fav.google_books_id === book.id);
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/favorites/${isFavorite ? 'remove' : 'add'}/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(isFavorite ? { book_id: book.id } : book),
+      });
 
-  const handleFavorite = (book) => {
-    const isFavorite = favorites.some((fav) => fav.title === book.title);
-    const updatedFavorites = isFavorite
-      ? favorites.filter((fav) => fav.title !== book.title)
-      : [...favorites, book];
-    setFavorites(updatedFavorites);
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+      if (response.ok) {
+        // Refresh favorites after adding/removing
+        fetchFavorites();
+      }
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+    }
   };
 
   return (
@@ -160,39 +171,63 @@ const Home = () => {
       </div>
 
       <div className="search-section">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search for books"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button className="search-button" onClick={handleSearch}>
-          Search
-        </button>
+        <form onSubmit={handleSearch} className="search-controls">
+          <select
+            className="filter-select"
+            value={filterType}
+            onChange={(e) => handleFilterChange(e.target.value)}
+          >
+            <option value="title">Search by Title</option>
+            <option value="author">Search by Author</option>
+            <option value="genre">Search by Genre</option>
+          </select>
+
+          <input
+            type="text"
+            className="search-input"
+            placeholder={`Search by ${filterType}...`}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          
+          <button type="submit" className="search-button">
+            Search
+          </button>
+        </form>
       </div>
 
-      <div className="sort-menu">
-        <button className="sort-button" onClick={toggleSortMenu}>
-          Sort by: {sortOption}
-        </button>
-        {sortMenuVisible && (
-          <div className="sort-dropdown">
-            <button onClick={() => handleSort('title')}>Title</button>
-            <button onClick={() => handleSort('author')}>Author</button>
-            <button onClick={() => handleSort('genre')}>Genre</button>
-            <button onClick={() => handleSort('year')}>Year</button>
+      {loading && <p className="loading-message">Loading...</p>}
+      {error && <p className="error-message">{error}</p>}
+
+      <div className="book-grid">
+        {books.map((book, index) => (
+          <div key={index} className="book-card">
+            {book.image && (
+              <img src={book.image} alt={book.title} className="book-cover" />
+            )}
+            <div className="book-info">
+              <h3 className="book-title" onClick={() => navigate('/book-details', { state: { book } })}>{book.title}</h3>
+              <p className="book-author"><strong>Author:</strong> {book.author}</p>
+              <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
+              <p className="book-year"><strong>Year:</strong> {book.year}</p>
+              <p className="book-description">{book.description}</p>
+              <StarRating
+                totalStars={5}
+                value={book.average_rating || 0}
+                onRatingChange={(newRating) => console.log(`Rated ${book.title}: ${newRating}`)}
+              />
+              <button
+                className="nav-button"
+                onClick={() => handleFavorite(book)}
+              >
+                {favorites.some((fav) => fav.google_books_id === book.id)
+                  ? 'Remove from Favorites'
+                  : 'Add to Favorites'}
+              </button>
+            </div>
           </div>
-        )}
+        ))}
       </div>
-
-      <DisplayBooks
-        books={books}
-        favorites={favorites}
-        handleFavorite={handleFavorite}
-        loading={loading}
-        error={error}
-      />
 
       <div className="pagination">
         <button onClick={handlePreviousPage} disabled={page === 1}>
