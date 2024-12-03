@@ -1,45 +1,47 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./Login";
-import Register from "./Register";
-import Home from "./Home";
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Home from './pages/Home';
+import BookDetails from './pages/Book-Details';
+import Profile from './pages/Profile'; // Import Profile component
+import Favorites from './pages/Favorites'; // Import Favorites page
+import { AuthContext } from './AuthContext';
+import AuthorDetails from "./pages/Author-Details" // Use AuthContext
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    () => JSON.parse(localStorage.getItem("isLoggedIn")) || false // Persist login state
-  );
-
-  // Function to handle login
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    localStorage.setItem("isLoggedIn", true); // Save login state
-  };
-
-  // Function to handle logout
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    localStorage.removeItem("isLoggedIn"); // Clear login state
-  };
+  const { isLoggedIn } = useContext(AuthContext); // Access login state
 
   return (
     <Router>
       <Routes>
-        {/* Redirect to Login if not logged in */}
         <Route
           path="/"
-          element={isLoggedIn ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />}
+          element={isLoggedIn ? <Home /> : <Navigate to="/login" />}
         />
         <Route
           path="/login"
-          element={<Login onLogin={handleLogin} />}
+          element={<Login />}
         />
         <Route
           path="/register"
           element={<Register />}
         />
         <Route
-          path="/home"
-          element={<Home />}
+          path="/book-details"
+          element={<BookDetails />}
+        />
+        <Route
+          path="/profile"
+          element={isLoggedIn ? <Profile /> : <Navigate to="/login" />} // Protect Profile route
+        />
+        <Route
+          path="/favorites"
+          element={isLoggedIn ? <Favorites /> : <Navigate to="/login" />} // Protect Favorites route
+        />
+        <Route
+          path="/author-details"
+          element={<AuthorDetails />}
         />
       </Routes>
     </Router>
