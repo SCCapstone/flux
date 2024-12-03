@@ -6,7 +6,8 @@ import Home from './pages/Home';
 import BookDetails from './pages/Book-Details';
 import Profile from './pages/Profile'; // Import Profile component
 import Favorites from './pages/Favorites'; // Import Favorites page
-import { AuthContext } from './AuthContext'; // Use AuthContext
+import { AuthContext } from './AuthContext';
+import AuthorDetails from "./pages/Author-Details" // Use AuthContext
 
 function App() {
   const { isLoggedIn } = useContext(AuthContext); // Access login state
@@ -37,6 +38,10 @@ function App() {
         <Route
           path="/favorites"
           element={isLoggedIn ? <Favorites /> : <Navigate to="/login" />} // Protect Favorites route
+        />
+        <Route
+          path="/author-details"
+          element={<AuthorDetails />}
         />
       </Routes>
     </Router>

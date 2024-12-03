@@ -4,6 +4,7 @@ import axios from 'axios';
 import { AuthContext } from '../AuthContext';
 import StarRating from '../components/StarRating';
 import '../styles/Home.css';
+import DisplayBooks from "../components/DisplayBooks";
 
 const Home = () => {
   const { user, handleLogout } = useContext(AuthContext);
@@ -82,15 +83,15 @@ const Home = () => {
         page: pageNumber,
         filterType: filter
       });
-      
+
       const response = await fetch(
         `http://localhost:8000/api/search/?${queryParams.toString()}`
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch books');
       }
-      
+
       const data = await response.json();
       setBooks(data.books || []);
     } catch (err) {
@@ -199,35 +200,13 @@ const Home = () => {
       {loading && <p className="loading-message">Loading...</p>}
       {error && <p className="error-message">{error}</p>}
 
-      <div className="book-grid">
-        {books.map((book, index) => (
-          <div key={index} className="book-card">
-            {book.image && (
-              <img src={book.image} alt={book.title} className="book-cover" />
-            )}
-            <div className="book-info">
-              <h3 className="book-title" onClick={() => navigate('/book-details', { state: { book } })}>{book.title}</h3>
-              <p className="book-author"><strong>Author:</strong> {book.author}</p>
-              <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
-              <p className="book-year"><strong>Year:</strong> {book.year}</p>
-              <p className="book-description">{book.description}</p>
-              <StarRating
-                totalStars={5}
-                value={book.average_rating || 0}
-                onRatingChange={(newRating) => console.log(`Rated ${book.title}: ${newRating}`)}
-              />
-              <button
-                className="nav-button"
-                onClick={() => handleFavorite(book)}
-              >
-                {favorites.some((fav) => fav.google_books_id === book.id)
-                  ? 'Remove from Favorites'
-                  : 'Add to Favorites'}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <DisplayBooks
+        books={books}
+        favorites={favorites}
+        handleFavorite={handleFavorite}
+        loading={loading}
+        error={error}
+      />
 
       <div className="pagination">
         <button onClick={handlePreviousPage} disabled={page === 1}>
