@@ -25,10 +25,10 @@ const AuthorDetails = () => {
     if (locationRouter.state?.book) {
       const data = locationRouter.state.book;
       setAuthor(data.author);
-      setQuery('inauthor:' + data.author);
+      setQuery(data.author);
       try {
         setLoading(true);
-        const fetchedBooks = await FetchBooks('inauthor:' + data.author, 1, 'title');
+        const fetchedBooks = await FetchBooks(data.author, 1, 'author');
         setBooks(fetchedBooks);
         setPage(1);
       } catch (err) {
