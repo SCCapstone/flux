@@ -4,7 +4,7 @@ import axios from 'axios';
 import { AuthContext } from '../AuthContext';
 import StarRating from '../components/StarRating';
 import '../styles/Home.css';
-import DisplayBooks from "../components/DisplayBooks"
+import DisplayBooks from "../components/DisplayBooks";
 
 const Home = () => {
   const { user, handleLogout } = useContext(AuthContext);
@@ -83,15 +83,15 @@ const Home = () => {
         page: pageNumber,
         filterType: filter
       });
-      
+
       const response = await fetch(
         `http://localhost:8000/api/search/?${queryParams.toString()}`
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch books');
       }
-      
+
       const data = await response.json();
       setBooks(data.books || []);
     } catch (err) {
