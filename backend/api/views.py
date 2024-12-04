@@ -246,8 +246,8 @@ def get_book_ratings(request, book_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_book_review(request)
-     try:
+def create_book_review(request):
+    try:
         user = request.user
         book = Book.objects.get(id=book_id)
     except Book.DoesNotExist:
