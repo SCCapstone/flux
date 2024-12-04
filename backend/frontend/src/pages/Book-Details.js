@@ -14,6 +14,7 @@ function BookDetails() {
   const [searchValue, setSearchValue] = useState('');
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(false);
+  
 
   const navigate = useNavigate();
   const locationRouter = useLocation();
@@ -23,6 +24,8 @@ function BookDetails() {
   const [rating, setRating] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [totalRatings, setTotalRatings] = useState(0);
+  const [reviews, setReviews] = useState([]); 
+  const [newReviewText, setNewReviewText] = useState(''); 
 
   useEffect(() => {
     if (locationRouter.state?.book) {
@@ -82,7 +85,16 @@ function BookDetails() {
           }
         }
       };
+      const fetchReviews = async () => {
+        try {
+          const response = await axios.get(`http://127.0.0.1:8000/api/reviews/${book.id}/`);
+          setReviews(response.data); // Update the reviews state with the fetched reviews
+        } catch (error) {
+          console.error('Error fetching reviews:', error);
+        }
+      };
       fetchRatings();
+      fetchReviews();
     }
   }, [book]);
 
@@ -122,6 +134,26 @@ function BookDetails() {
     } catch (err) {
       console.error('Error submitting rating:', err.response?.data || err.message);
       alert('Failed to submit rating. Please try again.');
+    }
+  };
+  const handleReviewSubmit = async () => {
+    if (!newReviewText || !book) return;
+
+    try {
+      const response = await axios.post(
+        'http://127.0.0.1:8000/api/reviews/',
+        {
+          review_text: newReviewText,
+          book: book.id,
+        },
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+      setReviews([...reviews, response.data]); 
+      setNewReviewText(''); 
+      console.log('Review submitted successfully:', response.data);
+    } catch (err) {
+      console.error('Error submitting review:', err);
+      alert('Failed to submit review. Please try again.');
     }
   };
 
@@ -198,6 +230,26 @@ function BookDetails() {
         onRatingChange={(value) => handleRatingSubmit(value)}
       />
       <p>Average Rating: {averageRating || 'No ratings yet'} ({totalRatings} ratings)</p>
+
+      <h3>Reviews</h3>
+      <div className="reviews">
+        {reviews.length === 0 ? (
+          <p>No reviews yet.</p>
+        ) : (
+          reviews.map((review) => (
+            <div key={review.id} className="review">
+              <p><strong>{review.user.username}</strong>: {review.review_text}</p>
+            </div>
+          ))
+        )}
+      </div>
+
+      <textarea
+        value={newReviewText}
+        onChange={(e) => setNewReviewText(e.target.value)}
+        placeholder="Write a review"
+      />
+      <button onClick={handleReviewSubmit}>Submit Review</button>
 
       <button onClick={() => navigate('/')} className="back-button">
         Back to Home

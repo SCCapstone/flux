@@ -5,15 +5,16 @@ from django.http import JsonResponse
 import requests
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from .models import Profile
+from .serializers import ReviewSerializer
 from django.core.files.storage import default_storage
-from .models import Rating, Book, Favorite
+from .models import Rating, Book, Favorite, Review
 import base64
 import os
 import time
@@ -242,6 +243,59 @@ def get_book_ratings(request, book_id):
         return Response({'average_rating': avg_rating, 'total_ratings': ratings.count()}, status=status.HTTP_200_OK)
     except Book.DoesNotExist:
         return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_book_review(request)
+     try:
+        user = request.user
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    data = request.data.copy()
+    data['book_id'] = book.id 
+    serializer = ReviewSerializer(data=data)
+
+    if serializer.is_valid():
+        # Save the review with the current user
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_review(request, rev_id):
+    try:
+        review = Review.objects.get(rev_id=rev_id, user=request.user)
+
+        data = request.data.copy()  
+        data['user'] = review.user.id  
+        data['book'] = review.book.id
+
+        serializer = ReviewSerializer(review, data=data)
+
+        if serializer.is_valid():
+            serializer.save()  
+            return Response({'message': 'Review updated successfully.', 'review': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    except Review.DoesNotExist:
+        return Response({'error': 'Review not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_review(request, rev_id):
+    try:
+        review = Review.objects.get(rev_id=rev_id, user=request.user)
+        review.delete()
+        return Response({'message': 'Review deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+    except Review.DoesNotExist:
+        return Response({'error': 'Review not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
