@@ -244,6 +244,16 @@ def get_book_ratings(request, book_id):
     except Book.DoesNotExist:
         return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['GET'])
+def get_book_reviews(request, book_id):
+    try:
+        book = Book.objects.get(id=book_id)
+        reviews = book.reviews.all()  
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data)
+    except Book.DoesNotExist:
+        return Response({"detail": "Book not found"}, status=404)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_book_review(request, book_id):

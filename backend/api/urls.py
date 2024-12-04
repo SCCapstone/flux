@@ -12,6 +12,7 @@ urlpatterns = [
     path('profile/update/', views.update_profile, name='update_profile'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('rate-book/', rate_book, name='rate_book'),
+    path('books/<int:book_id>/reviews/', views.get_book_reviews, name='get_book_reviews'),
     path('reviews/', views.create_book_review, name='create_book_review'),
     path('reviews/<int:rev_id>/', views.update_review, name='update_review'),
     path('reviews/<int:rev_id>/delete/', views.delete_review, name='delete_review'),

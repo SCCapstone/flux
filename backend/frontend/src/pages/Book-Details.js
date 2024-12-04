@@ -138,13 +138,23 @@ function BookDetails() {
   };
   const handleReviewSubmit = async () => {
     if (!newReviewText || !book) return;
+    const bookInfo = {
+      book_id: book.id,
+      title: book.title,
+    }
+    
+    const bookResponse = await axios.post(
+      'http://127.0.0.1:8000/api/books/create-or-get/',
+      bookData,
+      { headers: { Authorization: `Bearer ${user.token}` } }
+    );
 
     try {
       const response = await axios.post(
         'http://127.0.0.1:8000/api/reviews/',
         {
           review_text: newReviewText,
-          book: book.id,
+          book: bookResponse.data.id,
         },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
