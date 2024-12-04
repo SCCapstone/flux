@@ -145,7 +145,7 @@ function BookDetails() {
     
     const bookResponse = await axios.post(
       'http://127.0.0.1:8000/api/books/create-or-get/',
-      bookData,
+      bookInfo,
       { headers: { Authorization: `Bearer ${user.token}` } }
     );
 
