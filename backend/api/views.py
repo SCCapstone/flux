@@ -246,7 +246,7 @@ def get_book_ratings(request, book_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_book_review(request):
+def create_book_review(request, book_id):
     try:
         user = request.user
         book = Book.objects.get(id=book_id)
@@ -254,7 +254,7 @@ def create_book_review(request):
         return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     data = request.data.copy()
-    data['book_id'] = book.id 
+    data['book_id'] = book 
     serializer = ReviewSerializer(data=data)
 
     if serializer.is_valid():
@@ -272,8 +272,8 @@ def update_review(request, rev_id):
         review = Review.objects.get(rev_id=rev_id, user=request.user)
 
         data = request.data.copy()  
-        data['user'] = review.user.id  
-        data['book'] = review.book.id
+        data['user'] = review.user
+        data['book'] = review.book
 
         serializer = ReviewSerializer(review, data=data)
 
