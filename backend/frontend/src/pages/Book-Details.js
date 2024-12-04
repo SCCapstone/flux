@@ -87,8 +87,8 @@ function BookDetails() {
       };
       const fetchReviews = async () => {
         try {
-          const response = await axios.get(`http://127.0.0.1:8000/api/reviews/${book.id}/`);
-          setReviews(response.data); // Update the reviews state with the fetched reviews
+          const response = await axios.get(`http://127.0.0.1:8000/api/book/${book.id}/reviews/`);
+          setReviews(response.data); 
         } catch (error) {
           console.error('Error fetching reviews:', error);
         }
