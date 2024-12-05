@@ -2,26 +2,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
-<<<<<<< Updated upstream
-import requests
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import authenticate
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.decorators import api_view, permission_classes
-from .models import Profile
-from django.core.files.storage import default_storage
-from .models import Rating, Book, Favorite
-=======
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.db import models
 
 import requests
->>>>>>> Stashed changes
 import base64
 import os
 import time
@@ -34,7 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Profile, Rating, Book, Favorite, Review
 
-GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
+GOOGLE_BOOKS_API_KEY = 'AIzaSyAOo9-IH2Ox7xDLtPt58X-I7J6_174tA5s'
 
 @api_view(['POST'])
 def register_user(request):
@@ -254,8 +239,6 @@ def get_book_ratings(request, google_books_id):
             'total_ratings': 0
         })
 
-<<<<<<< Updated upstream
-=======
 @api_view(['GET'])
 def get_book_reviews(request, google_books_id):
     try:
@@ -364,7 +347,6 @@ def delete_review(request, review_id):
             status=status.HTTP_404_NOT_FOUND
         )
 
->>>>>>> Stashed changes
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_or_get_book(request):
