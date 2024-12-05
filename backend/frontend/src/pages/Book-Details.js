@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useContext } from 'react';
 import { AuthContext } from '../AuthContext';
+import Navigation from '../components/Navigation';
 import './Home';
 import '../styles/Book-Details.css';
 import StarRating from '../components/StarRating';
@@ -119,7 +120,7 @@ function BookDetails() {
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
-      const response = await axios.post(
+      await axios.post(
         'http://127.0.0.1:8000/api/rate-book/',
         { 
           book_id: bookResponse.data.id, 
@@ -179,101 +180,127 @@ function BookDetails() {
 
   if (!book) {
     return (
-      <div>
-        <p>Book details are not available. Please go back and select a book.</p>
-        <button onClick={() => navigate('/')}>Go Back</button>
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <p>Book details are not available. Please go back and select a book.</p>
+          <button onClick={() => navigate('/')} className="btn btn-primary">
+            Go Back
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="book-details-container">
-      <p>Search for a book by ISBN, Title, or Author</p>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="mb-8">
+          <form onSubmit={searchBook} className="search-form">
+            <select
+              value={searchType}
+              onChange={(e) => setSearchType(e.target.value)}
+              className="select-input"
+            >
+              <option value="isbn">ISBN</option>
+              <option value="title">Title</option>
+              <option value="author">Author</option>
+            </select>
 
-      <form onSubmit={searchBook} className="search-form">
-        <select
-          value={searchType}
-          onChange={(e) => setSearchType(e.target.value)}
-        >
-          <option value="isbn">ISBN</option>
-          <option value="title">Title</option>
-          <option value="author">Author</option>
-        </select>
-
-        <input
-          type="text"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          placeholder={`Enter ${searchType}...`}
-        />
-
-        <input type="submit" value="Search" disabled={loading}/>
-      </form>
-
-      {error && <p className="error-message">{error}</p>}
-      {loading && <p className="loading-message">Loading...</p>}
-
-      {book && (
-        <div className="book-details">
-          <h2>Book Details</h2>
-          <h3>{book.title}</h3>
-          {book.image && (
-            <img
-              src={book.image}
-              alt={book.title}
-              className="book-image"
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder={`Enter ${searchType}...`}
+              className="search-input"
             />
-          )}
-          <div className="book-info">
-            {book.author && (
-              <p><strong>Authors:</strong> {book.author}</p>
-            )}
-            {book.year && (
-              <p><strong>Published Date:</strong> {book.year}</p>
-            )}
-            {book.description && (
-              <p><strong>Description:</strong> {book.description}</p>
-            )}
-            {book.pageCount && (
-              <p><strong>Pages:</strong> {book.pageCount}</p>
-            )}
-            {book.genre && (
-              <p><strong>Genres:</strong> {book.genre}</p>
-            )}
+
+            <button type="submit" className="search-button" disabled={loading}>
+              Search
+            </button>
+          </form>
+        </div>
+
+        {error && <p className="error-message">{error}</p>}
+        {loading && <p className="loading-message">Loading...</p>}
+
+        <div className="book-details">
+          <h2 className="text-2xl font-bold mb-4">{book.title}</h2>
+          
+          <div className="book-content">
+            <div className="book-image-container">
+              {book.image && (
+                <img
+                  src={book.image}
+                  alt={book.title}
+                  className="book-image"
+                />
+              )}
+            </div>
+            
+            <div className="book-info">
+              {book.author && (
+                <p><strong>Authors:</strong> {book.author}</p>
+              )}
+              {book.year && (
+                <p><strong>Published Date:</strong> {book.year}</p>
+              )}
+              {book.description && (
+                <p><strong>Description:</strong> {book.description}</p>
+              )}
+              {book.pageCount && (
+                <p><strong>Pages:</strong> {book.pageCount}</p>
+              )}
+              {book.genre && (
+                <p><strong>Genres:</strong> {book.genre}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rating-section mt-8">
+            <h3 className="text-xl font-semibold mb-4">Rate Book</h3>
+            <StarRating
+              totalStars={5}
+              value={rating}
+              onRatingChange={(value) => handleRatingSubmit(value)}
+            />
+            <p className="mt-2">
+              Average Rating: {averageRating || 'No ratings yet'} ({totalRatings} ratings)
+            </p>
+          </div>
+
+          <div className="reviews-section mt-8">
+            <h3 className="text-xl font-semibold mb-4">Reviews</h3>
+            <div className="reviews-list">
+              {reviews.length === 0 ? (
+                <p>No reviews yet.</p>
+              ) : (
+                reviews.map((review) => (
+                  <div key={review.id} className="review-item">
+                    <p><strong>{review.user.username}</strong>: {review.review_text}</p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="add-review mt-4">
+              <textarea
+                value={newReviewText}
+                onChange={(e) => setNewReviewText(e.target.value)}
+                placeholder="Write a review"
+                className="review-textarea"
+              />
+              <button 
+                onClick={handleReviewSubmit}
+                className="submit-review-button"
+              >
+                Submit Review
+              </button>
+            </div>
           </div>
         </div>
-      )}
-      <h3>Rate this Book</h3>
-      <StarRating
-        totalStars={5}
-        value={rating}
-        onRatingChange={(value) => handleRatingSubmit(value)}
-      />
-      <p>Average Rating: {averageRating || 'No ratings yet'} ({totalRatings} ratings)</p>
-
-      <h3>Reviews</h3>
-      <div className="reviews">
-        {reviews.length === 0 ? (
-          <p>No reviews yet.</p>
-        ) : (
-          reviews.map((review) => (
-            <div key={review.id} className="review">
-              <p><strong>{review.user.username}</strong>: {review.review_text}</p>
-            </div>
-          ))
-        )}
       </div>
-
-      <textarea
-        value={newReviewText}
-        onChange={(e) => setNewReviewText(e.target.value)}
-        placeholder="Write a review"
-      />
-      <button onClick={handleReviewSubmit}>Submit Review</button>
-
-      <button onClick={() => navigate('/')} className="back-button">
-        Back to Home
-      </button>
     </div>
   );
 }

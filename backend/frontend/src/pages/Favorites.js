@@ -1,6 +1,7 @@
-import React, { useState, useContext, useMemo, useEffect } from 'react';
+import React, { useState, useContext, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
+import Navigation from '../components/Navigation';
 import '../styles/Favorites.css';
 
 const Favorites = () => {
@@ -12,13 +13,9 @@ const Favorites = () => {
     genre: 'all'
   });
 
-  useEffect(() => {
-    if (user?.token) {
-      fetchFavorites();
-    }
-  }, [user]);
-
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
+    if (!user?.token) return;
+    
     try {
       const response = await fetch('http://127.0.0.1:8000/api/favorites/', {
         headers: {
@@ -32,7 +29,11 @@ const Favorites = () => {
     } catch (error) {
       console.error('Error fetching favorites:', error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]);
 
   const { uniqueGenres, uniqueDecades } = useMemo(() => {
     const genres = new Set(favorites.map(book => book.genre));
@@ -57,7 +58,10 @@ const Favorites = () => {
       });
 
       if (response.ok) {
-        fetchFavorites();
+        await fetchFavorites();
+      } else {
+        const errorData = await response.json();
+        console.error('Server error:', errorData);
       }
     } catch (error) {
       console.error('Error removing favorite:', error);
@@ -86,90 +90,83 @@ const Favorites = () => {
   }, [favorites, activeFilters]);
 
   return (
-    <div className="favorites-container">
-      <div className="header">
-        <h1>My Favorites</h1>
-        <div className="nav-buttons">
-          <button className="nav-button" onClick={() => navigate('/')}>
-            Home
-          </button>
-          <button className="nav-button" onClick={() => navigate('/profile')}>
-            My Profile
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <h1 className="text-2xl font-bold mb-6">My Favorites</h1>
 
-      <div className="controls-container">
-        <div className="filters">
-          <div className="filter-group">
-            <label>Decade:</label>
-            <select 
-              value={activeFilters.decade}
-              onChange={(e) => handleFilterChange('decade', e.target.value)}
-            >
-              {uniqueDecades.map(decade => (
-                <option key={decade} value={decade}>
-                  {decade === 'all' ? 'All Decades' : decade}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Genre:</label>
-            <select 
-              value={activeFilters.genre}
-              onChange={(e) => handleFilterChange('genre', e.target.value)}
-            >
-              {uniqueGenres.map(genre => (
-                <option key={genre} value={genre}>
-                  {genre === 'all' ? 'All Genres' : genre}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="favorites-grid">
-        {filteredBooks.length > 0 ? (
-          filteredBooks.map((book, index) => (
-            <div key={index} className="favorite-card">
-              {book.image && (
-                <img src={book.image} alt={book.title} className="favorite-cover" />
-              )}
-              <div className="favorite-info">
-                <h3
-                  className="favorite-title"
-                  onClick={() => handleBookDetails(book)}
-                >
-                  {book.title}
-                </h3>
-                <p>
-                  <strong>Author:</strong> {book.author}
-                </p>
-                <p>
-                  <strong>Genre:</strong> {book.genre}
-                </p>
-                <p>
-                  <strong>Year:</strong> {book.year}
-                </p>
-                <button
-                  className="remove-button"
-                  onClick={() => handleRemove(book)}
-                >
-                  Remove
-                </button>
-              </div>
+        <div className="controls-container">
+          <div className="filters">
+            <div className="filter-group">
+              <label>Decade:</label>
+              <select 
+                value={activeFilters.decade}
+                onChange={(e) => handleFilterChange('decade', e.target.value)}
+              >
+                {uniqueDecades.map(decade => (
+                  <option key={decade} value={decade}>
+                    {decade === 'all' ? 'All Decades' : decade}
+                  </option>
+                ))}
+              </select>
             </div>
-          ))
-        ) : (
-          <p className="no-favorites-message">
-            {favorites.length === 0 
-              ? "You have no favorite books."
-              : "No books match the selected filters."}
-          </p>
-        )}
+
+            <div className="filter-group">
+              <label>Genre:</label>
+              <select 
+                value={activeFilters.genre}
+                onChange={(e) => handleFilterChange('genre', e.target.value)}
+              >
+                {uniqueGenres.map(genre => (
+                  <option key={genre} value={genre}>
+                    {genre === 'all' ? 'All Genres' : genre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="favorites-grid">
+          {filteredBooks.length > 0 ? (
+            filteredBooks.map((book, index) => (
+              <div key={index} className="favorite-card">
+                {book.image && (
+                  <img src={book.image} alt={book.title} className="favorite-cover" />
+                )}
+                <div className="favorite-info">
+                  <h3
+                    className="favorite-title"
+                    onClick={() => handleBookDetails(book)}
+                  >
+                    {book.title}
+                  </h3>
+                  <p>
+                    <strong>Author:</strong> {book.author}
+                  </p>
+                  <p>
+                    <strong>Genre:</strong> {book.genre}
+                  </p>
+                  <p>
+                    <strong>Year:</strong> {book.year}
+                  </p>
+                  <button
+                    className="remove-button"
+                    onClick={() => handleRemove(book)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="no-favorites-message">
+              {favorites.length === 0 
+                ? "You have no favorite books."
+                : "No books match the selected filters."}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

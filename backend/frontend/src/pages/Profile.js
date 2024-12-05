@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../AuthContext';
+import Navigation from '../components/Navigation';
 import '../styles/Profile.css';
 
 const Profile = () => {
@@ -134,109 +135,110 @@ const Profile = () => {
   }
 
   return (
-    <div className="profile-container">
-      <div className="profile-header">
-        <h1>Profile</h1>
-      </div>
-      
-      {error && <div className="alert alert-error">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {error && <div className="alert alert-error">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
 
-      <div className="profile-image-container">
-        <img 
-          src={previewImage || '/default-profile.png'} 
-          alt="Profile" 
-          className="profile-image"
-        />
-      </div>
-
-      {isEditing ? (
-        <form onSubmit={handleSubmit} className="profile-form">
-          <div className="form-group">
-            <label>Profile Image:</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="file-input"
+        <div className="profile-content">
+          <div className="profile-image-container">
+            <img 
+              src={previewImage || '/default-profile.png'} 
+              alt="Profile" 
+              className="profile-image"
             />
           </div>
 
-          <div className="form-group">
-            <label>Username:</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Email:</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Bio:</label>
-            <textarea
-              name="bio"
-              value={formData.bio}
-              onChange={handleChange}
-              className="bio-input"
-              rows="4"
-              placeholder="Tell us about yourself..."
-            />
-          </div>
+          {isEditing ? (
+            <form onSubmit={handleSubmit} className="profile-form">
+              <div className="form-group">
+                <label>Profile Image:</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="file-input"
+                />
+              </div>
 
-          <div className="form-group">
-            <label>New Password (leave blank to keep current):</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-          </div>
+              <div className="form-group">
+                <label>Username:</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Email:</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Bio:</label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  className="bio-input"
+                  rows="4"
+                  placeholder="Tell us about yourself..."
+                />
+              </div>
 
-          <div className="button-group">
-            <button type="submit" className="btn btn-primary">
-              Save Changes
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="btn btn-secondary"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="profile-info">
-          <p><strong>Username:</strong> {profile.username}</p>
-          <p><strong>Email:</strong> {profile.email}</p>
-          <div className="bio-section">
-            <h3>Bio</h3>
-            <p>{profile.bio || 'No bio yet...'}</p>
-          </div>
-          <div className="button-group">
-            <button
-              onClick={handleEdit}
-              className="btn btn-primary"
-            >
-              Edit Profile
-            </button>
-          </div>
+              <div className="form-group">
+                <label>New Password (leave blank to keep current):</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="button-group">
+                <button type="submit" className="btn btn-primary">
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="profile-info">
+              <p><strong>Username:</strong> {profile.username}</p>
+              <p><strong>Email:</strong> {profile.email}</p>
+              <div className="bio-section">
+                <h3>Bio</h3>
+                <p>{profile.bio || 'No bio yet...'}</p>
+              </div>
+              <div className="button-group">
+                <button
+                  onClick={handleEdit}
+                  className="btn btn-primary"
+                >
+                  Edit Profile
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

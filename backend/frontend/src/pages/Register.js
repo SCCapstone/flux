@@ -30,7 +30,7 @@ const Register = () => {
 
       if (response.status === 201) {
         setMessage('Account created successfully.');
-        setTimeout(() => navigate('/login'), 2000); // Redirect after 2 seconds
+        setTimeout(() => navigate('/login'), 2000);
       }
     } catch (err) {
       setError(err.response?.data?.error || 'An error occurred during registration.');

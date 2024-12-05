@@ -1,14 +1,14 @@
 import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../AuthContext'; // Import AuthContext
+import { AuthContext } from '../AuthContext';
 import '../styles/Login.css'; 
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { handleLogin } = useContext(AuthContext); // Access login function
+  const { handleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -25,41 +25,55 @@ const Login = () => {
         username,
         password,
       });
-      console.log('Login response data:', response.data);
 
-      if (response.status === 200) {
-        handleLogin(response.data); // Update global state with user data
-        navigate('/'); // Redirect to home
+      console.log('Login response:', response.data);
+
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        
+        handleLogin({
+          username: response.data.username,
+          email: response.data.email,
+          token: response.data.token,
+          bio: response.data.bio || ''
+        });
+        
+        navigate('/');
+      } else {
+        setError('Invalid login response from server');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError(err.response?.data?.error || 'An error occurred during login.');
+      setUsername('');
+      setPassword('');
     }
   };
 
-return (
-  <div className="login-container">
-    <h2>Login</h2>
-    {error && <p className="error-message">{error}</p>}
-    <form className="login-form" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button type="submit">Login</button>
-    </form>
-    <p className="register-link">
-      Don't have an account? <a href="/register">Create Account</a>
-    </p>
-  </div>
-);
+  return (
+    <div className="login-container">
+      <h2>Login</h2>
+      {error && <p className="error-message">{error}</p>}
+      <form className="login-form" onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button type="submit">Login</button>
+      </form>
+      <p className="register-link">
+        Don't have an account? <a href="/register">Create Account</a>
+      </p>
+    </div>
+  );
 };
 
 export default Login;

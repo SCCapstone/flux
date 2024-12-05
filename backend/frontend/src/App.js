@@ -4,45 +4,56 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import BookDetails from './pages/Book-Details';
-import Profile from './pages/Profile'; // Import Profile component
-import Favorites from './pages/Favorites'; // Import Favorites page
+import Profile from './pages/Profile';
+import Favorites from './pages/Favorites';
+import AuthorDetails from "./pages/Author-Details";
 import { AuthContext } from './AuthContext';
-import AuthorDetails from "./pages/Author-Details" // Use AuthContext
 
 function App() {
-  const { isLoggedIn } = useContext(AuthContext); // Access login state
+  const { isLoggedIn } = useContext(AuthContext);
+
+  const ProtectedRoute = ({ children }) => {
+    if (!isLoggedIn) {
+      return <Navigate to="/login" replace />;
+    }
+    return children;
+  };
 
   return (
     <Router>
       <Routes>
-        <Route
-          path="/"
-          element={isLoggedIn ? <Home /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/login"
-          element={<Login />}
-        />
-        <Route
-          path="/register"
-          element={<Register />}
-        />
-        <Route
-          path="/book-details"
-          element={<BookDetails />}
-        />
-        <Route
-          path="/profile"
-          element={isLoggedIn ? <Profile /> : <Navigate to="/login" />} // Protect Profile route
-        />
-        <Route
-          path="/favorites"
-          element={isLoggedIn ? <Favorites /> : <Navigate to="/login" />} // Protect Favorites route
-        />
-        <Route
-          path="/author-details"
-          element={<AuthorDetails />}
-        />
+        <Route path="/login" element={
+          isLoggedIn ? <Navigate to="/" replace /> : <Login />
+        } />
+        <Route path="/register" element={
+          isLoggedIn ? <Navigate to="/" replace /> : <Register />
+        } />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        } />
+        <Route path="/book-details" element={
+          <ProtectedRoute>
+            <BookDetails />
+          </ProtectedRoute>
+        } />
+        <Route path="/author-details" element={
+          <ProtectedRoute>
+            <AuthorDetails />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/favorites" element={
+          <ProtectedRoute>
+            <Favorites />
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

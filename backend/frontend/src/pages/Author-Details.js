@@ -1,15 +1,11 @@
-import React, {useState, useContext, useEffect} from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
-import { AuthContext } from '../AuthContext';
-import '../styles/Home.css';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import Navigation from '../components/Navigation';
 import { FetchBooks } from '../components/FetchBooks';
 import DisplayBooks from "../components/DisplayBooks.js";
-
+import '../styles/AuthorDetails.css';
 
 const AuthorDetails = () => {
-  const { handleLogout } = useContext(AuthContext);
-  const navigate = useNavigate();
   const locationRouter = useLocation();
   const [books, setBooks] = useState([]);
   const [query, setQuery] = useState('');
@@ -20,75 +16,58 @@ const AuthorDetails = () => {
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [author, setAuthor] = useState('');
-
-  const fetchBooksByAuthor = async () => {
-    if (locationRouter.state?.book) {
-      const data = locationRouter.state.book;
-      setAuthor(data.author);
-      setQuery(data.author);
-      try {
-        setLoading(true);
-        const fetchedBooks = await FetchBooks(data.author, 1, 'author');
-        setBooks(fetchedBooks);
-        setPage(1);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  const [authorStats, setAuthorStats] = useState({
+    totalBooks: 0,
+    averageRating: 0,
+    genres: []
+  });
 
   useEffect(() => {
-  fetchBooksByAuthor();
-}, [locationRouter]);
-
-  const goToProfile = () => {
-    navigate('/profile');
-  };
-
-  const goToFavorites = () => {
-    navigate('/favorites');
-  };
-
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.startsWith(`${name}=`)) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+    const fetchBooksByAuthor = async () => {
+      if (locationRouter.state?.book) {
+        const data = locationRouter.state.book;
+        setAuthor(data.author);
+        setQuery(data.author);
+        try {
+          setLoading(true);
+          const fetchedBooks = await FetchBooks(data.author, 1, 'author');
+          setBooks(fetchedBooks);
+          
+          const stats = {
+            totalBooks: fetchedBooks.length,
+            averageRating: fetchedBooks.reduce((acc, book) => acc + (book.average_rating || 0), 0) / fetchedBooks.length,
+            genres: [...new Set(fetchedBooks.map(book => book.genre).filter(Boolean))]
+          };
+          setAuthorStats(stats);
+          
+          setPage(1);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
         }
       }
-    }
-    return cookieValue;
-  }
+    };
 
-  const handleLogoutClick = async () => {
-    try {
-      await axios.post('http://127.0.0.1:8000/api/logout/', {}, {
-        headers: {
-          'X-CSRFToken': getCookie('csrftoken'),
-        },
-      });
-      handleLogout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error.response || error.message);
-      alert('Failed to logout. Please try again.');
-    }
-  };
+    fetchBooksByAuthor();
+  }, [locationRouter.state]);
 
   const handleNextPage = async () => {
-    const nextPage = page + 1;
     setLoading(true);
     setError('');
     try {
-      const books = await fetchBooksByAuthor(query, nextPage, 'title');
-      setBooks(books);
-      setPage(nextPage);
+      const newBooks = await FetchBooks(query, page + 1, 'author');
+      if (newBooks && newBooks.length > 0) {
+        setBooks(newBooks);
+        setPage(prev => prev + 1);
+        
+        const stats = {
+          totalBooks: newBooks.length,
+          averageRating: newBooks.reduce((acc, book) => acc + (book.average_rating || 0), 0) / newBooks.length,
+          genres: [...new Set(newBooks.map(book => book.genre).filter(Boolean))]
+        };
+        setAuthorStats(stats);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -97,13 +76,22 @@ const AuthorDetails = () => {
   };
 
   const handlePreviousPage = async () => {
-    const prevPage = Math.max(1, page - 1);
+    if (page <= 1) return;
     setLoading(true);
     setError('');
     try {
-      const books = await fetchBooksByAuthor(query, prevPage, 'title');
-      setBooks(books);
-      setPage(prevPage);
+      const newBooks = await FetchBooks(query, page - 1, 'author');
+      if (newBooks && newBooks.length > 0) {
+        setBooks(newBooks);
+        setPage(prev => prev - 1);
+        
+        const stats = {
+          totalBooks: newBooks.length,
+          averageRating: newBooks.reduce((acc, book) => acc + (book.average_rating || 0), 0) / newBooks.length,
+          genres: [...new Set(newBooks.map(book => book.genre).filter(Boolean))]
+        };
+        setAuthorStats(stats);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -120,37 +108,95 @@ const AuthorDetails = () => {
     localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
   };
 
-  return (
-    <div className="author-container">
-      <div className="header">
-        <h1>{author}</h1>
-        <div className="nav-buttons">
-          <button className="nav-button" onClick={goToProfile}>
-            My Profile
-          </button>
-          <button className="nav-button" onClick={goToFavorites}>
-            Favorites
-          </button>
-          <button className="logout-button" onClick={handleLogoutClick}>
-            Logout
-          </button>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="loading-container">
+            <p className="loading-message">Loading author details...</p>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      <DisplayBooks
-        books={books}
-        favorites={favorites}
-        handleFavorite={handleFavorite}
-        loading={loading}
-        error={error}
-      />
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="error-container">
+            <p className="error-message">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-      <div className="pagination">
-        <button onClick={handlePreviousPage} disabled={page === 1}>
-          Previous
-        </button>
-        <span className="page-number">Page {page}</span>
-        <button onClick={handleNextPage}>Next</button>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="author-header">
+          <h1 className="author-name">{author}</h1>
+          <div className="author-stats">
+            <div className="stat-item">
+              <span className="stat-label">Total Books</span>
+              <span className="stat-value">{authorStats.totalBooks}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Average Rating</span>
+              <span className="stat-value">
+                {authorStats.averageRating ? authorStats.averageRating.toFixed(1) : 'N/A'}
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Genres</span>
+              <span className="stat-value">{authorStats.genres.length}</span>
+            </div>
+          </div>
+          {authorStats.genres.length > 0 && (
+            <div className="genres-list">
+              <span className="stat-label">Writing in: </span>
+              {authorStats.genres.map((genre, index) => (
+                <span key={genre} className="genre-tag">
+                  {genre}
+                  {index < authorStats.genres.length - 1 ? ', ' : ''}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="books-section">
+          <h2 className="section-title">Books by {author}</h2>
+          <DisplayBooks
+            books={books}
+            favorites={favorites}
+            handleFavorite={handleFavorite}
+            loading={loading}
+            error={error}
+          />
+        </div>
+
+        <div className="pagination-container">
+          <button 
+            onClick={handlePreviousPage} 
+            disabled={page === 1}
+            className="pagination-button"
+          >
+            Previous
+          </button>
+          <span className="page-number">Page {page}</span>
+          <button 
+            onClick={handleNextPage}
+            className="pagination-button"
+            disabled={books.length === 0}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
