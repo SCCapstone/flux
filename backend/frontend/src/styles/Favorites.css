@@ -1,207 +1,196 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 .controls-container {
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-  font-family: 'Inter', sans-serif;
+ background-color: white;
+ padding: 1.5rem;
+ border-radius: 0.5rem;
+ box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+ margin-bottom: 2rem;
+ font-family: 'Inter', sans-serif;
 }
 
 .filters {
-  display: flex;
-  gap: 2rem;
-  align-items: center;
+ display: flex;
+ gap: 2rem;
+ align-items: center;
 }
 
 .filter-group {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+ display: flex;
+ align-items: center;
+ gap: 1rem;
 }
 
 .filter-group label {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #374151;
-  font-family: 'Inter', sans-serif;
+ font-size: 1.1rem;
+ font-weight: 500;
+ color: #374151;
+ font-family: 'Inter', sans-serif;
 }
 
 .filter-group select {
-  padding: 0.75rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  font-size: 1.1rem;
-  min-width: 200px;
-  background-color: white;
-  color: #111827;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
+ padding: 0.75rem;
+ border: 1px solid #e5e7eb;
+ border-radius: 0.375rem;
+ font-size: 1.1rem;
+ min-width: 200px;
+ background-color: white;
+ color: #111827;
+ cursor: pointer;
+ outline: none;
+ transition: all 0.2s ease;
+ font-family: 'Inter', sans-serif;
 }
 
 .filter-group select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+ border-color: #2563eb;
+ box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .favorites-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
-  padding: 1rem 0;
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+ gap: 20px;
+ padding: 20px;
+ justify-items: center;
 }
 
 .favorite-card {
-  background: white;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  font-family: 'Inter', sans-serif;
+ width: fit-content;
+ position: relative;
+ background: white;
+ border-radius: 8px;
+ padding: 15px;
+ box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+ transition: transform 0.2s;
+ cursor: pointer;
+ overflow: visible;
+ font-family: 'Inter', sans-serif;
 }
 
 .favorite-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+ transform: translateY(-5px);
 }
 
 .favorite-cover {
-  width: 100%;
-  height: 300px;
-  object-fit: cover;
-  border-bottom: 1px solid #e5e7eb;
+ width: 250px;
+ height: auto;
+ min-height: 375px;
+ border-radius: 0.375rem;
+ box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .favorite-info {
-  padding: 1.5rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+ padding: 0.5rem 0;
+ display: flex;
+ flex-direction: column;
+ gap: 0.25rem;
 }
 
 .favorite-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #111827;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  line-height: 1.4;
-  font-family: 'Inter', sans-serif;
-}
-
-.favorite-title:hover {
-  color: #2563eb;
+ font-size: 1rem;
+ font-weight: 600;
+ color: #111827;
+ margin: 5px 0;
+ line-height: 1.2;
+ font-family: 'Inter', sans-serif;
 }
 
 .favorite-info p {
-  font-size: 1.1rem;
-  color: #4b5563;
-  line-height: 1.5;
-  font-family: 'Inter', sans-serif;
+ color: #666;
+ font-size: 0.9rem;
+ margin: 2px 0;
+ font-family: 'Inter', sans-serif;
 }
 
 .favorite-info strong {
-  color: #111827;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
+ color: #111827;
+ font-weight: 600;
+ font-family: 'Inter', sans-serif;
 }
 
 .remove-button {
-  margin-top: auto;
-  padding: 0.75rem 1rem;
-  background-color: #dc2626;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-size: 1.1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  font-family: 'Inter', sans-serif;
+ width: 100%;
+ padding: 0.5rem 1rem;
+ background-color: #dc2626;
+ color: white;
+ border: none;
+ border-radius: 0.375rem;
+ font-size: 1rem;
+ font-weight: 500;
+ cursor: pointer;
+ transition: background-color 0.2s ease;
+ font-family: 'Inter', sans-serif;
+ margin-top: 0.5rem;
 }
 
 .remove-button:hover {
-  background-color: #b91c1c;
+ background-color: #b91c1c;
 }
 
 .no-favorites-message {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 3rem;
-  font-size: 1.2rem;
-  color: #6b7280;
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  font-family: 'Inter', sans-serif;
+ grid-column: 1 / -1;
+ text-align: center;
+ padding: 3rem;
+ font-size: 1.2rem;
+ color: #6b7280;
+ background-color: white;
+ border-radius: 0.5rem;
+ box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+ font-family: 'Inter', sans-serif;
 }
 
 .text-2xl {
-  font-size: 2rem;
-  color: #111827;
-  font-family: 'Inter', sans-serif;
+ font-size: 2rem;
+ color: #111827;
+ font-family: 'Inter', sans-serif;
 }
 
 @media (max-width: 768px) {
-  .filters {
-    flex-direction: column;
-    gap: 1rem;
-  }
+ .filters {
+   flex-direction: column;
+   gap: 1rem;
+ }
 
-  .filter-group {
-    width: 100%;
-  }
+ .filter-group {
+   width: 100%;
+ }
 
-  .filter-group select {
-    flex: 1;
-  }
+ .filter-group select {
+   flex: 1;
+ }
 
-  .favorites-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  .favorite-cover {
-    height: 250px;
-  }
-
-  .text-2xl {
-    font-size: 1.75rem;
-  }
+ .text-2xl {
+   font-size: 1.75rem;
+ }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  .favorites-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+ .favorites-grid {
+   grid-template-columns: repeat(3, 1fr);
+ }
 }
 
 .loading {
-  opacity: 0.7;
-  pointer-events: none;
+ opacity: 0.7;
+ pointer-events: none;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+ from { opacity: 0; transform: translateY(10px); }
+ to { opacity: 1; transform: translateY(0); }
 }
 
 .favorite-card {
-  animation: fadeIn 0.3s ease-out;
+ animation: fadeIn 0.3s ease-out;
 }
 
 .error-message {
-  color: #dc2626;
-  padding: 1rem;
-  background-color: #fef2f2;
-  border-radius: 0.375rem;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  font-family: 'Inter', sans-serif;
+ color: #dc2626;
+ padding: 1rem;
+ background-color: #fef2f2;
+ border-radius: 0.375rem;
+ margin-bottom: 1rem;
+ font-size: 1.1rem;
+ font-family: 'Inter', sans-serif;
 }
