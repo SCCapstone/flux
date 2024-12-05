@@ -14,11 +14,7 @@ function BookDetails() {
   const [searchValue, setSearchValue] = useState('');
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(false);
-<<<<<<< Updated upstream
-
-=======
   
->>>>>>> Stashed changes
   const navigate = useNavigate();
   const locationRouter = useLocation();
   const baseUrl = 'https://www.googleapis.com/books/v1/volumes?q=';
@@ -27,6 +23,8 @@ function BookDetails() {
   const [rating, setRating] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [totalRatings, setTotalRatings] = useState(0);
+  const [reviews, setReviews] = useState([]);
+  const [newReviewText, setNewReviewText] = useState('');
 
   useEffect(() => {
     if (locationRouter.state?.book) {
@@ -82,8 +80,6 @@ function BookDetails() {
           setTotalRatings(0);
         }
       };
-<<<<<<< Updated upstream
-=======
 
       const fetchReviews = async () => {
         try {
@@ -95,8 +91,8 @@ function BookDetails() {
         }
       };
 
->>>>>>> Stashed changes
       fetchRatings();
+      fetchReviews();
     }
   }, [book]);
 
@@ -143,8 +139,6 @@ function BookDetails() {
       alert('Failed to submit rating. Please try again.');
     }
   };
-<<<<<<< Updated upstream
-=======
 
   const handleReviewSubmit = async () => {
     if (!newReviewText || !book) return;
@@ -182,7 +176,6 @@ function BookDetails() {
       alert('Failed to submit review. Please try again.');
     }
   };
->>>>>>> Stashed changes
 
   if (!book) {
     return (
@@ -257,6 +250,26 @@ function BookDetails() {
         onRatingChange={(value) => handleRatingSubmit(value)}
       />
       <p>Average Rating: {averageRating || 'No ratings yet'} ({totalRatings} ratings)</p>
+
+      <h3>Reviews</h3>
+      <div className="reviews">
+        {reviews.length === 0 ? (
+          <p>No reviews yet.</p>
+        ) : (
+          reviews.map((review) => (
+            <div key={review.id} className="review">
+              <p><strong>{review.user.username}</strong>: {review.review_text}</p>
+            </div>
+          ))
+        )}
+      </div>
+
+      <textarea
+        value={newReviewText}
+        onChange={(e) => setNewReviewText(e.target.value)}
+        placeholder="Write a review"
+      />
+      <button onClick={handleReviewSubmit}>Submit Review</button>
 
       <button onClick={() => navigate('/')} className="back-button">
         Back to Home
