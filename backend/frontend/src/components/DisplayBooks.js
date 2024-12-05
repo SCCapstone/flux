@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import StarRating from './StarRating';
 import '../styles/DisplayBooks.css';
 
 const DisplayBooks = ({ books, favorites, handleFavorite, loading, error }) => {
@@ -35,11 +34,6 @@ const DisplayBooks = ({ books, favorites, handleFavorite, loading, error }) => {
             <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
             <p className="book-year"><strong>Year:</strong> {book.year}</p>
             <p className="book-description">{book.description}</p>
-            <StarRating
-              totalStars={5}
-              value={book.average_rating || 0}
-              onRatingChange={(newRating) => console.log(`Rated ${book.title}: ${newRating}`)}
-            />
             <button
               className="nav-button"
               onClick={() => handleFavorite(book)}
