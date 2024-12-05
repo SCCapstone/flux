@@ -24,6 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-!haug26)7a01^yu%ulzqg7qag-zmwc7)4b3349+71zj9^9plg)'
 GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
+NYT_API_KEY = 'KRTfJAmqiVJk400CgY54diypVIEl7KOv'
+NYT_BESTSELLERS_URL = 'https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

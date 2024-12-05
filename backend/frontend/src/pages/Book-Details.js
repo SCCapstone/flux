@@ -10,17 +10,10 @@ import StarRating from '../components/StarRating';
 
 function BookDetails() {
   const { user } = useContext(AuthContext);
-  const [error, setError] = useState('');
-  const [searchType, setSearchType] = useState('isbn')
-  const [searchValue, setSearchValue] = useState('');
-  const [book, setBook] = useState(null);
-  const [loading, setLoading] = useState(false);
-  
   const navigate = useNavigate();
   const locationRouter = useLocation();
-  const baseUrl = 'https://www.googleapis.com/books/v1/volumes?q=';
-  const apiKey = '&key=AIzaSyAOo9-IH2Ox7xDLtPt58X-I7J6_174tA5s';
-
+  
+  const [book, setBook] = useState(null);
   const [rating, setRating] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [totalRatings, setTotalRatings] = useState(0);
@@ -32,41 +25,6 @@ function BookDetails() {
       setBook(locationRouter.state.book);
     }
   }, [locationRouter]);
-
-  const getSearchPrefix = () => {
-    switch(searchType) {
-      case 'isbn':
-        return 'isbn:';
-      case 'title':
-        return 'intitle:';
-      case 'author':
-        return 'inauthor:';
-      default:
-        return '';
-    }
-  };
-
-  const searchBook = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const searchPrefix = getSearchPrefix();
-      const response = await fetch(`${baseUrl}${searchPrefix}${searchValue}${apiKey}`);
-      const data = await response.json();
-
-      if (data.items && data.items.length > 0) {
-        setBook(data.items[0].volumeInfo);
-      } else {
-        setError(`No books found with that ${searchType}.`);
-      }
-    } catch (err) {
-      setError('Error grabbing book information');
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (book && book.id) {
@@ -151,10 +109,9 @@ function BookDetails() {
         author: book.authors ? book.authors.join(', ') : '',
         description: book.description,
         genre: book.categories ? book.categories.join(', ') : '',
-        image: book.imageLinks?.thumbnail || '',
+        image: book.imageLinks?.thumbnail.replace('zoom=1', 'zoom=0') || '',
         year: book.publishedDate ? book.publishedDate.substring(0, 4) : ''
       };
-
       const bookResponse = await axios.post(
         'http://127.0.0.1:8000/api/books/create-or-get/',
         bookData,
@@ -196,35 +153,6 @@ function BookDetails() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="mb-8">
-          <form onSubmit={searchBook} className="search-form">
-            <select
-              value={searchType}
-              onChange={(e) => setSearchType(e.target.value)}
-              className="select-input"
-            >
-              <option value="isbn">ISBN</option>
-              <option value="title">Title</option>
-              <option value="author">Author</option>
-            </select>
-
-            <input
-              type="text"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder={`Enter ${searchType}...`}
-              className="search-input"
-            />
-
-            <button type="submit" className="search-button" disabled={loading}>
-              Search
-            </button>
-          </form>
-        </div>
-
-        {error && <p className="error-message">{error}</p>}
-        {loading && <p className="loading-message">Loading...</p>}
-
         <div className="book-details">
           <h2 className="text-2xl font-bold mb-4">{book.title}</h2>
           

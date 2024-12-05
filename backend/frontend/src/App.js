@@ -7,6 +7,7 @@ import BookDetails from './pages/Book-Details';
 import Profile from './pages/Profile';
 import Favorites from './pages/Favorites';
 import AuthorDetails from "./pages/Author-Details";
+import BestSellers from './pages/BestSellers';
 import { AuthContext } from './AuthContext';
 
 function App() {
@@ -51,6 +52,11 @@ function App() {
         <Route path="/favorites" element={
           <ProtectedRoute>
             <Favorites />
+          </ProtectedRoute>
+        } />
+        <Route path="/bestsellers" element={
+          <ProtectedRoute>
+            <BestSellers />
           </ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />

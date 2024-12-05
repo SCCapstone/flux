@@ -448,3 +448,62 @@ def verify_token(request):
     
     except (InvalidToken, TokenError) as e:
         return Response({'error': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['GET'])
+def get_bestsellers(request):
+    try:
+        params = {
+            'api-key': settings.NYT_API_KEY
+        }
+        
+        response = requests.get(settings.NYT_BESTSELLERS_URL, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            books = []
+            
+            for book in data['results']['books']:
+                # Get additional details from Google Books API for each book
+                google_query = f"{book['title']} {book['author']}"
+                google_url = f"https://www.googleapis.com/books/v1/volumes?q={google_query}&key={GOOGLE_BOOKS_API_KEY}"
+                google_response = requests.get(google_url)
+                google_data = google_response.json()
+                
+                google_book_info = {}
+                if google_response.status_code == 200 and google_data.get('items'):
+                    volume_info = google_data['items'][0]['volumeInfo']
+                    google_book_info = {
+                        'google_books_id': google_data['items'][0]['id'],
+                        'description': volume_info.get('description', ''),
+                        'categories': volume_info.get('categories', []),
+                        'image': volume_info.get('imageLinks', {}).get('thumbnail', '')
+                    }
+
+                books.append({
+                    'rank': book['rank'],
+                    'title': book['title'],
+                    'author': book['author'],
+                    'description': google_book_info.get('description', book['description']),
+                    'google_books_id': google_book_info.get('google_books_id', ''),
+                    'genre': ', '.join(google_book_info.get('categories', [])),
+                    'image': google_book_info.get('image', book['book_image']),
+                    'amazon_link': book['amazon_product_url'],
+                    'weeks_on_list': book['weeks_on_list']
+                })
+            
+            return Response({
+                'status': 'success',
+                'books': books,
+                'list_update_date': data['results']['updated']
+            })
+        else:
+            return Response({
+                'status': 'error',
+                'message': 'Failed to fetch bestsellers'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
