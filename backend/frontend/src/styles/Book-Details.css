@@ -1,204 +1,205 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 .book-details {
- background-color: white;
- border-radius: 0.5rem;
- box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
- padding: 2rem;
- font-family: 'Inter', sans-serif;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .book-image-container {
-  width: 250px;
-  display: flex;
-  justify-content: center;
+  width: max-content;
+  display: block;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
 }
 
 .book-image {
-  width: 250px;
-  height: auto;
-  min-height: 375px;
+  width: auto;
+  max-height: 375px;
   border-radius: 0.375rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  object-fit: contain;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
 }
 
 .book-content {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: max-content 1fr;
   gap: 2rem;
   margin-top: 1.5rem;
 }
 
 .book-info {
- display: flex;
- flex-direction: column;
- gap: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .book-info p {
- font-size: 1.1rem;
- line-height: 1.6;
- color: #4b5563;
- font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #4b5563;
+  font-family: 'Inter', sans-serif;
 }
 
 .book-info strong {
- color: #111827;
- font-weight: 600;
- font-size: 1.1rem;
- font-family: 'Inter', sans-serif;
+  color: #111827;
+  font-weight: 600;
+  font-size: 1.1rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .rating-section {
- border-top: 1px solid #e5e7eb;
- padding-top: 2rem;
- margin-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 2rem;
+  margin-top: 2rem;
 }
 
 .rating-section h3 {
- font-size: 1.5rem;
- margin-bottom: 1rem;
- font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .rating-section p {
- font-size: 1.1rem;
- margin-top: 1rem;
- font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .reviews-section {
- border-top: 1px solid #e5e7eb;
- padding-top: 2rem;
- margin-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 2rem;
+  margin-top: 2rem;
 }
 
 .reviews-section h3 {
- font-size: 1.5rem;
- margin-bottom: 1rem;
- font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .reviews-list {
- margin-top: 1.5rem;
- display: flex;
- flex-direction: column;
- gap: 1.25rem;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .review-item {
- background-color: #f9fafb;
- padding: 1.25rem;
- border-radius: 0.375rem;
- border-left: 4px solid #2563eb;
+  background-color: #f9fafb;
+  padding: 1.25rem;
+  border-radius: 0.375rem;
+  border-left: 4px solid #2563eb;
 }
 
 .review-item p {
- margin: 0;
- font-size: 1.1rem;
- line-height: 1.6;
- font-family: 'Inter', sans-serif;
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  font-family: 'Inter', sans-serif;
 }
 
 .review-item strong {
- color: #111827;
- font-size: 1.1rem;
- font-family: 'Inter', sans-serif;
+  color: #111827;
+  font-size: 1.1rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .add-review {
- margin-top: 2rem;
+  margin-top: 2rem;
 }
 
 .review-textarea {
- width: 100%;
- min-height: 120px;
- padding: 1rem;
- border: 1px solid #e5e7eb;
- border-radius: 0.375rem;
- margin-bottom: 1rem;
- font-size: 1.1rem;
- resize: vertical;
- transition: border-color 0.2s ease;
- font-family: 'Inter', sans-serif;
+  width: 100%;
+  min-height: 120px;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+  font-family: 'Inter', sans-serif;
 }
 
 .review-textarea:focus {
- outline: none;
- border-color: #2563eb;
- box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .submit-review-button {
- padding: 0.75rem 1.5rem;
- background-color: #2563eb;
- color: white;
- border: none;
- border-radius: 0.375rem;
- font-size: 1.1rem;
- font-weight: 500;
- cursor: pointer;
- transition: background-color 0.2s ease;
- font-family: 'Inter', sans-serif;
+  padding: 0.75rem 1.5rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-family: 'Inter', sans-serif;
 }
 
 .submit-review-button:hover {
- background-color: #1d4ed8;
+  background-color: #1d4ed8;
 }
 
 .btn-primary {
- padding: 0.75rem 1.5rem;
- background-color: #2563eb;
- color: white;
- border: none;
- border-radius: 0.375rem;
- font-size: 1.1rem;
- font-weight: 500;
- cursor: pointer;
- transition: background-color 0.2s ease;
- font-family: 'Inter', sans-serif;
+  padding: 0.75rem 1.5rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-family: 'Inter', sans-serif;
 }
 
 .btn-primary:hover {
- background-color: #1d4ed8;
+  background-color: #1d4ed8;
 }
 
 .text-2xl {
- font-size: 2rem !important;
- line-height: 1.3;
- margin-bottom: 1.5rem;
- font-family: 'Inter', sans-serif;
+  font-size: 2rem !important;
+  line-height: 1.3;
+  margin-bottom: 1.5rem;
+  font-family: 'Inter', sans-serif;
 }
 
 @media (max-width: 768px) {
- .book-content {
-   grid-template-columns: 1fr;
- }
+  .book-content {
+    grid-template-columns: 1fr;
+  }
 
- .book-image-container {
-   max-width: 250px;
-   margin: 0 auto;
- }
+  .book-image-container {
+    width: max-content;
+    margin: 0 auto;
+  }
 
- .book-image {
-   height: 375px;
- }
+  .book-details {
+    padding: 1rem;
+  }
 
- .book-details {
-   padding: 1rem;
- }
-
- .review-item {
-   padding: 1rem;
- }
- 
- .text-2xl {
-   font-size: 1.75rem !important;
- }
+  .review-item {
+    padding: 1rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.75rem !important;
+  }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
- .book-content {
-   grid-template-columns: 200px 1fr;
- }
+  .book-content {
+    grid-template-columns: max-content 1fr;
+  }
 }
