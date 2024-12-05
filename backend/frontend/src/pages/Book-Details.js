@@ -14,7 +14,11 @@ function BookDetails() {
   const [searchValue, setSearchValue] = useState('');
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(false);
+<<<<<<< Updated upstream
 
+=======
+  
+>>>>>>> Stashed changes
   const navigate = useNavigate();
   const locationRouter = useLocation();
   const baseUrl = 'https://www.googleapis.com/books/v1/volumes?q=';
@@ -69,19 +73,29 @@ function BookDetails() {
     if (book && book.id) {
       const fetchRatings = async () => {
         try {
-          const response = await axios.get(`http://127.0.0.1:8000/api/book/${book.id}/ratings/`);
+          const response = await axios.get(`http://127.0.0.1:8000/api/books/${book.id}/ratings/`);
           setAverageRating(response.data.average_rating);
           setTotalRatings(response.data.total_ratings);
         } catch (error) {
-          if (error.response?.status === 404) {
-            // Book doesn't exist in our database yet, set default values
-            setAverageRating(0);
-            setTotalRatings(0);
-          } else {
-            console.error('Error fetching ratings:', error);
-          }
+          console.error('Error fetching ratings:', error);
+          setAverageRating(0);
+          setTotalRatings(0);
         }
       };
+<<<<<<< Updated upstream
+=======
+
+      const fetchReviews = async () => {
+        try {
+          const response = await axios.get(`http://127.0.0.1:8000/api/books/${book.id}/reviews/`);
+          setReviews(response.data);
+        } catch (error) {
+          console.error('Error fetching reviews:', error);
+          setReviews([]);
+        }
+      };
+
+>>>>>>> Stashed changes
       fetchRatings();
     }
   }, [book]);
@@ -93,22 +107,22 @@ function BookDetails() {
     }
 
     try {
-      // First, ensure the book exists in our database
       const bookData = {
         google_books_id: book.id,
         title: book.title,
-        author: book.author,
-        // Add other relevant book fields
+        author: book.authors ? book.authors.join(', ') : '',
+        description: book.description,
+        genre: book.categories ? book.categories.join(', ') : '',
+        image: book.imageLinks?.thumbnail || '',
+        year: book.publishedDate ? book.publishedDate.substring(0, 4) : ''
       };
 
-      // Create or get the book first
       const bookResponse = await axios.post(
         'http://127.0.0.1:8000/api/books/create-or-get/',
         bookData,
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
-      // Then submit the rating using the database book ID
       const response = await axios.post(
         'http://127.0.0.1:8000/api/rate-book/',
         { 
@@ -117,13 +131,58 @@ function BookDetails() {
         },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
-      console.log('Rating submitted successfully:', response.data);
+
       setRating(newRating);
+      
+      // Refresh ratings
+      const newRatingsResponse = await axios.get(`http://127.0.0.1:8000/api/books/${book.id}/ratings/`);
+      setAverageRating(newRatingsResponse.data.average_rating);
+      setTotalRatings(newRatingsResponse.data.total_ratings);
     } catch (err) {
       console.error('Error submitting rating:', err.response?.data || err.message);
       alert('Failed to submit rating. Please try again.');
     }
   };
+<<<<<<< Updated upstream
+=======
+
+  const handleReviewSubmit = async () => {
+    if (!newReviewText || !book) return;
+
+    try {
+      const bookData = {
+        google_books_id: book.id,
+        title: book.title,
+        author: book.authors ? book.authors.join(', ') : '',
+        description: book.description,
+        genre: book.categories ? book.categories.join(', ') : '',
+        image: book.imageLinks?.thumbnail || '',
+        year: book.publishedDate ? book.publishedDate.substring(0, 4) : ''
+      };
+
+      const bookResponse = await axios.post(
+        'http://127.0.0.1:8000/api/books/create-or-get/',
+        bookData,
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+
+      const response = await axios.post(
+        'http://127.0.0.1:8000/api/reviews/',
+        {
+          review_text: newReviewText,
+          book: bookResponse.data.id,
+        },
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+
+      setReviews([...reviews, response.data]);
+      setNewReviewText('');
+    } catch (err) {
+      console.error('Error submitting review:', err);
+      alert('Failed to submit review. Please try again.');
+    }
+  };
+>>>>>>> Stashed changes
 
   if (!book) {
     return (
