@@ -2,24 +2,24 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.core.files.storage import default_storage
-from django.db import models
-
 import requests
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status, viewsets
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import api_view, permission_classes
+from .models import Profile
+from .serializers import ReviewSerializer
+from django.core.files.storage import default_storage
+from .models import Rating, Book, Favorite, Review
 import base64
 import os
 import time
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-
-from .models import Profile, Rating, Book, Favorite, Review
-
-GOOGLE_BOOKS_API_KEY = 'AIzaSyAOo9-IH2Ox7xDLtPt58X-I7J6_174tA5s'
+GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
 
 @api_view(['POST'])
 def register_user(request):
@@ -37,8 +37,9 @@ def register_user(request):
         return Response({'error': 'Email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = User.objects.create_user(username=username, password=password, email=email)
-    Profile.objects.create(user=user)
+    Profile.objects.create(user=user)  # Create profile for new user
     
+    # Generate token for the new user
     refresh = RefreshToken.for_user(user)
     
     return Response({
@@ -86,9 +87,11 @@ def update_profile(request):
     data = request.data
     
     try:
+        # Create media directories if they don't exist
         profile_images_path = os.path.join(settings.MEDIA_ROOT, 'profile_images')
         os.makedirs(profile_images_path, exist_ok=True)
 
+        # Update basic user info
         if 'username' in data and data['username'] != user.username:
             if User.objects.filter(username=data['username']).exists():
                 return Response({'error': 'Username already taken'}, status=status.HTTP_400_BAD_REQUEST)
@@ -102,19 +105,23 @@ def update_profile(request):
         if 'password' in data and data['password']:
             user.set_password(data['password'])
         
+        # Update profile fields
         if 'bio' in data:
             profile.bio = data['bio']
             
         if 'profile_image' in data and data['profile_image']:
+            # Delete old image if it exists
             if profile.profile_image:
                 old_image_path = os.path.join(settings.MEDIA_ROOT, str(profile.profile_image))
                 if os.path.exists(old_image_path):
                     os.remove(old_image_path)
             
+            # Handle base64 encoded image
             format, imgstr = data['profile_image'].split(';base64,')
             ext = format.split('/')[-1]
-            filename = f"profile_image_{user.username}_{int(time.time())}.{ext}"
+            filename = f"profile_image_{user.username}_{int(time.time())}.{ext}"  # Added timestamp to prevent caching
             
+            # Save the decoded image
             file_path = os.path.join(profile_images_path, filename)
             image_data = base64.b64decode(imgstr)
             with open(file_path, 'wb') as f:
@@ -125,6 +132,7 @@ def update_profile(request):
         user.save()
         profile.save()
         
+        # Generate new token
         refresh = RefreshToken.for_user(user)
         
         return Response({
@@ -167,6 +175,7 @@ def search_books(request):
         start_index = (page - 1) * max_results
 
         if query:
+            # Construct the query based on filter type using Google Books API search operators
             if filter_type == 'author':
                 formatted_query = f'inauthor:"{query}"'
             elif filter_type == 'title':
@@ -194,7 +203,9 @@ def search_books(request):
                         'image': volume_info.get('imageLinks', {}).get('thumbnail', ''),
                     })
 
+                # Paginate the books
                 paginated_books = books[start_index:start_index + max_results]
+
                 return JsonResponse({'books': paginated_books, 'page': page})
             else:
                 return JsonResponse({'error': 'Error fetching data from Google Books API'}, status=500)
@@ -224,128 +235,77 @@ def rate_book(request):
         return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
-def get_book_ratings(request, google_books_id):
+def get_book_ratings(request, book_id):
     try:
-        book = Book.objects.get(google_books_id=google_books_id)
+        book = Book.objects.get(id=book_id)
         ratings = Rating.objects.filter(book=book)
         avg_rating = ratings.aggregate(models.Avg('rating'))['rating__avg']
-        return Response({
-            'average_rating': round(avg_rating, 1) if avg_rating else 0,
-            'total_ratings': ratings.count()
-        })
+        return Response({'average_rating': avg_rating, 'total_ratings': ratings.count()}, status=status.HTTP_200_OK)
     except Book.DoesNotExist:
-        return Response({
-            'average_rating': 0,
-            'total_ratings': 0
-        })
+        return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
-def get_book_reviews(request, google_books_id):
+def get_book_reviews(request, book_id):
     try:
-        book = Book.objects.get(google_books_id=google_books_id)
-        reviews = Review.objects.filter(book=book)
-        reviews_data = []
-        
-        for review in reviews:
-            reviews_data.append({
-                'id': review.id,
-                'user': {
-                    'id': review.user.id,
-                    'username': review.user.username
-                },
-                'review_text': review.review_text,
-                'added_date': review.added_date,
-                'updated_at': review.updated_at
-            })
-        return Response(reviews_data)
+        book = Book.objects.get(id=book_id)
+        reviews = book.reviews.all()  
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data)
     except Book.DoesNotExist:
-        return Response([])
+        return Response({"detail": "Book not found"}, status=404)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_book_review(request):
+def create_book_review(request, book_id):
     try:
-        book_id = request.data.get('book')
-        review_text = request.data.get('review_text')
-        
-        if not book_id or not review_text:
-            return Response(
-                {'error': 'Book ID and review text are required.'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
+        user = request.user
         book = Book.objects.get(id=book_id)
-        review = Review.objects.create(
-            user=request.user,
-            book=book,
-            review_text=review_text
-        )
-        
-        return Response({
-            'id': review.id,
-            'user': {
-                'id': review.user.id,
-                'username': review.user.username
-            },
-            'review_text': review.review_text,
-            'added_date': review.added_date,
-            'updated_at': review.updated_at
-        }, status=status.HTTP_201_CREATED)
-        
     except Book.DoesNotExist:
-        return Response(
-            {'error': 'Book not found.'}, 
-            status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    data = request.data.copy()
+    data['book_id'] = book 
+    serializer = ReviewSerializer(data=data)
+
+    if serializer.is_valid():
+        # Save the review with the current user
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def update_review(request, review_id):
+def update_review(request, rev_id):
     try:
-        review = Review.objects.get(id=review_id, user=request.user)
-        review_text = request.data.get('review_text')
-        
-        if not review_text:
-            return Response(
-                {'error': 'Review text is required.'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        review.review_text = review_text
-        review.save()
-        
-        return Response({
-            'id': review.id,
-            'user': {
-                'id': review.user.id,
-                'username': review.user.username
-            },
-            'review_text': review.review_text,
-            'added_date': review.added_date,
-            'updated_at': review.updated_at
-        })
-        
+        review = Review.objects.get(rev_id=rev_id, user=request.user)
+
+        data = request.data.copy()  
+        data['user'] = review.user
+        data['book'] = review.book
+
+        serializer = ReviewSerializer(review, data=data)
+
+        if serializer.is_valid():
+            serializer.save()  
+            return Response({'message': 'Review updated successfully.', 'review': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
     except Review.DoesNotExist:
-        return Response(
-            {'error': 'Review not found.'}, 
-            status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({'error': 'Review not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_review(request, review_id):
+def delete_review(request, rev_id):
     try:
-        review = Review.objects.get(id=review_id, user=request.user)
+        review = Review.objects.get(rev_id=rev_id, user=request.user)
         review.delete()
-        return Response(
-            {'message': 'Review deleted successfully.'}, 
-            status=status.HTTP_204_NO_CONTENT
-        )
+        return Response({'message': 'Review deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
     except Review.DoesNotExist:
-        return Response(
-            {'error': 'Review not found.'}, 
-            status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({'error': 'Review not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -354,26 +314,20 @@ def create_or_get_book(request):
     if not google_books_id:
         return Response({'error': 'Google Books ID is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-    try:
-        book, created = Book.objects.get_or_create(
-            google_books_id=google_books_id,
-            defaults={
-                'title': request.data.get('title', ''),
-                'author': request.data.get('author', ''),
-                'description': request.data.get('description', ''),
-                'genre': request.data.get('genre', ''),
-                'image': request.data.get('image', ''),
-                'year': request.data.get('year', '')
-            }
-        )
-        return Response({
-            'id': book.id,
-            'google_books_id': book.google_books_id,
-            'title': book.title,
-            'author': book.author
-        })
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    book, created = Book.objects.get_or_create(
+        google_books_id=google_books_id,
+        defaults={
+            'title': request.data.get('title', ''),
+            'author': request.data.get('author', ''),
+
+        }
+    )
+    return Response({
+        'id': book.id,
+        'google_books_id': book.google_books_id,
+        'title': book.title,
+        'author': book.author
+    })
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

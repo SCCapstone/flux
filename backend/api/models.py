@@ -47,7 +47,7 @@ class Favorite(models.Model):
 
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reviews')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
     added_date = models.DateTimeField(auto_now_add=True)
     review_text = models.TextField()
     updated_at = models.DateTimeField(auto_now=True)
