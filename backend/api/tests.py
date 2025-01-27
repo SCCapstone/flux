@@ -1,11 +1,57 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
-from .models import Book, Rating, Review
+from .models import Book, Favorite, Rating
 from rest_framework.test import APIClient
 from rest_framework import status
 
-class BookSystemTest(TestCase):
+class BookSearchTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+    
+    def test_book_search(self):
+        response = self.client.get(
+            reverse('search_books'),
+            {'q': 'python programming', 'page': 1, 'filterType': 'title'}
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        self.assertIn('books', data)
+        self.assertIn('page', data)
+        
+        if data['books']:
+            first_book = data['books'][0]
+            expected_fields = ['id', 'title', 'author', 'description', 'image', 'genre', 'year']
+            for field in expected_fields:
+                self.assertIn(field, first_book)
+
+class UserAuthTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.register_data = {
+            'username': 'testuser',
+            'password': 'testpass123',
+            'email': 'test@example.com'
+        }
+    
+    def test_user_registration_and_login(self):
+        response = self.client.post(reverse('register'), self.register_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('token', response.data)
+        self.assertIn('user', response.data)
+        
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpass123'
+        }
+        response = self.client.post(reverse('login'), login_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)
+        self.assertIn('user', response.data)
+
+class BookRatingTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username='testuser',
@@ -22,13 +68,9 @@ class BookSystemTest(TestCase):
         )
         
         self.client = APIClient()
-        
-    def test_book_creation_and_rating(self):
         self.client.force_authenticate(user=self.user)
         
-        self.assertEqual(self.book.title, 'Test Book')
-        self.assertEqual(self.book.author, 'Test Author')
-        
+    def test_book_rating(self):
         rating_data = {
             'book_id': self.book.id,
             'rating': 4
@@ -46,26 +88,3 @@ class BookSystemTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['average_rating'], 4.0)
         self.assertEqual(response.data['total_ratings'], 1)
-
-class BookSearchBehaviorTest(TestCase):
-    def setUp(self):
-        self.client = Client()
-    
-    def test_book_search_behavior(self):
-        search_query = 'python programming'
-        response = self.client.get(
-            reverse('search_books'),
-            {'q': search_query, 'page': 1, 'filterType': 'title'}
-        )
-        
-        self.assertEqual(response.status_code, 200)
-        response_data = response.json()
-        
-        self.assertIn('books', response_data)
-        self.assertIn('page', response_data)
-        
-        if response_data['books']:
-            first_book = response_data['books'][0]
-            required_fields = ['id', 'title', 'author', 'description', 'image']
-            for field in required_fields:
-                self.assertIn(field, first_book)
