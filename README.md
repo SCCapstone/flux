@@ -75,7 +75,9 @@ Before running this test, you will need to run the debug servers for the React f
 enter the backend directory which contains the manage.py file. Inside of this directory, open a command prompt and run the following 3 commands:
 
 python manage.py makemigrations
+
 python manage.py migrate
+
 python manage.py runserver
 
 This will setup the database for the app and then run it.
