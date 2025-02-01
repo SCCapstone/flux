@@ -121,6 +121,13 @@
       ],
       "value": ""
     }, {
+      "id": "e41b7d3a-787c-460e-b01e-aa5a491bc322",
+      "comment": "",
+      "command": "open",
+      "target": "/login",
+      "targets": [],
+      "value": ""
+    }, {
       "id": "f7399e38-6ae6-40fb-86de-2e20068346b1",
       "comment": "Wait for redirect to login page",
       "command": "pause",
