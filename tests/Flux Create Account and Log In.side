@@ -121,6 +121,13 @@
       ],
       "value": ""
     }, {
+      "id": "f7399e38-6ae6-40fb-86de-2e20068346b1",
+      "comment": "Wait for redirect to login page",
+      "command": "pause",
+      "target": "",
+      "targets": [],
+      "value": "6000"
+    }, {
       "id": "73f23b7f-2dd8-4d8b-987a-e775004209e4",
       "comment": "",
       "command": "mouseOver",
@@ -133,6 +140,13 @@
         ["xpath=//button[contains(.,'Login')]", "xpath:innerText"]
       ],
       "value": ""
+    }, {
+      "id": "4d8d2f35-dbc8-48f8-a25e-431e3e9fb101",
+      "comment": "Wait",
+      "command": "pause",
+      "target": "",
+      "targets": [],
+      "value": "6000"
     }, {
       "id": "34071770-5e45-4510-b0ec-8d9094843984",
       "comment": "",
