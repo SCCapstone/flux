@@ -68,7 +68,34 @@ The website will be deployed using Heroku at a later date
 
 # Testing
 
-TBD
+To run the test, you will need the Selenium IDE which is a browser extension for chrome or firefox. It can be 
+acquired here: https://www.selenium.dev/selenium-ide/
+
+Before running this test, you will need to run the debug servers for the React frontend and Django backend. To do this,
+enter the backend directory which contains the manage.py file. Inside of this directory, open a command prompt and run the following 3 commands:
+
+python manage.py makemigrations
+
+python manage.py migrate
+
+python manage.py runserver
+
+This will setup the database for the app and then run it.
+
+After running the django server, you will need to run the React frontend by opening the backend/frontend directory.
+If this is your first time running the app, you will first need to run:
+
+npm install .
+
+After this is completed, you can start the frontend by running:
+
+npm start
+
+At this point, the flux app should be accessible at the address localhost:3000
+
+To run the test, you will need to open up the selenium IDE by clicking on the extension icon in your browser. At the top of Selenium, there is a folder icon in the top right.
+If you click on this, you can select the selenium test file that you want to run that is located in flux repo's test folder. Set the run speed to half by clicking the timer icon near the top
+of Selenium. Then you can run the test using the start button.
 
 ## Testing Technology
 
