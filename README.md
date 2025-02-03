@@ -68,8 +68,26 @@ The website will be deployed using Heroku at a later date
 
 # Testing
 
-To run the test, you will need the Selenium IDE which is a browser extension for chrome or firefox. It can be 
-acquired here: https://www.selenium.dev/selenium-ide/
+To run the test, you will need selenium-side-runner which is a command-line tool used for running selenium tests. To install this, you will first need
+node.js and npm which you can download here: https://nodejs.org/en/download
+
+After downloading and installing node.js and npm, you can install selenium-side-runner by running 
+
+npm install -g selenium-side-runner
+
+You will additionally need to install a driver for selenium to communicate with your browser. You only need to install one of the following depending on what browser
+you use.
+
+Chrome: 
+npm install -g chromedriver
+
+Edge: 
+npm install -g edgedriver
+
+Firefox: 
+npm install -g geckodriver
+
+If you use another browser, there are more instructions here: https://www.selenium.dev/selenium-ide/docs/en/introduction/command-line-runner
 
 Before running this test, you will need to run the debug servers for the React frontend and Django backend. To do this,
 enter the backend directory which contains the manage.py file. Inside of this directory, open a command prompt and run the following 3 commands:
@@ -93,9 +111,11 @@ npm start
 
 At this point, the flux app should be accessible at the address localhost:3000
 
-To run the test, you will need to open up the selenium IDE by clicking on the extension icon in your browser. At the top of Selenium, there is a folder icon in the top right.
-If you click on this, you can select the selenium test file that you want to run that is located in flux repo's test folder. Set the run speed to half by clicking the timer icon near the top
-of Selenium. Then you can run the test using the start button.
+To run the test, you will need to run the following command:
+
+selenium-side-runner /path/to/test/file.side
+
+Replace /path/to/test/file.side with the file location for where the test file is on your computer. It should be inside of the tests folder of the flux directory.
 
 ## Testing Technology
 
