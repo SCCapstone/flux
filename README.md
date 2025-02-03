@@ -122,6 +122,7 @@ Replace /path/to/test/file.side with the file location for where the test file i
 TBD
 
 ## Running Tests
+To run all unit tests: `python manage.py test`
 
 TBD
 
