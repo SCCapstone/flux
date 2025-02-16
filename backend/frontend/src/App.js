@@ -11,7 +11,7 @@ import BestSellers from './pages/BestSellers';
 import { AuthContext } from './AuthContext';
 
 function App() {
-  const { isLoggedIn } = useContext(AuthContext);
+  const { isLoggedIn, unlockAchievement } = useContext(AuthContext);
 
   const ProtectedRoute = ({ children }) => {
     if (!isLoggedIn) {
@@ -36,7 +36,7 @@ function App() {
         } />
         <Route path="/book-details" element={
           <ProtectedRoute>
-            <BookDetails />
+            <BookDetails onUnlockAchievement={unlockAchievement} />
           </ProtectedRoute>
         } />
         <Route path="/author-details" element={
