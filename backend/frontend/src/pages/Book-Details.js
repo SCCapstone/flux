@@ -55,6 +55,10 @@ function BookDetails() {
     }
   }, [book]);
 
+  const handleRateBook = (rating) => {
+    onUnlockAchievement("Rated a Book!");
+  };
+  
   const handleRatingSubmit = async (newRating) => {
     if (!book || !book.id) {
       console.error('Book ID is missing. Cannot submit rating.');

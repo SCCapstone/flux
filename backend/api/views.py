@@ -20,6 +20,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 from .models import Profile, Rating, Book, Favorite, Review
+from .utils import check_and_award_achievements
 
 GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
 
@@ -507,3 +508,32 @@ def get_bestsellers(request):
             'status': 'error',
             'message': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['POST'])
+def rate_book(request):
+    user = request.user
+    book_id = request.data.get('book_id')
+    rating_value = request.data.get('rating')
+
+    if not (1 <= rating_value <= 5):
+        return Response({'error': 'Rating must be between 1 and 5.'}, status=400)
+
+    rating, created = Rating.objects.update_or_create(
+        user=user,
+        book_id=book_id,
+        defaults={'rating': rating_value}
+    )
+
+    # Check for achievements
+    check_and_award_achievements(user)
+
+    return Response({'message': 'Rating submitted successfully!'})
+
+@api_view(['GET'])
+def get_user_achievements(request):
+    user = request.user
+    achievements = UserAchievement.objects.filter(user=user).select_related('achievement')
+    return Response([
+        {"name": a.achievement.name, "description": a.achievement.description}
+        for a in achievements
+])
