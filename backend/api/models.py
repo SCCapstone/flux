@@ -17,13 +17,11 @@ class Book(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    bio = models.TextField(blank=True, null=True)
-    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
-    xp = models.IntegerField(default=0)
-    achievements = models.JSONField(default=list)  # Stores badges
-
+    bio = models.TextField(max_length=500, blank=True)
+    profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.png')
+    
     def __str__(self):
-        return f"{self.user.username}'s Profile"
+        return f"{self.user.username}'s profile"
     
 class Rating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -56,20 +54,3 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.book.title} review by {self.user.username}"
-    
-class Achievement(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-    badge_image = models.ImageField(upload_to='badges/', null=True, blank=True)
-    criteria = models.CharField(max_length=255)  # e.g., "rate_5_books"
-
-    def __str__(self):
-        return self.name
-
-class UserAchievement(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
-    earned_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.achievement.name}"

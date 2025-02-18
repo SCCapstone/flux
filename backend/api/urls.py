@@ -22,5 +22,4 @@ urlpatterns = [
     path('favorites/remove/', views.remove_favorite, name='remove_favorite'),
     path('verify-token/', views.verify_token, name='verify_token'),
     path('bestsellers/', views.get_bestsellers, name='get_bestsellers'),
-    path('achievements/', get_user_achievements, name='user_achievements'),
 ]

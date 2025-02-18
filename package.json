@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "axios": "^1.7.7",
-    "lucide-react": "^0.466.0",
     "react-router-dom": "^6.28.0",
     "requirements": "^2.0.2"
   }
