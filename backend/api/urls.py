@@ -22,4 +22,7 @@ urlpatterns = [
     path('favorites/remove/', views.remove_favorite, name='remove_favorite'),
     path('verify-token/', views.verify_token, name='verify_token'),
     path('bestsellers/', views.get_bestsellers, name='get_bestsellers'),
+    path('books/<str:google_books_id>/status/', views.get_book_status, name='get_book_status'),
+    path('books/<str:google_books_id>/update-status/', views.update_book_status, name='update_book_status'),
+    path('books/status/', views.get_user_book_statuses, name='get_user_book_statuses'),
 ]

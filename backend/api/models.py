@@ -54,3 +54,20 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.book.title} review by {self.user.username}"
+
+class UserBookStatus(models.Model):
+    STATUS_CHOICES = [
+        ('WILL_READ', 'Will Read'),
+        ('READING', 'Reading'),
+        ('FINISHED', 'Finished'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='book_statuses')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+
+    class Meta:
+        unique_together = ('user', 'book')
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.book.title} is {self.status}"

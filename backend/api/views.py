@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.db import models
+import json
 
 import requests
 import base64
@@ -19,7 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
-from .models import Profile, Rating, Book, Favorite, Review
+from .models import Profile, Rating, Book, Favorite, Review, UserBookStatus
 
 GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
 
@@ -507,3 +508,91 @@ def get_bestsellers(request):
             'status': 'error',
             'message': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_book_status(request, google_books_id):
+    user = request.user
+    try:
+        book = Book.objects.get(google_books_id=google_books_id)
+        user_book_status = UserBookStatus.objects.get(user=user, book=book)
+        return Response({
+            'status': user_book_status.status,
+        }, status=status.HTTP_200_OK)
+    except Book.DoesNotExist:
+        return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+    except UserBookStatus.DoesNotExist:
+        return Response({"status": "NOT_ADDED"}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_book_status(request, google_books_id):
+    user = request.user
+    new_status = request.data.get('status')
+    if new_status not in dict(UserBookStatus.STATUS_CHOICES).keys():
+        return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Get book data from api to create book object for later
+    url = f"https://www.googleapis.com/books/v1/volumes/{google_books_id}?key={GOOGLE_BOOKS_API_KEY}"
+    response = requests.get(url)
+    if response.status_code != 200:
+        return Response(
+            {"error": "Book not found in Google Books API"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    book_data = response.json()
+    volume_info = book_data.get('volumeInfo', {})
+    if not volume_info:
+        return Response(
+            {"error": "No book data found in Google Books API response"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    title = volume_info.get('title', 'No Title')
+    authors = volume_info.get('authors', ['Unknown Author'])
+    description = volume_info.get('description', 'No Description')
+    categories = volume_info.get('categories', ['Unknown Genre'])
+    image_links = volume_info.get('imageLinks', {})
+    published_date = volume_info.get('publishedDate', '')
+
+    book, created = Book.objects.update_or_create(
+        google_books_id=google_books_id,
+        defaults={
+            'title': title,
+            'author': ', '.join(authors),
+            'description': description,
+            'genre': ', '.join(categories),
+            'image': image_links.get('thumbnail', ''),
+            'year': published_date[:4] if published_date else 'N/A'
+        }
+    )
+
+    user_book_status, created = UserBookStatus.objects.get_or_create(
+        user=user,
+        book=book,
+        defaults={'status': new_status}
+    )
+
+    if not created:
+        user_book_status.status = new_status
+        user_book_status.save()
+
+    return Response({
+        'status': user_book_status.status,
+    }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_book_statuses(request):
+    user = request.user
+    user_book_statuses = UserBookStatus.objects.filter(user=user).select_related('book')
+    data = [
+        {
+            'book_id': status.book.google_books_id,
+            'title': status.book.title,
+            'status': status.status,
+        }
+        for status in user_book_statuses
+    ]
+    return Response(data, status=status.HTTP_200_OK)
