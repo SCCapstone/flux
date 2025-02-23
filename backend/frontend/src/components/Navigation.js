@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, User, Heart, LogOut, TrendingUp } from 'lucide-react';
+import { Home, User, Heart, LogOut, TrendingUp, List } from 'lucide-react';
 import { AuthContext } from '../AuthContext';
 import { useContext } from 'react';
 import '../styles/Navigation.css';
@@ -62,6 +62,14 @@ const Navigation = () => {
             >
               <Heart className="w-4 h-4" />
               Favorites
+            </button>
+
+            <button
+              onClick={() => navigate("/readlists")}
+              className={`nav-link ${location.pathname === "/readlists" ? "active" : ""}`}
+            >
+              <List className="w-4 h-4" />
+              Readlists
             </button>
 
             <button

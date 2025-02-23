@@ -71,3 +71,21 @@ class UserBookStatus(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s {self.book.title} is {self.status}"
+
+class Readlist(models.Model):
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="readlists")
+    is_favorites = models.BooleanField(default=False) 
+    
+    def __str__(self):
+        return f"{self.name} ({self.user.username})"
+
+class ReadlistBook(models.Model):
+    readlist = models.ForeignKey(Readlist, on_delete=models.CASCADE, related_name="books")
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('readlist', 'book')
+
+    def __str__(self):
+        return f"{self.book.title} in {self.readlist.name}"

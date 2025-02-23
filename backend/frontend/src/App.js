@@ -9,6 +9,7 @@ import Favorites from './pages/Favorites';
 import AuthorDetails from "./pages/Author-Details";
 import BestSellers from './pages/BestSellers';
 import { AuthContext } from './AuthContext';
+import Readlist from "./pages/Readlist";
 
 function App() {
   const { isLoggedIn } = useContext(AuthContext);
@@ -52,6 +53,11 @@ function App() {
         <Route path="/favorites" element={
           <ProtectedRoute>
             <Favorites />
+          </ProtectedRoute>
+        } />
+        <Route path="/readlists" element={
+          <ProtectedRoute>
+            <Readlist />
           </ProtectedRoute>
         } />
         <Route path="/bestsellers" element={

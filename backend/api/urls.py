@@ -25,4 +25,8 @@ urlpatterns = [
     path('books/<str:google_books_id>/status/', views.get_book_status, name='get_book_status'),
     path('books/<str:google_books_id>/update-status/', views.update_book_status, name='update_book_status'),
     path('books/status/', views.get_user_book_statuses, name='get_user_book_statuses'),
+    path("readlists/", views.get_readlists, name="get_readlists"),
+    path("readlists/create/", views.create_readlist, name="create_readlist"),
+    path("readlists/delete/<int:readlist_id>/", views.delete_readlist, name="delete_readlist"),
+    path("readlists/update/", views.update_readlist_books, name="update_readlist_books"),
 ]

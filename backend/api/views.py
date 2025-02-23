@@ -20,7 +20,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
-from .models import Profile, Rating, Book, Favorite, Review, UserBookStatus
+from .models import Profile, Rating, Book, Favorite, Review, UserBookStatus, Readlist, ReadlistBook
+from .serializers import ReadlistSerializer
 
 GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
 
@@ -596,3 +597,63 @@ def get_user_book_statuses(request):
         for status in user_book_statuses
     ]
     return Response(data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_readlists(request):
+    readlists = Readlist.objects.filter(user=request.user)
+    serializer = ReadlistSerializer(readlists, many=True)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_readlist(request):
+    name = request.data.get("name")
+    if not name:
+        return Response({"error": "Readlist name is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    readlist, created = Readlist.objects.get_or_create(user=request.user, name=name, defaults={"is_favorites": False})
+    return Response(ReadlistSerializer(readlist).data, status=status.HTTP_201_CREATED)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_readlist(request, readlist_id):
+    try:
+        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
+        readlist.delete()
+        return Response({"message": "Readlist deleted"}, status=status.HTTP_204_NO_CONTENT)
+    except Readlist.DoesNotExist:
+        return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_readlist_books(request):
+    book_id = request.data.get("book_id")
+    readlist_ids = request.data.get("readlist_ids", [])
+
+    if not book_id:
+        return Response({"error": "Book ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        book, _ = Book.objects.get_or_create(
+            google_books_id=book_id,
+            defaults={
+                "title": request.data.get("title", ""),
+                "author": request.data.get("author", ""),
+                "description": request.data.get("description", ""),
+                "genre": request.data.get("genre", ""),
+                "image": request.data.get("image", ""),
+                "year": request.data.get("year", "")
+            }
+        )
+
+        for readlist in Readlist.objects.filter(user=request.user):
+            if readlist.id in readlist_ids:
+                ReadlistBook.objects.get_or_create(readlist=readlist, book=book)
+            else:
+                ReadlistBook.objects.filter(readlist=readlist, book=book).delete()
+
+        return Response({"message": "Book readlist associations updated"})
+
+    except Book.DoesNotExist:
+        return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
