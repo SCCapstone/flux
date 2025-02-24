@@ -25,4 +25,13 @@ urlpatterns = [
     path('books/<str:google_books_id>/status/', views.get_book_status, name='get_book_status'),
     path('books/<str:google_books_id>/update-status/', views.update_book_status, name='update_book_status'),
     path('books/status/', views.get_user_book_statuses, name='get_user_book_statuses'),
+    path('achievements/', views.get_achievements, name='get_achievements'),
+    path('user/achievements/', views.get_user_achievements, name='get_user_achievements'),
+    path('user/points/', views.get_user_points, name='get_user_points'),
+    path('user/points/history/', views.get_points_history, name='get_points_history'),
+    path('challenges/', views.get_challenges, name='get_challenges'),
+    path('challenges/join/', views.join_challenge, name='join_challenge'),
+    path('user/challenges/', views.get_user_challenges, name='get_user_challenges'),
+    path('user/streak/', views.get_reading_streak, name='get_reading_streak'),
+    path('leaderboard/', views.get_leaderboard, name='get_leaderboard'),
 ]
