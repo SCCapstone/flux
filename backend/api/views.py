@@ -657,3 +657,26 @@ def update_readlist_books(request):
 
     except Book.DoesNotExist:
         return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_readlist_books(request, readlist_id):
+    """Retrieve books from a specific readlist"""
+    try:
+        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
+        books = readlist.books.all()
+        book_data = [
+            {
+                "id": book.id,
+                "google_books_id": book.google_books_id,
+                "title": book.title,
+                "author": book.author,
+                "genre": book.genre,
+                "year": book.year,
+                "image": book.image,
+            }
+            for book in books
+        ]
+        return Response({"name": readlist.name, "books": book_data}, status=status.HTTP_200_OK)
+    except Readlist.DoesNotExist:
+        return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)

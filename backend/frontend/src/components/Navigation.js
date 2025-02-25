@@ -1,24 +1,21 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, User, Heart, LogOut, TrendingUp, List } from 'lucide-react';
 import { AuthContext } from '../AuthContext';
-import { useContext } from 'react';
-import '../styles/Navigation.css';
+import "../styles/Navigation.css";
 
 const Navigation = () => {
   const { handleLogout } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const handleLogoutClick = async () => {
     try {
       const response = await fetch('http://127.0.0.1:8000/api/logout/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        headers: { 'Content-Type': 'application/json' },
       });
-  
+
       if (response.ok) {
         handleLogout();
         navigate('/login');
@@ -38,7 +35,7 @@ const Navigation = () => {
           <div className="navbar-brand">
             <h1>Welcome to Flux!</h1>
           </div>
-          
+
           <div className="nav-links">
             <button
               onClick={() => navigate('/')}
@@ -47,7 +44,7 @@ const Navigation = () => {
               <Home className="w-4 h-4" />
               Home
             </button>
-            
+
             <button
               onClick={() => navigate('/profile')}
               className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}
@@ -55,7 +52,7 @@ const Navigation = () => {
               <User className="w-4 h-4" />
               Profile
             </button>
-            
+
             <button
               onClick={() => navigate('/favorites')}
               className={`nav-link ${location.pathname === '/favorites' ? 'active' : ''}`}
@@ -65,8 +62,12 @@ const Navigation = () => {
             </button>
 
             <button
-              onClick={() => navigate("/readlists")}
-              className={`nav-link ${location.pathname === "/readlists" ? "active" : ""}`}
+              onClick={() => navigate('/readlists')}
+              className={`nav-link ${
+                location.pathname === '/readlists' || location.pathname.startsWith('/readlist/')
+                  ? 'active'
+                  : ''
+              }`}
             >
               <List className="w-4 h-4" />
               Readlists
@@ -80,10 +81,7 @@ const Navigation = () => {
               Bestsellers
             </button>
 
-            <button
-              onClick={handleLogoutClick}
-              className="nav-link logout-link"
-            >
+            <button onClick={handleLogoutClick} className="nav-link logout-link">
               <LogOut className="w-4 h-4" />
               Logout
             </button>

@@ -17,16 +17,27 @@ urlpatterns = [
     path('reviews/<int:review_id>/delete/', views.delete_review, name='delete_review'),
     path('books/<str:google_books_id>/ratings/', views.get_book_ratings, name='get_book_ratings'),
     path('books/create-or-get/', views.create_or_get_book, name='create_or_get_book'),
+    
+    # Favorites
     path('favorites/', views.get_favorites, name='get_favorites'),
     path('favorites/add/', views.add_favorite, name='add_favorite'),
     path('favorites/remove/', views.remove_favorite, name='remove_favorite'),
+    
+    # Token Verification
     path('verify-token/', views.verify_token, name='verify_token'),
+    
+    # Bestsellers
     path('bestsellers/', views.get_bestsellers, name='get_bestsellers'),
+
+    # Book Status
     path('books/<str:google_books_id>/status/', views.get_book_status, name='get_book_status'),
     path('books/<str:google_books_id>/update-status/', views.update_book_status, name='update_book_status'),
     path('books/status/', views.get_user_book_statuses, name='get_user_book_statuses'),
+    
+    # Readlists
     path("readlists/", views.get_readlists, name="get_readlists"),
     path("readlists/create/", views.create_readlist, name="create_readlist"),
+    path("readlists/<int:readlist_id>/", views.get_readlist_books, name="get_readlist_books"),  # ✅ NEW Endpoint
     path("readlists/delete/<int:readlist_id>/", views.delete_readlist, name="delete_readlist"),
     path("readlists/update/", views.update_readlist_books, name="update_readlist_books"),
 ]

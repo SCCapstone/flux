@@ -76,16 +76,17 @@ class Readlist(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="readlists")
     is_favorites = models.BooleanField(default=False) 
+    books = models.ManyToManyField(Book, through="ReadlistBook", related_name="readlists")  # ✅ Added ManyToManyField
     
     def __str__(self):
         return f"{self.name} ({self.user.username})"
 
 class ReadlistBook(models.Model):
-    readlist = models.ForeignKey(Readlist, on_delete=models.CASCADE, related_name="books")
+    readlist = models.ForeignKey(Readlist, on_delete=models.CASCADE, related_name="readlist_books")  # ✅ Changed related_name
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('readlist', 'book')
 
     def __str__(self):
-        return f"{self.book.title} in {self.readlist.name}"
+        return f"{self.book.title} in {self.readlist.name}"  # ✅ Fixed missing closing quote
