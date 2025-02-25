@@ -42,6 +42,8 @@ def register_user(request):
 
     user = User.objects.create_user(username=username, password=password, email=email)
     Profile.objects.create(user=user)  # Create profile for new user
+
+    Readlist.objects.create(user=user, name="Favorites", is_favorites=True)
     
     refresh = RefreshToken.for_user(user)
     
@@ -601,9 +603,16 @@ def get_user_book_statuses(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_readlists(request):
-    readlists = Readlist.objects.filter(user=request.user)
+    user = request.user
+
+    # Ensure "Favorites" always exists for the user
+    favorites, created = Readlist.objects.get_or_create(user=user, name="Favorites", is_favorites=True)
+
+    # Fetch all readlists, ensuring "Favorites" is included
+    readlists = Readlist.objects.filter(user=user).order_by("is_favorites")  # Ensures "Favorites" appears first
     serializer = ReadlistSerializer(readlists, many=True)
     return Response(serializer.data)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -620,10 +629,16 @@ def create_readlist(request):
 def delete_readlist(request, readlist_id):
     try:
         readlist = Readlist.objects.get(id=readlist_id, user=request.user)
+
+        if readlist.is_favorites:
+            return Response({"error": "Favorites readlist cannot be deleted."}, status=status.HTTP_403_FORBIDDEN)
+
         readlist.delete()
         return Response({"message": "Readlist deleted"}, status=status.HTTP_204_NO_CONTENT)
+
     except Readlist.DoesNotExist:
         return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -634,29 +649,34 @@ def update_readlist_books(request):
     if not book_id:
         return Response({"error": "Book ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        book, _ = Book.objects.get_or_create(
-            google_books_id=book_id,
-            defaults={
-                "title": request.data.get("title", ""),
-                "author": request.data.get("author", ""),
-                "description": request.data.get("description", ""),
-                "genre": request.data.get("genre", ""),
-                "image": request.data.get("image", ""),
-                "year": request.data.get("year", "")
-            }
-        )
+    # Fetch or create book and update fields unconditionally
+    book, created = Book.objects.get_or_create(google_books_id=book_id)
 
-        for readlist in Readlist.objects.filter(user=request.user):
-            if readlist.id in readlist_ids:
-                ReadlistBook.objects.get_or_create(readlist=readlist, book=book)
-            else:
-                ReadlistBook.objects.filter(readlist=readlist, book=book).delete()
+    # Force update all book fields
+    updated_fields = {
+        "title": request.data.get("title", "").strip(),
+        "author": request.data.get("author", "").strip(),
+        "description": request.data.get("description", "").strip(),
+        "genre": request.data.get("genre", "").strip(),
+        "image": request.data.get("image", "").strip(),
+        "year": request.data.get("year", "").strip(),
+    }
 
-        return Response({"message": "Book readlist associations updated"})
+    # Only update non-empty fields
+    for field, value in updated_fields.items():
+        if value:
+            setattr(book, field, value)
 
-    except Book.DoesNotExist:
-        return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+    book.save()  # ✅ Ensure the book is updated in the database
+
+    # Handle ReadlistBook relationships
+    for readlist in Readlist.objects.filter(user=request.user):
+        if readlist.id in readlist_ids:
+            ReadlistBook.objects.get_or_create(readlist=readlist, book=book)
+        else:
+            ReadlistBook.objects.filter(readlist=readlist, book=book).delete()
+
+    return Response({"message": "Book readlist associations updated"})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -664,7 +684,8 @@ def get_readlist_books(request, readlist_id):
     """Retrieve books from a specific readlist"""
     try:
         readlist = Readlist.objects.get(id=readlist_id, user=request.user)
-        books = readlist.books.all()
+        books = readlist.books.all()  # ✅ This ensures books are retrieved correctly
+
         book_data = [
             {
                 "id": book.id,
@@ -677,6 +698,13 @@ def get_readlist_books(request, readlist_id):
             }
             for book in books
         ]
+
+        print(f"📌 Books in '{readlist.name}': {book_data}")  # ✅ Debugging output
+
         return Response({"name": readlist.name, "books": book_data}, status=status.HTTP_200_OK)
+
     except Readlist.DoesNotExist:
         return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+

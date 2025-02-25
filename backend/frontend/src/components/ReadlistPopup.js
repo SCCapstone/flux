@@ -1,30 +1,49 @@
 import React, { useState, useEffect } from "react";
+import "../styles/ReadlistPopup.css";
 
 const ReadlistPopup = ({ book, onClose, onSave }) => {
   const [readlists, setReadlists] = useState([]);
   const [selectedReadlists, setSelectedReadlists] = useState(new Set());
+  const [newReadlistName, setNewReadlistName] = useState("");
+  const [creatingReadlist, setCreatingReadlist] = useState(false);
 
   useEffect(() => {
-    // Fetch the user's readlists from the backend
+    // Fetch user's readlists
     const fetchReadlists = async () => {
       try {
         const response = await fetch("http://127.0.0.1:8000/api/readlists/", {
           headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
+
         if (response.ok) {
           const data = await response.json();
           setReadlists(data);
+
           // Check which readlists the book is already in
-          const currentLists = new Set(
-            data
-              .filter((list) =>
-                list.books.some((b) => b.google_books_id === book.google_books_id)
-              )
-              .map((list) => list.id)
-          );
-          setSelectedReadlists(currentLists);
+          if (book?.google_books_id) {
+            const currentLists = new Set(
+              data
+                .filter((list) =>
+                  list.books.some(
+                    (b) => b.google_books_id === book.google_books_id
+                  )
+                )
+                .map((list) => list.id)
+            );
+            setSelectedReadlists(currentLists);
+          } else if (book?.id) {
+            // If your 'book' uses just an 'id'
+            const currentLists = new Set(
+              data
+                .filter((list) =>
+                  list.books.some((b) => b.id === book.id)
+                )
+                .map((list) => list.id)
+            );
+            setSelectedReadlists(currentLists);
+          }
         }
       } catch (error) {
         console.error("Error fetching readlists:", error);
@@ -34,6 +53,7 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
     if (book) fetchReadlists();
   }, [book]);
 
+  // Toggle readlist selection
   const handleToggleReadlist = (readlistId) => {
     setSelectedReadlists((prev) => {
       const newSet = new Set(prev);
@@ -46,22 +66,81 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
     });
   };
 
+  // Create / Update readlist associations
   const handleSave = async () => {
+    // Determine the unique ID we send to backend: 'id' or 'google_books_id'
+    // If you're consistently using 'id' on the backend, make sure 'book.id' is valid
+    if (!book || (!book.id && !book.google_books_id)) {
+      console.error("❌ Error: Missing book_id in frontend. Book object:", book);
+      return;
+    }
+
+    // Build the request payload with all fields:
+    const payload = {
+      // Use 'book.id' if your backend expects that; otherwise 'book.google_books_id'
+      book_id: book.id || book.google_books_id,
+
+      // Send the rest of the details so the backend can update them
+      title: book.title || "",
+      author: book.author || "",
+      description: book.description || "",
+      genre: book.genre || "",
+      image: book.image || "",
+      year: book.year || "",
+
+      // Which readlists to place the book in
+      readlist_ids: Array.from(selectedReadlists),
+    };
+
+    console.log("📤 Sending update request with payload:", payload);
+
     try {
-      await fetch("http://127.0.0.1:8000/api/readlists/update/", {
+      const response = await fetch("http://127.0.0.1:8000/api/readlists/update/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({
-          book_id: book.google_books_id,
-          readlist_ids: Array.from(selectedReadlists),
-        }),
+        body: JSON.stringify(payload),
       });
-      onSave();
+
+      const data = await response.json();
+      console.log("📥 Received response:", data);
+
+      if (!response.ok) {
+        console.error("❌ Error updating readlists:", data);
+        return;
+      }
+
+      onSave(); // Close the popup
     } catch (error) {
-      console.error("Error updating readlists:", error);
+      console.error("❌ Error updating readlists:", error);
+    }
+  };
+
+  // Create a new readlist
+  const handleCreateReadlist = async () => {
+    if (!newReadlistName.trim()) return;
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/readlists/create/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ name: newReadlistName }),
+      });
+
+      if (response.ok) {
+        const newReadlist = await response.json();
+        setReadlists((prev) => [...prev, newReadlist]);
+        setSelectedReadlists((prev) => new Set([...prev, newReadlist.id]));
+        setNewReadlistName("");
+        setCreatingReadlist(false);
+      }
+    } catch (error) {
+      console.error("Error creating readlist:", error);
     }
   };
 
@@ -72,7 +151,8 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
       <div className="readlist-popup">
         <h2>Manage Readlists</h2>
         <p>Select the readlists to add/remove this book:</p>
-        <ul>
+
+        <ul className="readlist-options">
           {readlists.map((readlist) => (
             <li key={readlist.id}>
               <label>
@@ -86,6 +166,28 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
             </li>
           ))}
         </ul>
+
+        {/* Create a new readlist UI */}
+        {creatingReadlist ? (
+          <div className="create-readlist">
+            <input
+              type="text"
+              placeholder="New Readlist Name"
+              value={newReadlistName}
+              onChange={(e) => setNewReadlistName(e.target.value)}
+            />
+            <button onClick={handleCreateReadlist}>Create</button>
+            <button onClick={() => setCreatingReadlist(false)}>Cancel</button>
+          </div>
+        ) : (
+          <button
+            className="add-readlist-button"
+            onClick={() => setCreatingReadlist(true)}
+          >
+            + Create New Readlist
+          </button>
+        )}
+
         <div className="popup-actions">
           <button onClick={handleSave}>Apply</button>
           <button onClick={onClose}>Cancel</button>

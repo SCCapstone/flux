@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
+import "../styles/BookList.css";  
 
 const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
   const { user } = useContext(AuthContext);
@@ -13,7 +14,6 @@ const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
 
   const fetchBooks = useCallback(async () => {
     if (!user?.token) return;
-
     try {
       const response = await fetch(apiEndpoint, {
         headers: { Authorization: `Bearer ${user.token}` },
@@ -21,7 +21,8 @@ const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
 
       if (response.ok) {
         const data = await response.json();
-        setBooks(data.books || data); // Handling different API structures
+        // If the API returns { name, books }, we only need data.books
+        setBooks(data.books || data); 
       }
     } catch (error) {
       console.error("Error fetching books:", error);
@@ -32,6 +33,7 @@ const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
     fetchBooks();
   }, [fetchBooks]);
 
+  // Unique genres / decades to build the filter dropdowns
   const { uniqueGenres, uniqueDecades } = useMemo(() => {
     const genres = new Set(books.map((book) => book.genre));
     const decades = new Set(
@@ -45,7 +47,7 @@ const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
 
   const handleRemoveBook = async (book) => {
     if (!allowRemove) return;
-
+    // Example: removing from the readlist is done by sending an empty readlist_ids array
     try {
       const response = await fetch("http://127.0.0.1:8000/api/readlists/update/", {
         method: "POST",
@@ -80,21 +82,28 @@ const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
     }));
   };
 
+  // Filter the books based on decade and genre
   const filteredBooks = useMemo(() => {
     return books.filter((book) => {
       const matchesDecade =
         activeFilters.decade === "all" ||
         `${Math.floor(parseInt(book.year) / 10) * 10}s` === activeFilters.decade;
-      const matchesGenre = activeFilters.genre === "all" || book.genre === activeFilters.genre;
+      const matchesGenre =
+        activeFilters.genre === "all" || book.genre === activeFilters.genre;
       return matchesDecade && matchesGenre;
     });
   }, [books, activeFilters]);
 
   return (
-    <div>
-      <h1>{title}</h1>
+    <div className="booklist-container">
+      {/* If you want a header or title */}
+      <div className="booklist-header">
+        <h1>{title}</h1>
+        {/* (Optional) Place any 'Add Book' or other actions here */}
+      </div>
 
-      <div>
+      {/* Filter controls */}
+      <div className="booklist-controls">
         <label>Decade:</label>
         <select onChange={(e) => handleFilterChange("decade", e.target.value)}>
           {uniqueDecades.map((decade) => (
@@ -114,22 +123,46 @@ const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
         </select>
       </div>
 
-      <div>
+      {/* Grid of books */}
+      <div className="booklist-grid">
         {filteredBooks.length > 0 ? (
           filteredBooks.map((book, index) => (
-            <div key={index}>
+            <div key={index} className="booklist-card">
+              {/* Book cover */}
               {book.image && (
-                <img src={book.image} alt={book.title} onClick={() => handleBookDetails(book)} />
+                <img
+                  src={book.image}
+                  alt={book.title}
+                  className="booklist-cover"
+                  onClick={() => handleBookDetails(book)}
+                />
               )}
-              <h3 onClick={() => handleBookDetails(book)}>{book.title}</h3>
-              <p><strong>Author:</strong> {book.author}</p>
-              <p><strong>Genre:</strong> {book.genre}</p>
-              <p><strong>Year:</strong> {book.year}</p>
-              {allowRemove && <button onClick={() => handleRemoveBook(book)}>Remove</button>}
+
+              {/* Book info */}
+              <div className="booklist-info">
+                <h3 className="booklist-title" onClick={() => handleBookDetails(book)}>
+                  {book.title}
+                </h3>
+                <p className="booklist-author">
+                  <strong>Author:</strong> {book.author}
+                </p>
+                <p className="booklist-genre">
+                  <strong>Genre:</strong> {book.genre}
+                </p>
+                <p className="booklist-year">
+                  <strong>Year:</strong> {book.year}
+                </p>
+
+                {allowRemove && (
+                  <button className="remove-button" onClick={() => handleRemoveBook(book)}>
+                    Remove
+                  </button>
+                )}
+              </div>
             </div>
           ))
         ) : (
-          <p>No books found.</p>
+          <p className="no-results">No books found.</p>
         )}
       </div>
     </div>

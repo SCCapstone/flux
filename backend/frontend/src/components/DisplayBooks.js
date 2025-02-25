@@ -24,13 +24,33 @@ const DisplayBooks = ({ books, loading, error }) => {
       {books.map((book, index) => (
         <div key={index} className="book-card">
           {book.image && (
-            <img src={book.image} alt={book.title} className="book-cover" />
+            <img 
+              src={book.image} 
+              alt={book.title} 
+              className="book-cover" 
+              onClick={() => {
+                console.log("Navigating to Book Details:", book);
+                navigate("/book-details", { state: { book } });
+              }} 
+            />
           )}
           <div className="book-info">
-            <h3 className="book-title" onClick={() => navigate("/book-details", { state: { book } })}>
+            <h3 
+              className="book-title" 
+              onClick={() => {
+                console.log("Navigating to Book Details:", book);
+                navigate("/book-details", { state: { book } });
+              }}
+            >
               {book.title}
             </h3>
-            <p className="book-author" onClick={() => navigate("/author-details", { state: { book } })}>
+            <p 
+              className="book-author" 
+              onClick={() => {
+                console.log("Navigating to Author Details:", book);
+                navigate("/author-details", { state: { book } });
+              }}
+            >
               {book.author}
             </p>
             <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
@@ -40,7 +60,10 @@ const DisplayBooks = ({ books, loading, error }) => {
             {/* New Button: Opens Readlist Popup */}
             <button
               className="nav-button"
-              onClick={() => setSelectedBook(book)}
+              onClick={() => {
+                console.log("Opening ReadlistPopup for book:", book);
+                setSelectedBook(book);
+              }}
             >
               Manage Readlists
             </button>
@@ -53,7 +76,10 @@ const DisplayBooks = ({ books, loading, error }) => {
         <ReadlistPopup
           book={selectedBook}
           onClose={() => setSelectedBook(null)}
-          onSave={() => setSelectedBook(null)}
+          onSave={() => {
+            console.log("Closing ReadlistPopup after save");
+            setSelectedBook(null);
+          }}
         />
       )}
     </div>
