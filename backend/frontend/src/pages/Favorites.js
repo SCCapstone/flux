@@ -3,14 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
 import Navigation from '../components/Navigation';
 import '../styles/Favorites.css';
+import '../styles/Gamification.css';
 
 const Favorites = () => {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user, refreshGamificationData } = useContext(AuthContext);
   const [favorites, setFavorites] = useState([]);
   const [activeFilters, setActiveFilters] = useState({
     decade: 'all',
     genre: 'all'
+  });
+  
+  // Notification state
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'success',
+    points: 0
   });
 
   const fetchFavorites = useCallback(async () => {
@@ -59,6 +68,8 @@ const Favorites = () => {
 
       if (response.ok) {
         await fetchFavorites();
+        // Refresh gamification data to update achievements
+        refreshGamificationData();
       } else {
         const errorData = await response.json();
         console.error('Server error:', errorData);
@@ -92,8 +103,35 @@ const Favorites = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
+      
+      {/* Notification */}
+      {notification.show && (
+        <div className="fixed top-20 right-4 max-w-xs bg-white rounded-lg shadow-lg p-4 border-l-4 border-green-500 z-50 animate-fade-in">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">{notification.message}</p>
+              {notification.points > 0 && (
+                <p className="text-sm text-gray-600 font-bold">+{notification.points} points earned!</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">My Favorites</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">My Favorites</h1>
+          
+          {/* Collection Count Badge */}
+          <div className="bg-blue-100 text-blue-800 py-2 px-4 rounded-full font-bold">
+            <span>{favorites.length} {favorites.length === 1 ? 'Book' : 'Books'} in Collection</span>
+          </div>
+        </div>
 
         <div className="controls-container">
           <div className="filters">

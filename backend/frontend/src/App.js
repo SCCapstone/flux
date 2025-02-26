@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -9,17 +9,23 @@ import Favorites from './pages/Favorites';
 import AuthorDetails from "./pages/Author-Details";
 import BestSellers from './pages/BestSellers';
 import { AuthContext } from './AuthContext';
+import LoadingSpinner from './components/LoadingSpinner';
+
+// Lazy loaded gamification pages
+const Challenges = lazy(() => import('./components/Challenges'));
+const Leaderboard = lazy(() => import('./components/Leaderboard'));
+const Achievements = lazy(() => import('./components/Achievements'));
 
 function App() {
   const { isLoggedIn } = useContext(AuthContext);
-
+  
   const ProtectedRoute = ({ children }) => {
     if (!isLoggedIn) {
       return <Navigate to="/login" replace />;
     }
     return children;
   };
-
+  
   return (
     <Router>
       <Routes>
@@ -59,6 +65,30 @@ function App() {
             <BestSellers />
           </ProtectedRoute>
         } />
+        
+        {/* Lazy loaded gamification routes */}
+        <Route path="/challenges" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner message="Loading challenges..." />}>
+              <Challenges />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/leaderboard" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner message="Loading leaderboard..." />}>
+              <Leaderboard />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/achievements" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner message="Loading achievements..." />}>
+              <Achievements />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
