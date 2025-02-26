@@ -25,4 +25,13 @@ urlpatterns = [
     path('books/<str:google_books_id>/status/', views.get_book_status, name='get_book_status'),
     path('books/<str:google_books_id>/update-status/', views.update_book_status, name='update_book_status'),
     path('books/status/', views.get_user_book_statuses, name='get_user_book_statuses'),
+    
+    # User following system routes
+    path('users/follow/', views.follow_user, name='follow_user'),
+    path('users/unfollow/', views.unfollow_user, name='unfollow_user'),
+    path('users/<str:username>/followers/', views.get_followers, name='get_followers'),
+    path('users/<str:username>/following/', views.get_following, name='get_following'),
+    path('users/<str:username>/check-follow/', views.check_follow_status, name='check_follow_status'),
+    path('users/<str:username>/profile/', views.get_user_profile, name='get_user_profile'),
+    path('users/search/', views.search_users, name='search_users'),
 ]

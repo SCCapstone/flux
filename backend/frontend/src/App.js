@@ -8,6 +8,8 @@ import Profile from './pages/Profile';
 import Favorites from './pages/Favorites';
 import AuthorDetails from "./pages/Author-Details";
 import BestSellers from './pages/BestSellers';
+import UserProfile from './pages/UserProfile';
+import UserSearch from './pages/UserSearch';
 import { AuthContext } from './AuthContext';
 
 function App() {
@@ -57,6 +59,16 @@ function App() {
         <Route path="/bestsellers" element={
           <ProtectedRoute>
             <BestSellers />
+          </ProtectedRoute>
+        } />
+        <Route path="/user/:username" element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/search-users" element={
+          <ProtectedRoute>
+            <UserSearch />
           </ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />

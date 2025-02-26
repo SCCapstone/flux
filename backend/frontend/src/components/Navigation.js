@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, User, Heart, LogOut, TrendingUp } from 'lucide-react';
+import { Home, User, Heart, LogOut, TrendingUp, Search } from 'lucide-react';
 import { AuthContext } from '../AuthContext';
 import { useContext } from 'react';
 import '../styles/Navigation.css';
@@ -70,6 +70,14 @@ const Navigation = () => {
             >
               <TrendingUp className="w-4 h-4" />
               Bestsellers
+            </button>
+            
+            <button
+              onClick={() => navigate('/search-users')}
+              className={`nav-link ${location.pathname === '/search-users' ? 'active' : ''}`}
+            >
+              <Search className="w-4 h-4" />
+              Find Users
             </button>
 
             <button

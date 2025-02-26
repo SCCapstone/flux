@@ -20,7 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
-from .models import Profile, Rating, Book, Favorite, Review, UserBookStatus
+from .models import Profile, Rating, Book, Favorite, Review, UserBookStatus, UserFollow
 
 GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
 
@@ -596,3 +596,271 @@ def get_user_book_statuses(request):
         for status in user_book_statuses
     ]
     return Response(data, status=status.HTTP_200_OK)
+
+# User Following System Views
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def follow_user(request):
+    """Follow a user"""
+    username = request.data.get('username')
+    
+    if not username:
+        return Response({'error': 'Username is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if username == request.user.username:
+        return Response({'error': 'You cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Print debug information
+        print(f"User {request.user.username} is trying to follow {username}")
+        
+        user_to_follow = User.objects.get(username=username)
+        print(f"Found user to follow: {user_to_follow.username} (ID: {user_to_follow.id})")
+        
+        # Check if already following
+        existing_follow = UserFollow.objects.filter(
+            follower=request.user,
+            followed=user_to_follow
+        ).exists()
+        
+        if existing_follow:
+            print(f"User {request.user.username} is already following {username}")
+            return Response({
+                'message': f'Already following {username}',
+                'is_following': True
+            })
+            
+        # Create the follow relationship
+        follow = UserFollow.objects.create(
+            follower=request.user,
+            followed=user_to_follow
+        )
+        print(f"Created follow relationship: {follow.id}")
+            
+        return Response({
+            'message': f'Now following {username}',
+            'is_following': True
+        })
+    except User.DoesNotExist:
+        print(f"User not found: {username}")
+        return Response({'error': f"User '{username}' not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error following user: {str(e)}")
+        return Response({'error': f"Error following user: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def unfollow_user(request):
+    """Unfollow a user"""
+    username = request.data.get('username')
+    
+    if not username:
+        return Response({'error': 'Username is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Print debug information
+        print(f"User {request.user.username} is trying to unfollow {username}")
+        
+        user_to_unfollow = User.objects.get(username=username)
+        print(f"Found user to unfollow: {user_to_unfollow.username} (ID: {user_to_unfollow.id})")
+        
+        # Find and delete the follow relationship
+        follow = UserFollow.objects.filter(
+            follower=request.user,
+            followed=user_to_unfollow
+        )
+        
+        if follow.exists():
+            follow_count = follow.count()
+            follow.delete()
+            print(f"Deleted {follow_count} follow relationship(s)")
+            return Response({
+                'message': f'Unfollowed {username}',
+                'is_following': False
+            })
+        else:
+            print(f"User {request.user.username} was not following {username}")
+            return Response({
+                'message': f'You were not following {username}',
+                'is_following': False
+            })
+    except User.DoesNotExist:
+        print(f"User not found: {username}")
+        return Response({'error': f"User '{username}' not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error unfollowing user: {str(e)}")
+        return Response({'error': f"Error unfollowing user: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_follow_status(request, username):
+    """Check if the authenticated user is following the specified user"""
+    try:
+        # Print debug information
+        print(f"Checking if {request.user.username} is following {username}")
+        
+        user_to_check = User.objects.get(username=username)
+        is_following = UserFollow.objects.filter(
+            follower=request.user,
+            followed=user_to_check
+        ).exists()
+        
+        print(f"Follow status: {is_following}")
+        
+        return Response({'is_following': is_following})
+    except User.DoesNotExist:
+        print(f"User not found: {username}")
+        return Response({'error': f"User '{username}' not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error checking follow status: {str(e)}")
+        return Response({'error': f"Error checking follow status: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_followers(request, username):
+    """Get a list of users who follow the specified user"""
+    try:
+        user = User.objects.get(username=username)
+        followers = UserFollow.objects.filter(followed=user).select_related('follower')
+        
+        followers_data = []
+        for follow in followers:
+            try:
+                profile = Profile.objects.get(user=follow.follower)
+                profile_image = request.build_absolute_uri(profile.profile_image.url) if profile.profile_image else None
+            except Profile.DoesNotExist:
+                profile_image = None
+                
+            followers_data.append({
+                'username': follow.follower.username,
+                'profile_image': profile_image,
+                'follow_date': follow.created_at
+            })
+            
+        return Response(followers_data)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_following(request, username):
+    """Get a list of users that the specified user follows"""
+    try:
+        user = User.objects.get(username=username)
+        following = UserFollow.objects.filter(follower=user).select_related('followed')
+        
+        following_data = []
+        for follow in following:
+            try:
+                profile = Profile.objects.get(user=follow.followed)
+                profile_image = request.build_absolute_uri(profile.profile_image.url) if profile.profile_image else None
+            except Profile.DoesNotExist:
+                profile_image = None
+                
+            following_data.append({
+                'username': follow.followed.username,
+                'profile_image': profile_image,
+                'follow_date': follow.created_at
+            })
+            
+        return Response(following_data)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_user_profile(request, username):
+    """Get a user's profile with additional follow statistics"""
+    try:
+        # Print debug information
+        print(f"Fetching profile for username: {username}")
+        
+        # Get the user
+        user = User.objects.get(username=username)
+        print(f"User found: {user.username} (ID: {user.id})")
+        
+        # Get or create profile
+        try:
+            profile = Profile.objects.get(user=user)
+        except Profile.DoesNotExist:
+            profile = Profile.objects.create(user=user)
+            print(f"Created new profile for user {username}")
+        
+        # Count followers and following
+        followers_count = UserFollow.objects.filter(followed=user).count()
+        following_count = UserFollow.objects.filter(follower=user).count()
+        print(f"Followers: {followers_count}, Following: {following_count}")
+        
+        # Get recent reviews by the user
+        recent_reviews = Review.objects.filter(user=user).order_by('-added_date')[:5]
+        reviews_data = []
+        
+        for review in recent_reviews:
+            reviews_data.append({
+                'id': review.id,
+                'book': {
+                    'id': review.book.id,
+                    'google_books_id': review.book.google_books_id,
+                    'title': review.book.title,
+                    'author': review.book.author,
+                    'image': review.book.image
+                },
+                'review_text': review.review_text,
+                'added_date': review.added_date
+            })
+        
+        # Check if logged-in user is following this profile
+        is_following = False
+        if request.user.is_authenticated:
+            is_following = UserFollow.objects.filter(
+                follower=request.user,
+                followed=user
+            ).exists()
+        
+        # Prepare response data
+        response_data = {
+            'username': user.username,
+            'email': user.email,  # Add email to the response
+            'bio': profile.bio,
+            'profile_image': request.build_absolute_uri(profile.profile_image.url) if profile.profile_image else None,
+            'followers_count': followers_count,
+            'following_count': following_count,
+            'is_following': is_following,
+            'recent_reviews': reviews_data
+        }
+        
+        print(f"Successfully prepared profile data for {username}")
+        return Response(response_data)
+        
+    except User.DoesNotExist:
+        print(f"User not found: {username}")
+        return Response({'error': f"User '{username}' not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error fetching profile: {str(e)}")
+        return Response({'error': f"Error fetching profile: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def search_users(request):
+    """Search for users by username"""
+    query = request.GET.get('q', '')
+    
+    if not query:
+        return Response([])
+    
+    users = User.objects.filter(username__icontains=query)[:20]  # Limit to 20 results
+    
+    results = []
+    for user in users:
+        try:
+            profile = Profile.objects.get(user=user)
+            profile_image = request.build_absolute_uri(profile.profile_image.url) if profile.profile_image else None
+            bio = profile.bio
+        except Profile.DoesNotExist:
+            profile_image = None
+            bio = ''
+            
+        results.append({
+            'username': user.username,
+            'profile_image': profile_image,
+            'bio': bio
+        })
+        
+    return Response(results)

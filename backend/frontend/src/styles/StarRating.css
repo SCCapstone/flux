@@ -1,61 +1,61 @@
 .star-rating {
-    display: inline-flex;
-    gap: 0.25rem;
-    align-items: center;
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.star {
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.star:hover,
+.star.active {
+  transform: scale(1.1);
+}
+
+.star.filled {
+  color: #ffd700;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.star.empty {
+  color: #e5e7eb;
+}
+
+.star-rating:hover .star {
+  color: #e5e7eb;
+}
+
+.star-rating .star:hover ~ .star {
+  color: #e5e7eb;
+}
+
+.star:hover,
+.star:hover ~ .star {
+  transform: scale(1.1);
+}
+
+@keyframes starPop {
+  0% {
+    transform: scale(1);
   }
-  
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.star.selected {
+  animation: starPop 0.3s ease;
+}
+
+@media (max-width: 640px) {
   .star {
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
+    font-size: 1.25rem;
   }
-  
-  .star:hover,
-  .star.active {
-    transform: scale(1.1);
-  }
-  
-  .star.filled {
-    color: #ffd700;
-    text-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
-  }
-  
-  .star.empty {
-    color: #e5e7eb;
-  }
-  
-  .star-rating:hover .star {
-    color: #e5e7eb;
-  }
-  
-  .star-rating .star:hover ~ .star {
-    color: #e5e7eb;
-  }
-  
-  .star:hover,
-  .star:hover ~ .star {
-    transform: scale(1.1);
-  }
-  
-  @keyframes starPop {
-    0% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.2);
-    }
-    100% {
-      transform: scale(1);
-    }
-  }
-  
-  .star.selected {
-    animation: starPop 0.3s ease;
-  }
-  
-  @media (max-width: 640px) {
-    .star {
-      font-size: 1.25rem;
-    }
-  }
+}
