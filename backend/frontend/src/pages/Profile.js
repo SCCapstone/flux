@@ -1,129 +1,151 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../AuthContext';
 import Navigation from '../components/Navigation';
-import '../styles/UserProfile.css';
+import '../styles/Profile.css';
+import '../styles/Gamification.css';
 
 const Profile = () => {
-  const navigate = useNavigate();
-  const { user, handleLogin, isLoggedIn } = useContext(AuthContext);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('reviews');
-  const [followers, setFollowers] = useState([]);
-  const [following, setFollowing] = useState([]);
-  const [loadingFollowers, setLoadingFollowers] = useState(false);
-  const [loadingFollowing, setLoadingFollowing] = useState(false);
+  const { user, handleLogin } = useContext(AuthContext);
+  const [profile, setProfile] = useState({ 
+    username: '', 
+    email: '', 
+    bio: '', 
+    profile_image: null 
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    username: user?.username || '',
-    email: user?.email || '',
+    username: '',
+    email: '',
     password: '',
     bio: '',
     profile_image: ''
   });
   const [previewImage, setPreviewImage] = useState(null);
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // Gamification states
+  const [activeTab, setActiveTab] = useState('profile');
+  const [userPoints, setUserPoints] = useState(null);
+  const [achievements, setAchievements] = useState([]);
+  const [readingStreak, setReadingStreak] = useState(null);
+  const [challenges, setChallenges] = useState([]);
+  const [pointsHistory, setPointsHistory] = useState([]);
+  const [recentReviews, setRecentReviews] = useState([]);
+  const [isLoadingGamification, setIsLoadingGamification] = useState(true);
+  
+  // User following states
+  const [followers, setFollowers] = useState([]);
+  const [following, setFollowing] = useState([]);
+  const [loadingFollowers, setLoadingFollowers] = useState(false);
+  const [loadingFollowing, setLoadingFollowing] = useState(false);
 
-  // This useEffect fetches the profile data
   useEffect(() => {
-    const fetchProfile = async () => {
-      // Get auth data from localStorage if not in context
-      const storedToken = localStorage.getItem('token');
-      const storedUserStr = localStorage.getItem('user');
-      let storedUser = null;
-      
-      try {
-        if (storedUserStr) {
-          storedUser = JSON.parse(storedUserStr);
+    if (user?.token) {
+      // Fetch profile data
+      fetch('http://127.0.0.1:8000/api/profile/', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
         }
-      } catch (e) {
-        console.error('Error parsing stored user:', e);
-      }
-      
-      // Try to use context user first, fall back to localStorage
-      const token = user?.token || storedToken;
-      const username = user?.username || storedUser?.username;
-      
-      if (!token || !username) {
-        setLoading(false);
-        setError('Authentication data missing. Please log in again.');
-        return;
-      }
-      
-      try {
-        setLoading(true);
-        
-        const response = await axios.get(`http://127.0.0.1:8000/api/users/${username}/profile/`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          timeout: 10000
-        });
-        
-        if (response.data) {
-          setProfile(response.data);
-          
-          // Set form data from profile
+      })
+        .then(response => response.json())
+        .then(data => {
+          setProfile(data);
           setFormData({
-            username: username,
-            email: response.data.email || user?.email || '',
+            username: data.username,
+            email: data.email,
             password: '',
-            bio: response.data.bio || '',
+            bio: data.bio || '',
             profile_image: ''
           });
+          setPreviewImage(data.profile_image);
           
-          setPreviewImage(response.data.profile_image);
-          setError(null);
-          
-          // If we got a successful response but our context is empty, update the context
-          if (!user && storedUser) {
-            handleLogin({
-              username: storedUser.username,
-              email: response.data.email || storedUser.email || '',
-              token: storedToken,
-              bio: response.data.bio || ''
-            });
-          }
-        } else {
-          setError('Profile data is empty.');
-        }
-      } catch (err) {
-        if (err.response?.status === 401) {
-          setError('Authentication error: Your session may have expired. Please log in again.');
-        } else {
-          setError(`Failed to load profile data: ${err.message || 'Unknown error'}`);
-        }
-      } finally {
-        setLoading(false);
+          // Initial fetch of followers and following
+          fetchFollowers();
+          fetchFollowing();
+        })
+        .catch(err => console.error('Error fetching profile:', err));
+      
+      // Fetch gamification data
+      fetchGamificationData();
+      
+      // Fetch reviews
+      fetchUserReviews();
+    }
+  }, [user]);
+  
+  // Fetch followers/following when tab changes
+  useEffect(() => {
+    if (user?.token) {
+      if (activeTab === 'followers') {
+        fetchFollowers();
+      } else if (activeTab === 'following') {
+        fetchFollowing();
       }
-    };
-
-    fetchProfile();
-  }, [user, handleLogin]);
-
+    }
+  }, [activeTab, user?.token]);
+  
+  const fetchGamificationData = async () => {
+    if (!user?.token) return;
+    
+    setIsLoadingGamification(true);
+    try {
+      const headers = {
+        'Authorization': `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      };
+      
+      // Fetch points and stats
+      const pointsResponse = await fetch('http://127.0.0.1:8000/api/user/points/', { headers });
+      const pointsData = await pointsResponse.json();
+      setUserPoints(pointsData);
+      
+      // Fetch achievements
+      const achievementsResponse = await fetch('http://127.0.0.1:8000/api/user/achievements/', { headers });
+      const achievementsData = await achievementsResponse.json();
+      setAchievements(achievementsData);
+      
+      // Fetch reading streak
+      const streakResponse = await fetch('http://127.0.0.1:8000/api/user/streak/', { headers });
+      const streakData = await streakResponse.json();
+      setReadingStreak(streakData);
+      
+      // Fetch challenges
+      const challengesResponse = await fetch('http://127.0.0.1:8000/api/user/challenges/', { headers });
+      const challengesData = await challengesResponse.json();
+      setChallenges(challengesData);
+      
+      // Fetch points history
+      const historyResponse = await fetch('http://127.0.0.1:8000/api/user/points/history/', { headers });
+      const historyData = await historyResponse.json();
+      setPointsHistory(historyData);
+      
+    } catch (error) {
+      console.error('Error fetching gamification data:', error);
+    } finally {
+      setIsLoadingGamification(false);
+    }
+  };
+  
   const fetchFollowers = async () => {
-    if (loadingFollowers || !profile) return;
-    
-    // Get auth data
-    const storedToken = localStorage.getItem('token');
-    const token = user?.token || storedToken;
-    const username = user?.username || profile?.username;
-    
-    if (!token || !username) return;
+    if (loadingFollowers || !user?.username) return;
     
     try {
       setLoadingFollowers(true);
       
-      const response = await axios.get(`http://127.0.0.1:8000/api/users/${username}/followers/`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.username}/followers/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${user.token}`
         }
       });
       
-      setFollowers(response.data || []);
+      if (response.ok) {
+        const data = await response.json();
+        setFollowers(data || []);
+      } else {
+        setFollowers([]);
+      }
     } catch (error) {
       console.error('Error fetching followers:', error);
       setFollowers([]);
@@ -133,25 +155,23 @@ const Profile = () => {
   };
 
   const fetchFollowing = async () => {
-    if (loadingFollowing || !profile) return;
-    
-    // Get auth data
-    const storedToken = localStorage.getItem('token');
-    const token = user?.token || storedToken;
-    const username = user?.username || profile?.username;
-    
-    if (!token || !username) return;
+    if (loadingFollowing || !user?.username) return;
     
     try {
       setLoadingFollowing(true);
       
-      const response = await axios.get(`http://127.0.0.1:8000/api/users/${username}/following/`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.username}/following/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${user.token}`
         }
       });
       
-      setFollowing(response.data || []);
+      if (response.ok) {
+        const data = await response.json();
+        setFollowing(data || []);
+      } else {
+        setFollowing([]);
+      }
     } catch (error) {
       console.error('Error fetching following:', error);
       setFollowing([]);
@@ -159,85 +179,26 @@ const Profile = () => {
       setLoadingFollowing(false);
     }
   };
-
-  // Pre-fetch followers/following data when profile is loaded
-  useEffect(() => {
-    if (profile) {
-      fetchFollowers();
-      fetchFollowing();
-    }
-  }, [profile]);
-
-  // Also fetch followers/following when tab changes
-  useEffect(() => {
-    if (profile) {
-      if (activeTab === 'followers') {
-        fetchFollowers();
-      } else if (activeTab === 'following') {
-        fetchFollowing();
-      }
-    }
-  }, [activeTab, profile]);
-
-  const handleRefreshData = () => {
-    setLoading(true);
-    setError(null);
-    
-    // Force a re-fetch of profile data
-    const storedToken = localStorage.getItem('token');
-    const storedUserStr = localStorage.getItem('user');
-    let storedUser = null;
+  
+  const fetchUserReviews = async () => {
+    if (!user?.token || !user?.username) return;
     
     try {
-      if (storedUserStr) {
-        storedUser = JSON.parse(storedUserStr);
-      }
-    } catch (e) {
-      console.error('Error parsing stored user:', e);
-    }
-    
-    const token = user?.token || storedToken;
-    const username = user?.username || storedUser?.username;
-    
-    if (token && username) {
-      axios.get(`http://127.0.0.1:8000/api/users/${username}/profile/`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.username}/profile/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${user.token}`
         }
-      })
-      .then(response => {
-        setProfile(response.data);
-        
-        // Also update the email field specifically
-        if (response.data.email) {
-          // Update the form data
-          setFormData(prev => ({
-            ...prev,
-            email: response.data.email
-          }));
-          
-          // Update the user context
-          if (user) {
-            handleLogin({
-              ...user,
-              email: response.data.email
-            });
-          }
-        }
-        
-        setLoading(false);
-        // Also update the followers and following
-        fetchFollowers();
-        fetchFollowing();
-      })
-      .catch(err => {
-        console.error('Refresh failed:', err);
-        setError(`Error refreshing data: ${err.message}`);
-        setLoading(false);
       });
-    } else {
-      setError('Cannot refresh: missing authentication data');
-      setLoading(false);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.recent_reviews) {
+          setRecentReviews(data.recent_reviews || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user reviews:', error);
+      setRecentReviews([]);
     }
   };
 
@@ -270,218 +231,437 @@ const Profile = () => {
   };
 
   const handleCancel = () => {
-    if (profile) {
-      setIsEditing(false);
-      setFormData({
-        username: profile.username || user?.username || '',
-        email: profile.email || user?.email || '',
-        password: '',
-        bio: profile.bio || '',
-        profile_image: ''
-      });
-      setPreviewImage(profile.profile_image);
-      setError('');
-      setSuccess('');
-    }
+    setIsEditing(false);
+    setFormData({
+      username: profile.username,
+      email: profile.email,
+      password: '',
+      bio: profile.bio || '',
+      profile_image: ''
+    });
+    setPreviewImage(profile.profile_image);
+    setError('');
+    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
-    const storedToken = localStorage.getItem('token');
-    const token = user?.token || storedToken;
-    
-    if (!token) {
-      setError('No authentication token found. Please log in again.');
-      return;
-    }
 
     try {
-      const response = await axios.put('http://127.0.0.1:8000/api/profile/update/', 
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          }
-        }
-      );
-
-      const data = response.data;
-      setSuccess('Profile updated successfully');
-      
-      // Update user context with new info - importantly, use form email
-      const updatedUser = {
-        ...user,
-        token: data.token,
-        username: data.user.username,
-        email: formData.email // Use form email directly since API might not return it
-      };
-      
-      handleLogin(updatedUser);
-      
-      // Also manually update localStorage to ensure email is saved
-      localStorage.setItem('user', JSON.stringify({
-        username: updatedUser.username,
-        email: updatedUser.email,
-        bio: formData.bio
-      }));
-      
-      // Refresh the profile data
-      const profileResponse = await axios.get(`http://127.0.0.1:8000/api/users/${data.user.username}/profile/`, {
+      const response = await fetch('http://127.0.0.1:8000/api/profile/update/', {
+        method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${data.token}`
-        }
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-      
-      setProfile(profileResponse.data);
-      setPreviewImage(profileResponse.data.profile_image);
-      setIsEditing(false);
-      
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('Profile updated successfully');
+        setProfile({
+          username: data.user.username,
+          email: data.user.email,
+          bio: data.user.bio,
+          profile_image: data.user.profile_image
+        });
+        handleLogin({
+          ...user,
+          token: data.token,
+          username: data.user.username,
+          email: data.user.email
+        });
+        setPreviewImage(data.user.profile_image);
+        setIsEditing(false);
+      } else {
+        setError(data.error || 'Failed to update profile');
+      }
     } catch (err) {
-      console.error('Error updating profile:', err);
-      setError(err.response?.data?.error || 'Failed to update profile');
+      setError('An error occurred while updating the profile');
     }
   };
 
+  // Navigation functions
   const handleUserClick = (username) => {
-    navigate(`/user/${username}`);
+    window.location.href = `/user/${username}`;
   };
-
+  
   const handleBookClick = (book) => {
-    navigate('/book-details', { 
-      state: { 
-        book: {
-          id: book.google_books_id,
-          title: book.title,
-          author: book.author,
-          image: book.image,
-          description: book.description
-        }
-      } 
-    });
+    window.location.href = `/book-details?id=${book.google_books_id}`;
   };
 
-  const renderReviews = () => {
-    if (!profile?.recent_reviews?.length) {
-      return <p className="no-content-message">No reviews yet.</p>;
+  // Rendering UI based on active tab
+  const renderGamificationContent = () => {
+    if (isLoadingGamification && (activeTab !== 'followers' && activeTab !== 'following')) {
+      return <div className="text-center py-8">Loading data...</div>;
     }
-
-    return (
-      <div className="reviews-container">
-        {profile.recent_reviews.map(review => (
-          <div key={review.id} className="review-card">
-            <div className="review-header">
-              <img 
-                src={review.book.image || '/default-book.png'} 
-                alt={review.book.title}
-                className="review-book-cover"
-                onClick={() => handleBookClick(review.book)}
-              />
-              <div className="review-book-info">
-                <h3 
-                  className="review-book-title"
-                  onClick={() => handleBookClick(review.book)}
-                >
-                  {review.book.title}
-                </h3>
-                <p className="review-book-author">{review.book.author}</p>
+    
+    switch(activeTab) {
+      case 'followers':
+        return renderFollowers();
+      
+      case 'following':
+        return renderFollowing();
+      case 'achievements':
+        return (
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-2xl font-bold mb-6">Your Achievements</h2>
+            {achievements.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {achievements.map((achievement) => (
+                  <div key={achievement.id} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 shadow">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full mr-4">
+                        {achievement.badge_image ? (
+                          <img src={achievement.badge_image} alt={achievement.name} className="w-10 h-10" />
+                        ) : (
+                          <span className="text-2xl">🏆</span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-bold">{achievement.name}</h3>
+                        <p className="text-sm text-gray-600">{achievement.description}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex justify-between items-center">
+                      <span className="text-xs text-gray-500">
+                        Earned: {new Date(achievement.date_earned).toLocaleDateString()}
+                      </span>
+                      <span className="text-sm font-semibold text-blue-600">+{achievement.points} pts</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">You haven't earned any achievements yet. Keep reading and reviewing books to earn achievements!</p>
+            )}
+          </div>
+        );
+        
+      case 'challenges':
+        return (
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-2xl font-bold mb-6">Reading Challenges</h2>
+            {challenges.length > 0 ? (
+              <div className="space-y-6">
+                {challenges.map((challenge) => (
+                  <div key={challenge.id} className="border rounded-lg p-4">
+                    <h3 className="text-xl font-bold">{challenge.name}</h3>
+                    <p className="text-gray-600 mb-3">{challenge.description}</p>
+                    
+                    <div className="mb-2">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
+                        <span>{challenge.progress_percentage}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-blue-600 h-2.5 rounded-full" 
+                          style={{ width: `${challenge.progress_percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className={challenge.completed ? "text-green-600" : "text-blue-600"}>
+                        {challenge.completed ? "Completed!" : `${challenge.days_remaining} days remaining`}
+                      </span>
+                      <span>
+                        {challenge.completed 
+                          ? `Completed on ${new Date(challenge.completed_date).toLocaleDateString()}`
+                          : `Ends on ${new Date(challenge.end_date).toLocaleDateString()}`
+                        }
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center">
+                <p className="text-gray-500 mb-4">You're not participating in any reading challenges yet.</p>
+                <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                  Join a Challenge
+                </button>
+              </div>
+            )}
+          </div>
+        );
+        
+      case 'stats':
+        return (
+          <div className="space-y-6">
+            {/* Points and Level Card */}
+            <div className="bg-white shadow-md rounded-lg p-6">
+              <div className="flex flex-col md:flex-row justify-between">
+                <div className="text-center mb-4 md:mb-0">
+                  <div className="text-gray-600">Your Level</div>
+                  <div className="text-5xl font-bold text-blue-600">{userPoints?.level || 1}</div>
+                  <div className="text-sm text-gray-500">Keep reading to level up!</div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-gray-600">Total Points</div>
+                  <div className="text-5xl font-bold text-purple-600">{userPoints?.total_points || 0}</div>
+                  <div className="text-sm text-gray-500">
+                    {userPoints?.level ? `${100 - (userPoints.total_points % 100)} points to next level` : 'Start earning points!'}
+                  </div>
+                </div>
               </div>
             </div>
-            <p className="review-text">{review.review_text}</p>
-            <p className="review-date">
-              {new Date(review.added_date).toLocaleDateString()}
-            </p>
+            
+            {/* Reading Stats Card */}
+            <div className="bg-white shadow-md rounded-lg p-6">
+              <h3 className="text-xl font-bold mb-4">Reading Stats</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-blue-50 rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold text-blue-600">{userPoints?.books_read || 0}</div>
+                  <div className="text-sm text-gray-600">Books Read</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold text-purple-600">{userPoints?.reviews_written || 0}</div>
+                  <div className="text-sm text-gray-600">Reviews</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold text-green-600">{achievements.length}</div>
+                  <div className="text-sm text-gray-600">Achievements</div>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold text-orange-600">{readingStreak?.current_streak || 0}</div>
+                  <div className="text-sm text-gray-600">Day Streak</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Recent Reviews */}
+            <div className="bg-white shadow-md rounded-lg p-6">
+              <h3 className="text-xl font-bold mb-4">Recent Reviews</h3>
+              {recentReviews.length > 0 ? (
+                <div className="reviews-list">
+                  {recentReviews.map(review => (
+                    <div key={review.id} className="review-card" onClick={() => handleBookClick(review.book)}>
+                      <div className="review-header">
+                        <img 
+                          src={review.book.image || '/default-book.png'} 
+                          alt={review.book.title}
+                          className="review-book-cover"
+                        />
+                        <div className="review-book-info">
+                          <h4 className="review-book-title">{review.book.title}</h4>
+                          <p className="review-book-author">{review.book.author}</p>
+                        </div>
+                      </div>
+                      <p className="review-text">{review.review_text}</p>
+                      <div className="review-date">
+                        {new Date(review.added_date).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500">No reviews yet. Start reviewing books!</p>
+              )}
+            </div>
           </div>
-        ))}
-      </div>
-    );
+        );
+        
+      case 'profile':
+      default:
+        return (
+          <div className="profile-content">
+            {/* Original profile content goes here */}
+            <div className="profile-image-container">
+              <img 
+                src={previewImage || '/default-profile.png'} 
+                alt="Profile" 
+                className="profile-image"
+              />
+            </div>
+
+            {isEditing ? (
+              <form onSubmit={handleSubmit} className="profile-form">
+                <div className="form-group">
+                  <label>Profile Image:</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="file-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Username:</label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Email:</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Bio:</label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    className="bio-input"
+                    rows="4"
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>New Password (leave blank to keep current):</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="button-group">
+                  <button type="submit" className="btn btn-primary">
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="profile-info">
+                <p><strong>Username:</strong> {profile.username}</p>
+                <p><strong>Email:</strong> {profile.email}</p>
+                <div className="bio-section">
+                  <h3>Bio</h3>
+                  <p>{profile.bio || 'No bio yet...'}</p>
+                </div>
+                <div className="button-group">
+                  <button
+                    onClick={handleEdit}
+                    className="btn btn-primary"
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+    }
   };
 
   const renderFollowers = () => {
     if (loadingFollowers) {
-      return <p className="loading-message">Loading followers...</p>;
+      return <div className="loading-message">Loading followers...</div>;
     }
 
     if (!followers.length) {
-      return <p className="no-content-message">No followers yet.</p>;
+      return (
+        <div className="empty-state">
+          <p>No followers yet.</p>
+        </div>
+      );
     }
 
     return (
-      <div className="users-grid">
-        {followers.map(follower => (
-          <div key={follower.username} className="user-card">
+      <div>
+        <h2 className="section-title">Your Followers</h2>
+        <div className="user-grid">
+          {followers.map(follower => (
             <div 
-              className="user-card-info"
+              key={follower.username} 
+              className="user-card"
               onClick={() => handleUserClick(follower.username)}
             >
-              <img 
-                src={follower.profile_image || '/default-profile.png'} 
-                alt={follower.username}
-                className="user-avatar"
-              />
+              <div className="user-avatar-container">
+                <img 
+                  src={follower.profile_image || '/default-profile.png'} 
+                  alt={follower.username}
+                  className="user-avatar"
+                />
+              </div>
               <div className="user-details">
                 <h3 className="user-name">{follower.username}</h3>
-                <p className="follow-date">
+                <p className="user-meta">
                   Following since {new Date(follower.follow_date).toLocaleDateString()}
                 </p>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   };
 
   const renderFollowing = () => {
     if (loadingFollowing) {
-      return <p className="loading-message">Loading following...</p>;
+      return <div className="loading-message">Loading following...</div>;
     }
 
     if (!following.length) {
-      return <p className="no-content-message">Not following anyone yet.</p>;
+      return (
+        <div className="empty-state">
+          <p>You are not following anyone yet.</p>
+        </div>
+      );
     }
 
     return (
-      <div className="users-grid">
-        {following.map(followedUser => (
-          <div key={followedUser.username} className="user-card">
+      <div>
+        <h2 className="section-title">Accounts You Follow</h2>
+        <div className="user-grid">
+          {following.map(followedUser => (
             <div 
-              className="user-card-info"
+              key={followedUser.username} 
+              className="user-card"
               onClick={() => handleUserClick(followedUser.username)}
             >
-              <img 
-                src={followedUser.profile_image || '/default-profile.png'} 
-                alt={followedUser.username}
-                className="user-avatar"
-              />
+              <div className="user-avatar-container">
+                <img 
+                  src={followedUser.profile_image || '/default-profile.png'} 
+                  alt={followedUser.username}
+                  className="user-avatar"
+                />
+              </div>
               <div className="user-details">
                 <h3 className="user-name">{followedUser.username}</h3>
-                <p className="follow-date">
+                <p className="user-meta">
                   Following since {new Date(followedUser.follow_date).toLocaleDateString()}
                 </p>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   };
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'reviews':
-        return renderReviews();
-      case 'followers':
-        return renderFollowers();
-      case 'following':
-        return renderFollowing();
-      default:
-        return renderReviews(); // Default to reviews
-    }
-  };
+  if (!user) {
+    return <p className="profile-container">Please log in to view your profile.</p>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -489,173 +669,70 @@ const Profile = () => {
       <div className="profile-container">
         {error && <div className="alert alert-error">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
-
-        {loading ? (
-          <div className="profile-content">
-            <p className="loading-message">Loading profile...</p>
-          </div>
-        ) : isEditing ? (
-          <div className="profile-content">
-            <form onSubmit={handleSubmit} className="profile-form">
-              <div className="profile-avatar-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-                <img 
-                  src={previewImage || (profile?.profile_image) || '/default-profile.png'} 
-                  alt="Profile" 
-                  className="profile-avatar"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Profile Image:</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="file-input"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Username:</label>
-                <input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  required
-                  className="form-control"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Email:</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="form-control"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Bio:</label>
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  className="bio-input"
-                  rows="4"
-                  placeholder="Tell us about yourself..."
-                />
-              </div>
-
-              <div className="form-group">
-                <label>New Password (leave blank to keep current):</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="form-control"
-                />
-              </div>
-
-              <div className="button-group">
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
-          profile ? (
-            <>
-              <div className="profile-header">
-                <div className="profile-avatar-container">
-                  <img
-                    src={profile?.profile_image || '/default-profile.png'}
-                    alt={`${user?.username || profile?.username}'s profile`}
-                    className="profile-avatar"
-                  />
-                </div>
-                
-                <div className="profile-info">
-                  <h1 className="profile-username">{user?.username || profile?.username}</h1>
-                  <p className="profile-bio">{profile?.bio || 'No bio available'}</p>
-                  
-                  <div className="profile-stats">
-                    <button 
-                      onClick={() => setActiveTab('followers')}
-                      className="stat-item"
-                    >
-                      <span className="stat-count">{profile?.followers_count || 0}</span>
-                      <span className="stat-label">Followers</span>
-                    </button>
-                    <button 
-                      onClick={() => setActiveTab('following')}
-                      className="stat-item"
-                    >
-                      <span className="stat-count">{profile?.following_count || 0}</span>
-                      <span className="stat-label">Following</span>
-                    </button>
-                  </div>
-                  
-                  <button
-                    onClick={handleEdit}
-                    className="follow-button"
-                  >
-                    Edit Profile
-                  </button>
-                </div>
-              </div>
-              
-              <div className="profile-tabs">
-                <button
-                  onClick={() => setActiveTab('reviews')}
-                  className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
-                >
-                  Reviews
-                </button>
-                <button
-                  onClick={() => setActiveTab('followers')}
-                  className={`tab-button ${activeTab === 'followers' ? 'active' : ''}`}
-                >
-                  Followers
-                </button>
-                <button
-                  onClick={() => setActiveTab('following')}
-                  className={`tab-button ${activeTab === 'following' ? 'active' : ''}`}
-                >
-                  Following
-                </button>
-              </div>
-              
-              <div className="profile-content">
-                {renderTabContent()}
-              </div>
-            </>
-          ) : (
-            <div className="profile-content">
-              <p className="no-content-message">Profile data could not be loaded.</p>
-              <button
-                onClick={handleRefreshData}
-                className="follow-button"
-                style={{ maxWidth: '200px', margin: '20px auto' }}
-              >
-                Retry Loading Profile
-              </button>
+        
+        {/* Gamification Summary */}
+        <div className="profile-summary">
+          <div className="summary-left">
+            <div className="summary-avatar">
+              <img 
+                src={previewImage || '/default-profile.png'} 
+                alt="Profile" 
+                className="summary-avatar-img"
+              />
             </div>
-          )
-        )}
+            <div className="summary-info">
+              <h1 className="summary-username">{profile.username}</h1>
+              <div className="badge-container">
+                <span className="badge level-badge">
+                  Level {userPoints?.level || 1}
+                </span>
+                <span className="badge points-badge">
+                  {userPoints?.total_points || 0} Points
+                </span>
+                <span className="badge streak-badge">
+                  {readingStreak?.current_streak || 0} Day Streak
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Progress to next level */}
+          {userPoints && (
+            <div className="level-progress">
+              <div className="level-labels">
+                <span>Level {userPoints.level}</span>
+                <span>Level {userPoints.level + 1}</span>
+              </div>
+              <div className="progress-bar-bg">
+                <div 
+                  className="progress-bar-fill"
+                  style={{ width: `${userPoints.total_points % 100}%` }}
+                ></div>
+              </div>
+              <div className="progress-text">
+                {100 - (userPoints.total_points % 100)} points to next level
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Navigation Tabs */}
+        <div className="profile-tabs">
+          {['profile', 'stats', 'achievements', 'challenges', 'followers', 'following'].map((tab) => (
+            <button
+              key={tab}
+              className={`tab-button ${activeTab === tab ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
+        
+        {/* Main Content */}
+        <div className="profile-content">
+          {renderGamificationContent()}
+        </div>
       </div>
     </div>
   );

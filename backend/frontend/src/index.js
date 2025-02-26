@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import axios from 'axios';
 import AuthProvider from './AuthContext';
+import './styles/Gamification.css';
 
 axios.interceptors.response.use(
   response => response,
