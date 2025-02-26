@@ -863,14 +863,7 @@ def search_users(request):
             'bio': bio
         })
         
-    return Response(results)from django.conf import settings
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.core.files.storage import default_storage
-from django.db import models
-import json
+    return Response(results)
 
 import requests
 import base64
