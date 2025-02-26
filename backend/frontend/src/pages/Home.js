@@ -251,32 +251,24 @@ const Home = () => {
       {/* Reading streak reminder (show only if logged in) */}
       {user && readingStreak && (
         <div className="max-w-7xl mx-auto px-4 mt-4">
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-blue-100 rounded-full p-2 mr-3">
-                <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-medium">
-                  {readingStreak.is_active 
-                    ? `${readingStreak.current_streak} day streak! Keep it up!` 
-                    : "Don't break your streak! Mark a book as read today."}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Reading daily helps you progress faster and earn more achievements.
-                </p>
-              </div>
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <div>
+              <p className="font-medium">
+                {readingStreak.is_active 
+                  ? `${readingStreak.current_streak} day streak! Keep it up!` 
+                  : "Don't break your streak! Mark a book as read today."}
+              </p>
+              <p className="text-sm text-gray-600">
+                Reading daily helps you progress faster and earn more achievements.
+              </p>
             </div>
-            <button 
-              onClick={() => setShowChallenges(!showChallenges)}
-              className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
-            >
-              {showChallenges ? "Hide Challenges" : "View Challenges"}
-            </button>
           </div>
+          <button onClick={() => navigate('/challenges')} className="view-challenges-btn">
+            View Challenges
+          </button>
         </div>
+      </div>
       )}
       
       {/* Active Challenges */}

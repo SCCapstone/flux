@@ -14,8 +14,7 @@ const Favorites = () => {
     genre: 'all'
   });
   
-  // Gamification states
-  const [collectionAchievements, setCollectionAchievements] = useState([]);
+  // Notification state
   const [notification, setNotification] = useState({
     show: false,
     message: '',
@@ -40,37 +39,10 @@ const Favorites = () => {
       console.error('Error fetching favorites:', error);
     }
   }, [user]);
-  
-  // Fetch gamification data
-  const fetchGamificationData = useCallback(async () => {
-    if (!user?.token) return;
-    
-    try {
-      const headers = {
-        'Authorization': `Bearer ${user.token}`,
-      };
-      
-      // Fetch user's achievements related to collections
-      const achievementsResponse = await fetch('http://127.0.0.1:8000/api/user/achievements/', { headers });
-      if (achievementsResponse.ok) {
-        const achievementsData = await achievementsResponse.json();
-        // Filter for collection-related achievements
-        const collectionOnes = achievementsData.filter(a => 
-          a.name.includes('Collector') || 
-          a.name.includes('Enthusiast') || 
-          a.name.includes('Book Lover')
-        );
-        setCollectionAchievements(collectionOnes);
-      }
-    } catch (error) {
-      console.error('Error fetching gamification data:', error);
-    }
-  }, [user]);
 
   useEffect(() => {
     fetchFavorites();
-    fetchGamificationData();
-  }, [fetchFavorites, fetchGamificationData]);
+  }, [fetchFavorites]);
 
   const { uniqueGenres, uniqueDecades } = useMemo(() => {
     const genres = new Set(favorites.map(book => book.genre));
@@ -82,26 +54,6 @@ const Favorites = () => {
       uniqueDecades: ['all', ...Array.from(decades)].sort()
     };
   }, [favorites]);
-
-  // Calculate progress to collection achievements
-  const collectionProgress = useMemo(() => {
-    const favoriteCount = favorites.length;
-    const thresholds = [
-      { name: 'Collector', target: 5, description: 'Add 5 books to favorites' },
-      { name: 'Enthusiast', target: 25, description: 'Add 25 books to favorites' },
-      { name: 'Book Lover', target: 50, description: 'Add 50 books to favorites' }
-    ];
-    
-    return thresholds.map(threshold => {
-      const existing = collectionAchievements.find(a => a.name === threshold.name);
-      return {
-        ...threshold,
-        current: favoriteCount,
-        percentage: Math.min(100, (favoriteCount / threshold.target) * 100),
-        achieved: existing !== undefined
-      };
-    });
-  }, [favorites.length, collectionAchievements]);
 
   const handleRemove = async (book) => {
     try {
@@ -148,68 +100,6 @@ const Favorites = () => {
     });
   }, [favorites, activeFilters]);
 
-  // Render collection achievements
-  const renderCollectionAchievements = () => {
-    return (
-      <div className="bg-white shadow rounded-lg p-4 mb-6">
-  <h2 className="text-xl font-bold mb-4">Collection Achievements</h2>
-  <div className="space-y-4">
-    {collectionProgress.map((achievement, index) => (
-      <div key={index} className="relative">
-        <div className="flex justify-between items-center mb-1">
-          <div className="flex items-center">
-            <span className="mr-2">{achievement.achieved ? '🏆' : '🔒'}</span>
-            <span className="font-medium">{achievement.name}</span>
-          </div>
-          <span className="text-sm text-gray-600">
-            {achievement.current} / {achievement.target} books
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-          <div 
-            className="h-2.5 rounded-full bg-blue-600"
-            style={{ width: `${achievement.percentage}%` }}
-          ></div>
-        </div>
-        <p className="text-xs text-gray-500">{achievement.description}</p>
-      </div>
-    ))}
-  </div>
-</div>
-    );
-  };
-  
-  // Render earned badges
-  const renderEarnedBadges = () => {
-    if (collectionAchievements.length === 0) return null;
-    
-    return (
-      <div className="mt-8 bg-white shadow rounded-lg p-4">
-        <h2 className="text-lg font-semibold mb-3">Earned Collection Badges</h2>
-        <div className="flex flex-wrap gap-4">
-          {collectionAchievements.map((achievement, index) => (
-            <div key={index} className="flex flex-col items-center bg-yellow-50 rounded-lg p-3 border border-yellow-200">
-              <div className="w-16 h-16 flex items-center justify-center bg-yellow-100 rounded-full mb-2">
-                {achievement.badge_image ? (
-                  <img 
-                    src={achievement.badge_image} 
-                    alt={achievement.name} 
-                    className="w-12 h-12" 
-                  />
-                ) : (
-                  <span className="text-3xl">🏆</span>
-                )}
-              </div>
-              <h3 className="font-bold text-center">{achievement.name}</h3>
-              <p className="text-xs text-gray-600 text-center">{achievement.description}</p>
-              <span className="mt-1 text-xs font-semibold text-blue-600">+{achievement.points} points</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -242,9 +132,6 @@ const Favorites = () => {
             <span>{favorites.length} {favorites.length === 1 ? 'Book' : 'Books'} in Collection</span>
           </div>
         </div>
-        
-        {/* Collection Achievements */}
-        {renderCollectionAchievements()}
 
         <div className="controls-container">
           <div className="filters">
@@ -318,9 +205,6 @@ const Favorites = () => {
             </p>
           )}
         </div>
-        
-        {/* Badges Showcase */}
-        {renderEarnedBadges()}
       </div>
     </div>
   );

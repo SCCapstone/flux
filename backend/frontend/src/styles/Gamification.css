@@ -319,15 +319,15 @@
 }
 
 .level-badge {
-    display: inline-flex;
-    align-items: center;
-    background: linear-gradient(to right, #3b82f6, #8b5cf6);
-    color: white;
-    border-radius: 0.5rem;
-    padding: 0.25rem 0.75rem;
-    margin-left: 0.5rem;
-    font-size: 0.875rem;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  color: white;
+  border-radius: 0.5rem;
+  min-width: 120px;
+  padding: 0.25rem 0.75rem;
+}
   
   .level-label, .points-value {
     opacity: 0.9;

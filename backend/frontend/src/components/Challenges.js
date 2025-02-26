@@ -1,257 +1,297 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from '../AuthContext';
-import Navigation from '../components/Navigation';
+import Navigation from './Navigation';
 import '../styles/Gamification.css';
 
 const Challenges = () => {
   const { user } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('active');
-  const [availableChallenges, setAvailableChallenges] = useState([]);
-  const [userChallenges, setUserChallenges] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('available');
+  const [loading, setLoading] = useState(false);
 
-  const fetchChallenges = useCallback(async () => {
-    if (!user?.token) return;
-    
-    setLoading(true);
-    try {
-      const headers = {
-        'Authorization': `Bearer ${user.token}`,
-      };
-      
-      // Fetch available challenges
-      const availableResponse = await fetch('http://127.0.0.1:8000/api/challenges/', { headers });
-      const availableData = await availableResponse.json();
-      setAvailableChallenges(availableData);
-      
-      // Fetch user's challenges
-      const userResponse = await fetch('http://127.0.0.1:8000/api/user/challenges/', { headers });
-      const userData = await userResponse.json();
-      setUserChallenges(userData);
-    } catch (error) {
-      console.error('Error fetching challenges:', error);
-    } finally {
-      setLoading(false);
+  // Sample challenges to display
+  const sampleAvailableChallenges = [
+    {
+      id: 'sample1',
+      name: 'Summer Reading Challenge',
+      description: 'Read 10 books during summer vacation',
+      target_books: 10,
+      books_read: 0,
+      start_date: '2025-06-01',
+      end_date: '2025-08-31',
+      days_remaining: 90,
+      progress_percentage: 0
+    },
+    {
+      id: 'sample2',
+      name: 'Genre Explorer',
+      description: 'Read books from 5 different genres',
+      target_books: 5,
+      books_read: 0,
+      start_date: '2025-03-01',
+      end_date: '2025-04-30',
+      days_remaining: 60,
+      progress_percentage: 0
+    },
+    {
+      id: 'sample3',
+      name: 'Classics Marathon',
+      description: 'Read 3 classic literature books',
+      target_books: 3,
+      books_read: 0,
+      start_date: '2025-02-01',
+      end_date: '2025-05-01',
+      days_remaining: 45,
+      progress_percentage: 0
     }
-  }, [user]);
+  ];
+
+  const [userChallenges, setUserChallenges] = useState([]);
+  const [availableChallenges, setAvailableChallenges] = useState(sampleAvailableChallenges);
 
   useEffect(() => {
-    if (user?.token) {
-      fetchChallenges();
-    }
-  }, [user, fetchChallenges]);
+    // Initial setup - we'll use the sample challenges as fallback
+    setAvailableChallenges(sampleAvailableChallenges);
+  }, []);
 
-  const handleJoinChallenge = async (challengeId) => {
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/challenges/join/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ challenge_id: challengeId }),
-      });
+  const handleJoinChallenge = (challengeId) => {
+    // Find the challenge in available challenges
+    const challenge = availableChallenges.find(c => c.id === challengeId);
+    
+    if (challenge) {
+      // Add to user challenges
+      setUserChallenges(prev => [...prev, challenge]);
       
-      if (response.ok) {
-        // Refresh challenges after joining
-        fetchChallenges();
+      // Remove from available challenges
+      setAvailableChallenges(prev => prev.filter(c => c.id !== challengeId));
+      
+      // Show notification
+      showNotification(`Joined the "${challenge.name}" challenge!`, true);
+      
+      // Switch to active tab to show the joined challenge
+      setActiveTab('active');
+    }
+  };
+  
+  const handleQuitChallenge = (challengeId) => {
+    // Find the challenge in user challenges
+    const challenge = userChallenges.find(c => c.id === challengeId);
+    
+    if (challenge) {
+      // Remove from user challenges
+      setUserChallenges(prev => prev.filter(c => c.id !== challengeId));
+      
+      // Add back to available challenges if it was one of the original sample challenges
+      if (challengeId.startsWith('sample')) {
+        setAvailableChallenges(prev => [...prev, challenge]);
       }
-    } catch (error) {
-      console.error('Error joining challenge:', error);
+      
+      // Show notification
+      showNotification(`Quit the "${challenge.name}" challenge`, false);
     }
   };
 
-  // Filter user challenges based on active tab
-  const filteredUserChallenges = userChallenges.filter(challenge => {
-    if (activeTab === 'active') {
-      return !challenge.completed && challenge.days_remaining > 0;
-    } else if (activeTab === 'completed') {
-      return challenge.completed;
-    } else { // expired
-      return !challenge.completed && challenge.days_remaining <= 0;
-    }
-  });
+  const handleCreateChallenge = () => {
+    // Create a new challenge with default values
+    const newChallenge = {
+      id: `new-${Date.now()}`,
+      name: 'Custom Reading Challenge',
+      description: 'My personal reading challenge',
+      target_books: 5,
+      books_read: 0,
+      start_date: '2025-01-01',
+      end_date: '2025-06-30',
+      days_remaining: 180,
+      progress_percentage: 0
+    };
+    
+    // Add to user challenges
+    setUserChallenges(prev => [...prev, newChallenge]);
+    
+    // Show notification
+    showNotification('Created a new reading challenge!', true);
+    
+    // Switch to active tab
+    setActiveTab('active');
+  };
 
-  // Filter available challenges to only show ones user hasn't joined
-  const filteredAvailableChallenges = availableChallenges.filter(
-    challenge => !userChallenges.some(uc => uc.id === challenge.id)
-  );
+  const getFilteredChallenges = () => {
+    if (activeTab === 'active') {
+      return userChallenges;
+    } else if (activeTab === 'available') {
+      return availableChallenges;
+    } else {
+      return []; // Completed and expired are empty for now
+    }
+  };
+  
+  // Notification state
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    isPositive: true
+  });
+  
+  // Show notification function
+  const showNotification = (message, isPositive = true) => {
+    setNotification({
+      show: true,
+      message,
+      isPositive
+    });
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navigation />
+      
+      {/* Gamification Notification */}
+      {notification.show && (
+        <div className={`gamification-notification animate-in`}>
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className={`h-5 w-5 ${notification.isPositive ? 'text-green-500' : 'text-red-500'}`} 
+                   fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {notification.isPositive ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                )}
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">{notification.message}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <h1 className="text-3xl font-bold mb-6">Reading Challenges</h1>
+        <h1 className="text-3xl font-bold mb-4">Reading Challenges</h1>
         
-        {/* Tabs - Using a more button-like style to match the rest of the app */}
-        <div className="mb-6 flex space-x-2">
+        <div className="mb-6">
+          <div>Level 1</div>
+          <div>0 PTS</div>
+        </div>
+        
+        <div className="mb-4">
           <button
             onClick={() => setActiveTab('active')}
-            className={`py-2 px-4 rounded-md font-medium ${
-              activeTab === 'active'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-100'
-            }`}
+            className="mr-1 px-3 py-1 border bg-white"
+            style={{ backgroundColor: activeTab === 'active' ? '#e5e7eb' : '' }}
           >
             Active Challenges
           </button>
           <button
             onClick={() => setActiveTab('completed')}
-            className={`py-2 px-4 rounded-md font-medium ${
-              activeTab === 'completed'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-100'
-            }`}
+            className="mr-1 px-3 py-1 border bg-white"
+            style={{ backgroundColor: activeTab === 'completed' ? '#e5e7eb' : '' }}
           >
             Completed
           </button>
           <button
             onClick={() => setActiveTab('expired')}
-            className={`py-2 px-4 rounded-md font-medium ${
-              activeTab === 'expired'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-100'
-            }`}
+            className="mr-1 px-3 py-1 border bg-white"
+            style={{ backgroundColor: activeTab === 'expired' ? '#e5e7eb' : '' }}
           >
             Expired
           </button>
           <button
             onClick={() => setActiveTab('available')}
-            className={`py-2 px-4 rounded-md font-medium ${
-              activeTab === 'available'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-100'
-            }`}
+            className="px-3 py-1 border bg-white"
+            style={{ backgroundColor: activeTab === 'available' ? '#e5e7eb' : '' }}
           >
             Available Challenges
           </button>
         </div>
         
+        <div className="mb-6">
+          <button
+            onClick={handleCreateChallenge}
+            className="px-3 py-1 border bg-white"
+          >
+            Create New Challenge
+          </button>
+        </div>
+        
         {loading ? (
-          <div className="text-center py-10">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-2"></div>
-            <p>Loading challenges...</p>
-          </div>
+          <p>Loading challenges...</p>
         ) : (
-          <>
-            {activeTab === 'available' ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredAvailableChallenges.length > 0 ? (
-                  filteredAvailableChallenges.map(challenge => (
-                    <div key={challenge.id} className="bg-white shadow rounded-lg overflow-hidden">
-                      <div className="p-5">
-                        <h3 className="text-lg font-bold text-gray-900">{challenge.name}</h3>
-                        <p className="mt-1 text-gray-600">{challenge.description}</p>
-                        <div className="mt-4">
-                          <span className="text-sm font-medium text-blue-600">
-                            Goal: Read {challenge.target_books} books
-                          </span>
+          <div>
+            {getFilteredChallenges().length > 0 ? (
+              getFilteredChallenges().map(challenge => (
+                <div key={challenge.id} className="mb-8 border-b pb-6">
+                  <h2 className="text-2xl font-bold mb-2">{challenge.name}</h2>
+                  <p className="mb-4">{challenge.description}</p>
+                  
+                  <div className="mb-4">
+                    <p><strong>Goal:</strong> Read {challenge.target_books} books</p>
+                    
+                    {activeTab === 'active' && (
+                      <div className="mt-2 mb-3">
+                        <div className="progress-labels">
+                          <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
+                          <span>{challenge.progress_percentage}%</span>
                         </div>
-                        <div className="mt-2 flex justify-between text-sm">
-                          <span>Starts: {new Date(challenge.start_date).toLocaleDateString()}</span>
-                          <span>Ends: {new Date(challenge.end_date).toLocaleDateString()}</span>
-                        </div>
-                        <div className="mt-4">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            {challenge.days_remaining} days remaining
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleJoinChallenge(challenge.id)}
-                          className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                        >
-                          Join Challenge
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="md:col-span-2 lg:col-span-3 text-center py-10">
-                    <p>No available challenges at the moment. Check back later!</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {filteredUserChallenges.length > 0 ? (
-                  filteredUserChallenges.map(challenge => (
-                    <div key={challenge.id} className="bg-white shadow rounded-lg overflow-hidden">
-                      <div className="p-5">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-900">{challenge.name}</h3>
-                            <p className="mt-1 text-gray-600">{challenge.description}</p>
-                          </div>
-                          {challenge.completed ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Completed
-                            </span>
-                          ) : challenge.days_remaining > 0 ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {challenge.days_remaining} days left
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              Expired
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="mt-4">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
-                            <span>{challenge.progress_percentage}%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div className="progress-container">
+                          <div className="progress-bar">
                             <div 
-                              className={`h-2.5 rounded-full ${
-                                challenge.completed 
-                                  ? 'bg-green-600' 
-                                  : challenge.days_remaining <= 0 
-                                    ? 'bg-red-600' 
-                                    : 'bg-blue-600'
-                              }`}
+                              className="progress-fill progress-fill-blue" 
                               style={{ width: `${challenge.progress_percentage}%` }}
                             ></div>
                           </div>
                         </div>
-                        
-                        <div className="mt-4 flex justify-between text-sm text-gray-500">
-                          <span>Started: {new Date(challenge.start_date).toLocaleDateString()}</span>
-                          <span>Ends: {new Date(challenge.end_date).toLocaleDateString()}</span>
-                        </div>
-                        
-                        {challenge.completed && (
-                          <div className="mt-4 bg-green-50 border border-green-200 rounded-md p-3">
-                            <div className="flex">
-                              <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                              <div className="ml-3">
-                                <p className="text-sm text-green-800">
-                                  Completed on {new Date(challenge.completed_date).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-10">
+                    )}
+                    
                     <p>
-                      {activeTab === 'active' && "You're not participating in any active challenges."}
-                      {activeTab === 'completed' && "You haven't completed any challenges yet."}
-                      {activeTab === 'expired' && "You don't have any expired challenges."}
+                      <strong>Starts:</strong> {challenge.start_date}
+                      <br />
+                      <strong>Ends:</strong> {challenge.end_date}
+                    </p>
+                    <p className="mt-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {challenge.days_remaining} days remaining
+                      </span>
                     </p>
                   </div>
-                )}
+                  
+                  {activeTab === 'available' && (
+                    <button 
+                      onClick={() => handleJoinChallenge(challenge.id)}
+                      className="px-3 py-1 border bg-white"
+                    >
+                      Join Challenge
+                    </button>
+                  )}
+                  
+                  {activeTab === 'active' && (
+                    <button 
+                      onClick={() => handleQuitChallenge(challenge.id)}
+                      className="px-3 py-1 border bg-white"
+                    >
+                      Quit Challenge
+                    </button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="py-4">
+                <p>
+                  {activeTab === 'active' && "You're not participating in any active challenges."}
+                  {activeTab === 'completed' && "You haven't completed any challenges yet."}
+                  {activeTab === 'expired' && "You don't have any expired challenges."}
+                  {activeTab === 'available' && "No available challenges at the moment."}
+                </p>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
