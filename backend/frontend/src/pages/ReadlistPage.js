@@ -20,7 +20,7 @@ const ReadlistPage = () => {
 
         if (response.ok) {
           const data = await response.json();
-          setReadlistName(data.name || "My Readlist"); // ✅ Use API name or fallback
+          setReadlistName(data.name || "My Readlist"); 
         }
       } catch (error) {
         console.error("Error fetching readlist:", error);
