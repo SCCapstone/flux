@@ -1013,7 +1013,6 @@ def award_points(user, amount, description):
     
     return user_points
 
-# Challenge related views
 @api_view(['GET'])
 def get_challenges(request):
     """Get all active reading challenges"""

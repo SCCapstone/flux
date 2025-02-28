@@ -221,7 +221,9 @@ const Challenges = () => {
         </div>
         
         {loading ? (
-          <p>Loading challenges...</p>
+          <div className="text-center py-10">
+            <p>Loading challenges...</p>
+          </div>
         ) : (
           <div>
             {getFilteredChallenges().length > 0 ? (

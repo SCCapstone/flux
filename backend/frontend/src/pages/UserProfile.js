@@ -122,7 +122,9 @@ const UserProfile = () => {
           title: book.title,
           author: book.author,
           image: book.image,
-          description: book.description
+          description: book.description,
+          genre: book.genre,
+          year: book.year
         }
       } 
     });
@@ -138,12 +140,6 @@ const UserProfile = () => {
         {profile.recent_reviews.map(review => (
           <div key={review.id} className="review-card">
             <div className="review-header">
-              <img 
-                src={review.book.image || '/default-book.png'} 
-                alt={review.book.title}
-                className="review-book-cover"
-                onClick={() => handleBookClick(review.book)}
-              />
               <div className="review-book-info">
                 <h3 
                   className="review-book-title"

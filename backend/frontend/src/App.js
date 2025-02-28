@@ -13,7 +13,6 @@ import UserSearch from './pages/UserSearch';
 import Readlist from './pages/Readlist';
 import ReadlistPage from './pages/ReadlistPage';
 import { AuthContext } from './AuthContext';
-import LoadingSpinner from './components/LoadingSpinner';
 
 // Lazy loaded gamification pages
 const Challenges = lazy(() => import('./components/Challenges'));
@@ -100,21 +99,21 @@ function App() {
         {/* Lazy loaded gamification routes */}
         <Route path="/challenges" element={
           <ProtectedRoute>
-            <Suspense fallback={<LoadingSpinner message="Loading challenges..." />}>
+            <Suspense fallback={<div>Loading challenges...</div>}>
               <Challenges />
             </Suspense>
           </ProtectedRoute>
         } />
         <Route path="/leaderboard" element={
           <ProtectedRoute>
-            <Suspense fallback={<LoadingSpinner message="Loading leaderboard..." />}>
+            <Suspense fallback={<div>Loading leaderboard...</div>}>
               <Leaderboard />
             </Suspense>
           </ProtectedRoute>
         } />
         <Route path="/achievements" element={
           <ProtectedRoute>
-            <Suspense fallback={<LoadingSpinner message="Loading achievements..." />}>
+            <Suspense fallback={<div>Loading achievements...</div>}>
               <Achievements />
             </Suspense>
           </ProtectedRoute>

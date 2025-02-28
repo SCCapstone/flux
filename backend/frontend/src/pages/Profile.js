@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
 import Navigation from '../components/Navigation';
 import '../styles/Profile.css';
 import '../styles/Gamification.css';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { user, handleLogin } = useContext(AuthContext);
   const [profile, setProfile] = useState({ 
     username: '', 
@@ -291,7 +293,19 @@ const Profile = () => {
   };
   
   const handleBookClick = (book) => {
-    window.location.href = `/book-details?id=${book.google_books_id}`;
+    navigate('/book-details', { 
+      state: { 
+        book: {
+          id: book.google_books_id,
+          title: book.title,
+          author: book.author,
+          image: book.image,
+          description: book.description,
+          genre: book.genre,
+          year: book.year
+        }
+      } 
+    });
   };
 
   // Rendering UI based on active tab
@@ -442,15 +456,15 @@ const Profile = () => {
               {recentReviews.length > 0 ? (
                 <div className="reviews-list">
                   {recentReviews.map(review => (
-                    <div key={review.id} className="review-card" onClick={() => handleBookClick(review.book)}>
+                    <div key={review.id} className="review-card">
                       <div className="review-header">
-                        <img 
-                          src={review.book.image || '/default-book.png'} 
-                          alt={review.book.title}
-                          className="review-book-cover"
-                        />
                         <div className="review-book-info">
-                          <h4 className="review-book-title">{review.book.title}</h4>
+                          <h4 
+                            className="review-book-title"
+                            onClick={() => handleBookClick(review.book)}
+                          >
+                            {review.book.title}
+                          </h4>
                           <p className="review-book-author">{review.book.author}</p>
                         </div>
                       </div>
