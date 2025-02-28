@@ -667,7 +667,7 @@ def update_readlist_books(request):
         if value:
             setattr(book, field, value)
 
-    book.save()  # ✅ Ensure the book is updated in the database
+    book.save()  
 
     # Handle ReadlistBook relationships
     for readlist in Readlist.objects.filter(user=request.user):
@@ -684,7 +684,7 @@ def get_readlist_books(request, readlist_id):
     """Retrieve books from a specific readlist"""
     try:
         readlist = Readlist.objects.get(id=readlist_id, user=request.user)
-        books = readlist.books.all()  # ✅ This ensures books are retrieved correctly
+        books = readlist.books.all()  
 
         book_data = [
             {
@@ -698,8 +698,6 @@ def get_readlist_books(request, readlist_id):
             }
             for book in books
         ]
-
-        print(f"📌 Books in '{readlist.name}': {book_data}")  # ✅ Debugging output
 
         return Response({"name": readlist.name, "books": book_data}, status=status.HTTP_200_OK)
 

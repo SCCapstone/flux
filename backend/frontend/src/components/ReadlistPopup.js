@@ -66,83 +66,68 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
     });
   };
 
-  // Create / Update readlist associations
-  const handleSave = async () => {
-    // Determine the unique ID we send to backend: 'id' or 'google_books_id'
-    // If you're consistently using 'id' on the backend, make sure 'book.id' is valid
-    if (!book || (!book.id && !book.google_books_id)) {
-      console.error("❌ Error: Missing book_id in frontend. Book object:", book);
-      return;
-    }
+  // Create & Update readlist associations
+const handleSave = async () => {
+  if (!book || (!book.id && !book.google_books_id)) {
+    return;
+  }
 
-    // Build the request payload with all fields:
-    const payload = {
-      // Use 'book.id' if your backend expects that; otherwise 'book.google_books_id'
-      book_id: book.id || book.google_books_id,
+  // Build the request payload with all fields:
+  const payload = {
+    book_id: book.id || book.google_books_id,
+    title: book.title || "",
+    author: book.author || "",
+    description: book.description || "",
+    genre: book.genre || "",
+    image: book.image || "",
+    year: book.year || "",
+    readlist_ids: Array.from(selectedReadlists),
+  };
 
-      // Send the rest of the details so the backend can update them
-      title: book.title || "",
-      author: book.author || "",
-      description: book.description || "",
-      genre: book.genre || "",
-      image: book.image || "",
-      year: book.year || "",
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/readlists/update/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify(payload),
+    });
 
-      // Which readlists to place the book in
-      readlist_ids: Array.from(selectedReadlists),
-    };
-
-    console.log("📤 Sending update request with payload:", payload);
-
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/readlists/update/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-      console.log("📥 Received response:", data);
-
-      if (!response.ok) {
-        console.error("❌ Error updating readlists:", data);
-        return;
-      }
-
+    if (response.ok) {
       onSave(); // Close the popup
-    } catch (error) {
-      console.error("❌ Error updating readlists:", error);
     }
-  };
+  } catch (error) {
+    console.error("Error updating readlists:", error);
+  }
+};
 
-  // Create a new readlist
-  const handleCreateReadlist = async () => {
-    if (!newReadlistName.trim()) return;
+// Create a new readlist
+const handleCreateReadlist = async () => {
+  if (!newReadlistName.trim()) return;
 
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/readlists/create/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ name: newReadlistName }),
-      });
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/readlists/create/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ name: newReadlistName }),
+    });
 
-      if (response.ok) {
-        const newReadlist = await response.json();
-        setReadlists((prev) => [...prev, newReadlist]);
-        setSelectedReadlists((prev) => new Set([...prev, newReadlist.id]));
-        setNewReadlistName("");
-        setCreatingReadlist(false);
-      }
-    } catch (error) {
-      console.error("Error creating readlist:", error);
+    if (response.ok) {
+      const newReadlist = await response.json();
+      setReadlists((prev) => [...prev, newReadlist]);
+      setSelectedReadlists((prev) => new Set([...prev, newReadlist.id]));
+      setNewReadlistName("");
+      setCreatingReadlist(false);
     }
-  };
+  } catch (error) {
+    console.error("Error creating readlist:", error);
+  }
+};
+
 
   if (!book) return null;
 
