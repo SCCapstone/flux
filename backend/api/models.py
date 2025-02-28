@@ -90,3 +90,72 @@ class ReadlistBook(models.Model):
 
     def __str__(self):
         return f"{self.book.title} in {self.readlist.name}"  
+class Achievement(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    badge_image = models.ImageField(upload_to='achievement_badges/', null=True, blank=True)
+    points = models.PositiveIntegerField(default=10)
+    
+    def __str__(self):
+        return self.name
+
+class UserAchievement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
+    date_earned = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'achievement')
+    
+    def __str__(self):
+        return f"{self.user.username} earned {self.achievement.name}"
+
+class ReadingChallenge(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    target_books = models.PositiveIntegerField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    
+    def __str__(self):
+        return self.name
+
+class UserChallenge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='challenges')
+    challenge = models.ForeignKey(ReadingChallenge, on_delete=models.CASCADE)
+    books_read = models.PositiveIntegerField(default=0)
+    joined_date = models.DateTimeField(auto_now_add=True)
+    completed = models.BooleanField(default=False)
+    completed_date = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('user', 'challenge')
+    
+    def __str__(self):
+        return f"{self.user.username} in {self.challenge.name}"
+
+class UserPoints(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='points')
+    total_points = models.PositiveIntegerField(default=0)
+    level = models.PositiveIntegerField(default=1)
+    
+    def __str__(self):
+        return f"{self.user.username}: {self.total_points} points (Level {self.level})"
+
+class PointsHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='points_history')
+    amount = models.IntegerField()
+    description = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username}: {self.amount} points for {self.description}"
+
+class ReadingStreak(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='reading_streak')
+    current_streak = models.PositiveIntegerField(default=0)
+    longest_streak = models.PositiveIntegerField(default=0)
+    last_read_date = models.DateField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.user.username}: {self.current_streak} days streak"

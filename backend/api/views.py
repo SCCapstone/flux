@@ -22,6 +22,11 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 from .models import Profile, Rating, Book, Favorite, Review, UserBookStatus, Readlist, ReadlistBook
 from .serializers import ReadlistSerializer
+from .models import (
+    Profile, Rating, Book, Favorite, Review, UserBookStatus,
+    Achievement, UserAchievement, ReadingChallenge,
+    UserChallenge, UserPoints, PointsHistory, ReadingStreak
+)
 
 GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
 
@@ -706,3 +711,531 @@ def get_readlist_books(request, readlist_id):
 
 
 
+def get_achievements(request):
+    """Get all available achievements in the system"""
+    achievements = Achievement.objects.all()
+    achievement_data = [{
+        'id': achievement.id,
+        'name': achievement.name,
+        'description': achievement.description,
+        'points': achievement.points,
+        'badge_image': request.build_absolute_uri(achievement.badge_image.url) if achievement.badge_image else None
+    } for achievement in achievements]
+    
+    return Response(achievement_data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_achievements(request):
+    """Get all achievements earned by the current user"""
+    user = request.user
+    user_achievements = UserAchievement.objects.filter(user=user).select_related('achievement')
+    
+    achievement_data = [{
+        'id': user_achievement.achievement.id,
+        'name': user_achievement.achievement.name,
+        'description': user_achievement.achievement.description,
+        'points': user_achievement.achievement.points,
+        'badge_image': request.build_absolute_uri(user_achievement.achievement.badge_image.url) 
+                        if user_achievement.achievement.badge_image else None,
+        'date_earned': user_achievement.date_earned
+    } for user_achievement in user_achievements]
+    
+    return Response(achievement_data)
+
+# Points related views
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_points(request):
+    """Get the current user's points and level"""
+    user = request.user
+    user_points, created = UserPoints.objects.get_or_create(
+        user=user,
+        defaults={'total_points': 0, 'level': 1}
+    )
+    
+    # Get user statistics for the profile
+    books_read = UserBookStatus.objects.filter(user=user, status='FINISHED').count()
+    reviews_written = Review.objects.filter(user=user).count()
+    
+    response_data = {
+        'total_points': user_points.total_points,
+        'level': user_points.level,
+        'books_read': books_read,
+        'reviews_written': reviews_written
+    }
+    
+    return Response(response_data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_points_history(request):
+    """Get the history of points earned by the current user"""
+    user = request.user
+    history = PointsHistory.objects.filter(user=user).order_by('-timestamp')
+    
+    history_data = [{
+        'amount': entry.amount,
+        'description': entry.description,
+        'timestamp': entry.timestamp
+    } for entry in history]
+    
+    return Response(history_data)
+
+# Helper function to award points to a user
+def award_points(user, amount, description):
+    """Award points to a user and update their level"""
+    user_points, created = UserPoints.objects.get_or_create(
+        user=user,
+        defaults={'total_points': 0, 'level': 1}
+    )
+    
+    # Add points
+    user_points.total_points += amount
+    
+    # Update level (1 level per 100 points)
+    new_level = (user_points.total_points // 100) + 1
+    if new_level > user_points.level:
+        user_points.level = new_level
+    
+    user_points.save()
+    
+    # Record in history
+    PointsHistory.objects.create(
+        user=user,
+        amount=amount,
+        description=description
+    )
+    
+    return user_points
+
+# Challenge related views
+@api_view(['GET'])
+def get_challenges(request):
+    """Get all active reading challenges"""
+    today = timezone.now().date()
+    challenges = ReadingChallenge.objects.filter(end_date__gte=today)
+    
+    challenge_data = [{
+        'id': challenge.id,
+        'name': challenge.name,
+        'description': challenge.description,
+        'target_books': challenge.target_books,
+        'start_date': challenge.start_date,
+        'end_date': challenge.end_date,
+        'days_remaining': (challenge.end_date - today).days
+    } for challenge in challenges]
+    
+    return Response(challenge_data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def join_challenge(request):
+    """Join a reading challenge"""
+    user = request.user
+    challenge_id = request.data.get('challenge_id')
+    
+    if not challenge_id:
+        return Response({'error': 'Challenge ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        challenge = ReadingChallenge.objects.get(id=challenge_id)
+        
+        # Check if the challenge is still active
+        if challenge.end_date < timezone.now().date():
+            return Response({'error': 'This challenge has ended'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user is already enrolled
+        if UserChallenge.objects.filter(user=user, challenge=challenge).exists():
+            return Response({'error': 'You are already enrolled in this challenge'}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        # Enroll user
+        user_challenge = UserChallenge.objects.create(
+            user=user,
+            challenge=challenge,
+            books_read=0,
+            completed=False
+        )
+        
+        return Response({
+            'message': f'Successfully joined the "{challenge.name}" challenge',
+            'challenge': {
+                'id': challenge.id,
+                'name': challenge.name,
+                'target_books': challenge.target_books,
+                'books_read': 0,
+                'progress_percentage': 0
+            }
+        })
+        
+    except ReadingChallenge.DoesNotExist:
+        return Response({'error': 'Challenge not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_challenges(request):
+    """Get all challenges the current user is participating in"""
+    user = request.user
+    user_challenges = UserChallenge.objects.filter(user=user).select_related('challenge')
+    
+    today = timezone.now().date()
+    challenge_data = []
+    
+    for user_challenge in user_challenges:
+        challenge = user_challenge.challenge
+        progress_percentage = (user_challenge.books_read / challenge.target_books) * 100 if challenge.target_books > 0 else 0
+        
+        challenge_data.append({
+            'id': challenge.id,
+            'name': challenge.name,
+            'description': challenge.description,
+            'target_books': challenge.target_books,
+            'books_read': user_challenge.books_read,
+            'progress_percentage': round(progress_percentage, 2),
+            'start_date': challenge.start_date,
+            'end_date': challenge.end_date,
+            'days_remaining': max(0, (challenge.end_date - today).days),
+            'completed': user_challenge.completed,
+            'completed_date': user_challenge.completed_date
+        })
+    
+    return Response(challenge_data)
+
+# Reading streak related views
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_reading_streak(request):
+    """Get the current user's reading streak"""
+    user = request.user
+    streak, created = ReadingStreak.objects.get_or_create(
+        user=user,
+        defaults={'current_streak': 0, 'longest_streak': 0}
+    )
+    
+    # Check if streak is still active (last read within the past day)
+    if streak.last_read_date:
+        days_since_last_read = (timezone.now().date() - streak.last_read_date).days
+        is_active = days_since_last_read <= 1
+    else:
+        is_active = False
+    
+    return Response({
+        'current_streak': streak.current_streak,
+        'longest_streak': streak.longest_streak,
+        'last_read_date': streak.last_read_date,
+        'is_active': is_active
+    })
+
+# Leaderboard view
+@api_view(['GET'])
+def get_leaderboard(request):
+    """Get the top users sorted by points"""
+    top_users = UserPoints.objects.select_related('user').order_by('-total_points')[:10]
+    
+    leaderboard_data = [{
+        'username': entry.user.username,
+        'level': entry.level,
+        'total_points': entry.total_points,
+        # Count achievements
+        'achievements': UserAchievement.objects.filter(user=entry.user).count()
+    } for entry in top_users]
+    
+    return Response(leaderboard_data)
+
+# Process achievement for finishing a book
+def process_finished_book_achievements(user):
+    """Check and award achievements related to finishing books"""
+    # Count finished books
+    finished_books_count = UserBookStatus.objects.filter(user=user, status='FINISHED').count()
+    
+    # Define achievement thresholds
+    achievement_thresholds = [
+        (1, "First Book", "Finished reading your first book", 10),
+        (5, "Bookworm", "Finished reading 5 books", 20),
+        (10, "Book Enthusiast", "Finished reading 10 books", 30),
+        (25, "Bibliophile", "Finished reading 25 books", 50),
+        (50, "Book Master", "Finished reading 50 books", 100),
+        (100, "Literary Legend", "Finished reading 100 books", 200)
+    ]
+    
+    # Check each threshold and award achievements
+    for count, name, description, points in achievement_thresholds:
+        if finished_books_count >= count:
+            # Try to get the achievement or create it if it doesn't exist
+            achievement, created = Achievement.objects.get_or_create(
+                name=name,
+                defaults={
+                    'description': description,
+                    'points': points
+                }
+            )
+            
+            # Award the achievement if the user doesn't have it yet
+            user_achievement, achievement_created = UserAchievement.objects.get_or_create(
+                user=user,
+                achievement=achievement
+            )
+            
+            # If this is a new achievement for the user, award points
+            if achievement_created:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+
+# EXTENDING EXISTING VIEW FUNCTIONS
+
+# Extend update_book_status to integrate with gamification
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_book_status_with_gamification(request, google_books_id):
+    """Update a book's status with gamification elements"""
+    # Keep the original function logic
+    response = update_book_status(request, google_books_id)
+    
+    # If the update was successful and the new status is 'FINISHED'
+    if response.status_code == status.HTTP_200_OK and request.data.get('status') == 'FINISHED':
+        user = request.user
+        
+        # Update reading streak
+        streak, created = ReadingStreak.objects.get_or_create(
+            user=user,
+            defaults={'current_streak': 0, 'longest_streak': 0}
+        )
+        
+        today = timezone.now().date()
+        
+        # If this is the first book or it's been more than a day since the last book
+        if streak.last_read_date is None or (today - streak.last_read_date).days > 1:
+            streak.current_streak = 1
+        # If the user finished a book today or yesterday, increment the streak
+        elif (today - streak.last_read_date).days <= 1 and streak.last_read_date != today:
+            streak.current_streak += 1
+        
+        # Update longest streak if current is higher
+        if streak.current_streak > streak.longest_streak:
+            streak.longest_streak = streak.current_streak
+        
+        streak.last_read_date = today
+        streak.save()
+        
+        # Award points for finishing the book
+        book = Book.objects.get(google_books_id=google_books_id)
+        award_points(user, 10, f"Finished reading: {book.title}")
+        
+        # Process achievements
+        process_finished_book_achievements(user)
+        
+        # Update challenges progress
+        active_challenges = UserChallenge.objects.filter(
+            user=user,
+            completed=False,
+            challenge__start_date__lte=today,
+            challenge__end_date__gte=today
+        )
+        
+        for user_challenge in active_challenges:
+            user_challenge.books_read += 1
+            
+            # Check if challenge is completed
+            if user_challenge.books_read >= user_challenge.challenge.target_books:
+                user_challenge.completed = True
+                user_challenge.completed_date = today
+                
+                # Award points for completing the challenge
+                award_points(
+                    user, 
+                    user_challenge.challenge.target_books * 5, 
+                    f"Completed challenge: {user_challenge.challenge.name}"
+                )
+                
+                # Create a challenge completion achievement
+                achievement, created = Achievement.objects.get_or_create(
+                    name=f"Challenge: {user_challenge.challenge.name}",
+                    defaults={
+                        'description': f"Completed the {user_challenge.challenge.name} challenge",
+                        'points': user_challenge.challenge.target_books * 5
+                    }
+                )
+                
+                UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            
+            user_challenge.save()
+        
+        # Add gamification data to the response
+        updated_response_data = response.data.copy()
+        updated_response_data.update({
+            'gamification': {
+                'points_earned': 10,
+                'current_streak': streak.current_streak,
+                'challenges_updated': active_challenges.count()
+            }
+        })
+        
+        return Response(updated_response_data, status=response.status_code)
+    
+    return response
+
+# Extend create_book_review to award points for reviews
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_book_review_with_gamification(request):
+    """Create a book review and award points"""
+    # Keep the original function logic
+    response = create_book_review(request)
+    
+    # If the review was created successfully
+    if response.status_code == status.HTTP_201_CREATED:
+        user = request.user
+        
+        # Award points for writing a review
+        award_points(user, 5, "Wrote a book review")
+        
+        # Check for review count achievements
+        review_count = Review.objects.filter(user=user).count()
+        
+        # Define achievement thresholds for reviews
+        review_achievements = [
+            (1, "First Review", "Wrote your first book review", 5),
+            (5, "Reviewer", "Wrote 5 book reviews", 15),
+            (10, "Critic", "Wrote 10 book reviews", 25),
+            (25, "Expert Reviewer", "Wrote 25 book reviews", 50),
+            (50, "Professional Critic", "Wrote 50 book reviews", 100)
+        ]
+        
+        # Check each threshold and award achievements
+        for count, name, description, points in review_achievements:
+            if review_count >= count:
+                # Try to get the achievement or create it if it doesn't exist
+                achievement, created = Achievement.objects.get_or_create(
+                    name=name,
+                    defaults={
+                        'description': description,
+                        'points': points
+                    }
+                )
+                
+                # Award the achievement if the user doesn't have it yet
+                user_achievement, achievement_created = UserAchievement.objects.get_or_create(
+                    user=user,
+                    achievement=achievement
+                )
+                
+                # If this is a new achievement for the user, award points
+                if achievement_created:
+                    award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+        
+        # Add gamification data to the response
+        updated_response_data = response.data.copy()
+        updated_response_data.update({
+            'gamification': {
+                'points_earned': 5,
+                'total_reviews': review_count
+            }
+        })
+        
+        return Response(updated_response_data, status=response.status_code)
+    
+    return response
+
+# Extend add_favorite to award points for adding favorites
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_favorite_with_gamification(request):
+    """Add a book to favorites and award points"""
+    # Keep the original function logic
+    response = add_favorite(request)
+    
+    # If the favorite was added successfully
+    if response.status_code == status.HTTP_200_OK:
+        user = request.user
+        
+        # Award points for adding a favorite
+        award_points(user, 2, "Added a book to favorites")
+        
+        # Check for favorites count achievements
+        favorites_count = Favorite.objects.filter(user=user).count()
+        
+        # Define achievement thresholds for favorites
+        favorite_achievements = [
+            (5, "Collector", "Added 5 books to favorites", 10),
+            (25, "Enthusiast", "Added 25 books to favorites", 25),
+            (50, "Book Lover", "Added 50 books to favorites", 50)
+        ]
+        
+        # Check each threshold and award achievements
+        for count, name, description, points in favorite_achievements:
+            if favorites_count >= count:
+                # Try to get the achievement or create it if it doesn't exist
+                achievement, created = Achievement.objects.get_or_create(
+                    name=name,
+                    defaults={
+                        'description': description,
+                        'points': points
+                    }
+                )
+                
+                # Award the achievement if the user doesn't have it yet
+                user_achievement, achievement_created = UserAchievement.objects.get_or_create(
+                    user=user,
+                    achievement=achievement
+                )
+                
+                # If this is a new achievement for the user, award points
+                if achievement_created:
+                    award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+        
+        # Add gamification data to the response
+        updated_response_data = response.data.copy()
+        updated_response_data.update({
+            'gamification': {
+                'points_earned': 2,
+                'total_favorites': favorites_count
+            }
+        })
+        
+        return Response(updated_response_data, status=response.status_code)
+    
+    return response
+
+# Initialize challenges (admin function)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_challenge(request):
+    """Create a new reading challenge (admin only)"""
+    user = request.user
+    
+    # Check if user is admin
+    if not user.is_staff:
+        return Response({'error': 'Only administrators can create challenges'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    name = request.data.get('name')
+    description = request.data.get('description')
+    target_books = request.data.get('target_books')
+    start_date = request.data.get('start_date')
+    end_date = request.data.get('end_date')
+    
+    # Validate required fields
+    if not all([name, description, target_books, start_date, end_date]):
+        return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Create the challenge
+        challenge = ReadingChallenge.objects.create(
+            name=name,
+            description=description,
+            target_books=target_books,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        return Response({
+            'id': challenge.id,
+            'name': challenge.name,
+            'description': challenge.description,
+            'target_books': challenge.target_books,
+            'start_date': challenge.start_date,
+            'end_date': challenge.end_date
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

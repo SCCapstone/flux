@@ -37,7 +37,17 @@ urlpatterns = [
     # Readlists
     path("readlists/", views.get_readlists, name="get_readlists"),
     path("readlists/create/", views.create_readlist, name="create_readlist"),
-    path("readlists/<int:readlist_id>/", views.get_readlist_books, name="get_readlist_books"),  # ✅ NEW Endpoint
+    path("readlists/<int:readlist_id>/", views.get_readlist_books, name="get_readlist_books"),  
     path("readlists/delete/<int:readlist_id>/", views.delete_readlist, name="delete_readlist"),
     path("readlists/update/", views.update_readlist_books, name="update_readlist_books"),
+
+    path('achievements/', views.get_achievements, name='get_achievements'),
+    path('user/achievements/', views.get_user_achievements, name='get_user_achievements'),
+    path('user/points/', views.get_user_points, name='get_user_points'),
+    path('user/points/history/', views.get_points_history, name='get_points_history'),
+    path('challenges/', views.get_challenges, name='get_challenges'),
+    path('challenges/join/', views.join_challenge, name='join_challenge'),
+    path('user/challenges/', views.get_user_challenges, name='get_user_challenges'),
+    path('user/streak/', views.get_reading_streak, name='get_reading_streak'),
+    path('leaderboard/', views.get_leaderboard, name='get_leaderboard'),
 ]

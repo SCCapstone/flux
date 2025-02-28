@@ -27,7 +27,6 @@
   gap: 15px;
 }
 
-/* ✅ Spacing & styles for filters */
 .filters select {
   padding: 5px;
   font-size: 14px;
@@ -69,3 +68,71 @@
   font-weight: bold;
   cursor: pointer;
 }
+
+/* Grid layout for books */
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Style for individual book cards */
+.favorite-card {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.favorite-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Book cover images */
+.favorite-cover {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Book title */
+.favorite-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 10px;
+  color: #333;
+  cursor: pointer;
+}
+
+.favorite-title:hover {
+  color: #2563eb;
+}
+
+/* Remove button */
+.remove-button {
+  background: #e3342f;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+.remove-button:hover {
+  background: #cc1f1a;
+}
+
+/* No favorites message */
+.no-favorites-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #555;
+}
+
