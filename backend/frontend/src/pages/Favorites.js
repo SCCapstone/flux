@@ -1,9 +1,22 @@
-import React, { useState, useContext, useMemo, useEffect, useCallback } from 'react';
+
+//import BookList from '../components/BookList'; 
+//import "../styles/Favorites.css";
+
+//const Favorites = () => (
+  //<div className="min-h-screen bg-gray-50">
+    //<Navigation />
+    //<BookList apiEndpoint="http://127.0.0.1:8000/api/favorites" title="My Favorites" />
+  //</div>
+//);
+
+//export default Favorites;
+import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
 import Navigation from '../components/Navigation';
 import '../styles/Favorites.css';
 import '../styles/Gamification.css';
+
 
 const Favorites = () => {
   const navigate = useNavigate();

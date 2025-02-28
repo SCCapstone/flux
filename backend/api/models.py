@@ -83,6 +83,25 @@ class UserFollow(models.Model):
     def __str__(self):
         return f"{self.follower.username} follows {self.followed.username}"
 
+class Readlist(models.Model):
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="readlists")
+    is_favorites = models.BooleanField(default=False) 
+    books = models.ManyToManyField(Book, through="ReadlistBook", related_name="readlists")  
+    
+    def __str__(self):
+        return f"{self.name} ({self.user.username})"
+
+class ReadlistBook(models.Model):
+    readlist = models.ForeignKey(Readlist, on_delete=models.CASCADE, related_name="readlist_books") 
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('readlist', 'book')
+
+    def __str__(self):
+        return f"{self.book.title} in {self.readlist.name}"
+
 class Achievement(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()

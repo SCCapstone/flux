@@ -1,0 +1,81 @@
+.readlist-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.readlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.readlist-title {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* ✅ Corrected button name */
+.add-readlist-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+.add-readlist-button:hover {
+  background-color: #45a049;
+}
+
+.readlist-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.readlist-card {
+  width: 180px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.readlist-cover {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.empty-cover {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ddd;
+  color: #666;
+  border-radius: 4px;
+}
+
+/* ✅ Use standardized remove button */
+.delete-button {
+  margin-top: 10px;
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.delete-button:hover {
+  background-color: #cc0000;
+}

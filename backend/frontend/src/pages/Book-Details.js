@@ -18,6 +18,7 @@ function BookDetails() {
   const [rating, setRating] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [totalRatings, setTotalRatings] = useState(0);
+  
   const [reviews, setReviews] = useState([]); 
   const [newReviewText, setNewReviewText] = useState('');
   const [bookStatus, setBookStatus] = useState('NOT_ADDED');
@@ -35,10 +36,14 @@ function BookDetails() {
   });
 
   useEffect(() => {
+    console.log("Location state in BookDetails:", locationRouter.state);
     if (locationRouter.state?.book) {
       setBook(locationRouter.state.book);
+    } else {
+      console.warn("Book data missing from state. Redirecting...");
+      navigate("/");
     }
-  }, [locationRouter]);
+  }, [locationRouter, navigate]);
 
   useEffect(() => {
     if (book && book.id) {
@@ -48,7 +53,7 @@ function BookDetails() {
           setAverageRating(response.data.average_rating);
           setTotalRatings(response.data.total_ratings);
         } catch (error) {
-          console.error('Error fetching ratings:', error);
+          console.error("Error fetching ratings:", error);
           setAverageRating(0);
           setTotalRatings(0);
         }
@@ -59,7 +64,7 @@ function BookDetails() {
           const response = await axios.get(`http://127.0.0.1:8000/api/books/${book.id}/reviews/`);
           setReviews(response.data);
         } catch (error) {
-          console.error('Error fetching reviews:', error);
+          console.error("Error fetching reviews:", error);
           setReviews([]);
         }
       };
@@ -265,7 +270,7 @@ function BookDetails() {
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 py-6">
           <p>Book details are not available. Please go back and select a book.</p>
-          <button onClick={() => navigate('/')} className="btn btn-primary">
+          <button onClick={() => navigate("/")} className="btn btn-primary">
             Go Back
           </button>
         </div>
@@ -332,18 +337,12 @@ function BookDetails() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="book-details">
           <h2 className="text-2xl font-bold mb-4">{book.title}</h2>
-          
+
           <div className="book-content">
             <div className="book-image-container">
-              {book.image && (
-                <img
-                  src={book.image}
-                  alt={book.title}
-                  className="book-image"
-                />
-              )}
+              {book.image && <img src={book.image} alt={book.title} className="book-image" />}
             </div>
-            
+
             <div className="book-info">
               {book.author && (
                 <p><strong>Authors:</strong> {book.author}</p>
@@ -404,13 +403,9 @@ function BookDetails() {
 
           <div className="rating-section mt-8">
             <h3 className="text-xl font-semibold mb-4">Rate Book</h3>
-            <StarRating
-              totalStars={5}
-              value={rating}
-              onRatingChange={(value) => handleRatingSubmit(value)}
-            />
+            <StarRating totalStars={5} value={rating} onRatingChange={setRating} />
             <p className="mt-2">
-              Average Rating: {averageRating || 'No ratings yet'} ({totalRatings} ratings)
+              Average Rating: {averageRating || "No ratings yet"} ({totalRatings} ratings)
             </p>
           </div>
 
@@ -435,10 +430,7 @@ function BookDetails() {
                 placeholder="Write a review"
                 className="review-textarea"
               />
-              <button 
-                onClick={handleReviewSubmit}
-                className="submit-review-button"
-              >
+              <button onClick={() => console.log("Submitting review")} className="submit-review-button">
                 Submit Review
               </button>
             </div>

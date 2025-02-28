@@ -10,6 +10,8 @@ import AuthorDetails from "./pages/Author-Details";
 import BestSellers from './pages/BestSellers';
 import UserProfile from './pages/UserProfile';
 import UserSearch from './pages/UserSearch';
+import Readlist from './pages/Readlist';
+import ReadlistPage from './pages/ReadlistPage';
 import { AuthContext } from './AuthContext';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -31,12 +33,15 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/login" element={
           isLoggedIn ? <Navigate to="/" replace /> : <Login />
         } />
         <Route path="/register" element={
           isLoggedIn ? <Navigate to="/" replace /> : <Register />
         } />
+
+        {/* Protected Routes */}
         <Route path="/" element={
           <ProtectedRoute>
             <Home />
@@ -67,6 +72,8 @@ function App() {
             <BestSellers />
           </ProtectedRoute>
         } />
+        
+        {/* User follow functionality */}
         <Route path="/user/:username" element={
           <ProtectedRoute>
             <UserProfile />
@@ -75,6 +82,18 @@ function App() {
         <Route path="/search-users" element={
           <ProtectedRoute>
             <UserSearch />
+          </ProtectedRoute>
+        } />
+        
+        {/* Readlist functionality */}
+        <Route path="/readlists" element={
+          <ProtectedRoute>
+            <Readlist />
+          </ProtectedRoute>
+        } />
+        <Route path="/readlist/:readlistId" element={
+          <ProtectedRoute>
+            <ReadlistPage />
           </ProtectedRoute>
         } />
         

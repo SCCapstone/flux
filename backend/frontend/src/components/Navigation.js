@@ -1,25 +1,22 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, User, Heart, LogOut, TrendingUp, Award, Users, Trophy, Search } from 'lucide-react';
+import { Home, User, Heart, LogOut, TrendingUp, Award, Users, Trophy, List, Search } from 'lucide-react';
 import { AuthContext } from '../AuthContext';
-import { useContext } from 'react';
 import '../styles/Navigation.css';
 import '../styles/Gamification.css';
 
 const Navigation = () => {
-  const { handleLogout } = useContext(AuthContext);
+  const { handleLogout, userLevel, userPoints } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const handleLogoutClick = async () => {
     try {
       const response = await fetch('http://127.0.0.1:8000/api/logout/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        headers: { 'Content-Type': 'application/json' },
       });
-      
+
       if (response.ok) {
         handleLogout();
         navigate('/login');
@@ -34,102 +31,68 @@ const Navigation = () => {
 
   return (
     <nav className="navbar">
-      <div className="navbar-container" style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        padding: '0 16px',
-        maxWidth: '1400px',
-        margin: '0 auto'
-      }}>
+      <div className="navbar-container">
         {/* Brand on the left */}
-        <div className="navbar-brand" style={{ 
-          marginRight: 'auto', 
-          flexShrink: 0,
-          paddingLeft: '0',
-          marginLeft: '-10px'
-        }}>
-          <h1 style={{ 
-            margin: 0, 
-            fontSize: '1.25rem', 
-            fontWeight: 'bold', 
-            color: '#4169e1' 
-          }}>Welcome to Flux!</h1>
+        <div className="navbar-brand">
+          <h1>Welcome to Flux!</h1>
         </div>
-               
-        {/* Navigation links */}
-        <div className="nav-links" style={{ 
-          display: 'flex',
-          marginLeft: '-10px'
-        }}>
-          <button
-            onClick={() => navigate('/')}
-            className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
-          >
-            <Home className="w-4 h-4" />
+
+        {/* Level Badge */}
+        <div className="level-badge">
+          <div className="level-text">LEVEL</div>
+          <div className="level-number">{userLevel || 1}</div>
+          <div className="level-points">{userPoints || 0} PTS</div>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="nav-links">
+          <button onClick={() => navigate('/')} className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
+            <Home className="icon" />
             Home
           </button>
-          
-          <button
-            onClick={() => navigate('/profile')}
-            className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}
-          >
-            <User className="w-4 h-4" />
+
+          <button onClick={() => navigate('/profile')} className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}>
+            <User className="icon" />
             Profile
           </button>
-          
-          <button
-            onClick={() => navigate('/favorites')}
-            className={`nav-link ${location.pathname === '/favorites' ? 'active' : ''}`}
-          >
-            <Heart className="w-4 h-4" />
+
+          <button onClick={() => navigate('/favorites')} className={`nav-link ${location.pathname === '/favorites' ? 'active' : ''}`}>
+            <Heart className="icon" />
             Favorites
           </button>
-          
-          <button
-            onClick={() => navigate('/bestsellers')}
-            className={`nav-link ${location.pathname === '/bestsellers' ? 'active' : ''}`}
-          >
-            <TrendingUp className="w-4 h-4" />
+
+          <button onClick={() => navigate('/readlists')} className={`nav-link ${location.pathname === '/readlists' ? 'active' : ''}`}>
+            <List className="icon" />
+            Readlists
+          </button>
+
+          <button onClick={() => navigate('/bestsellers')} className={`nav-link ${location.pathname === '/bestsellers' ? 'active' : ''}`}>
+            <TrendingUp className="icon" />
             Bestsellers
           </button>
           
-          <button
-            onClick={() => navigate('/search-users')}
-            className={`nav-link ${location.pathname === '/search-users' ? 'active' : ''}`}
-          >
-            <Search className="w-4 h-4" />
+          <button onClick={() => navigate('/search-users')} className={`nav-link ${location.pathname === '/search-users' ? 'active' : ''}`}>
+            <Search className="icon" />
             Find Users
           </button>
 
-          <button
-            onClick={() => navigate('/achievements')}
-            className={`nav-link ${location.pathname === '/achievements' ? 'active' : ''}`}
-          >
-            <Trophy className="w-4 h-4" />
+          <button onClick={() => navigate('/achievements')} className={`nav-link ${location.pathname === '/achievements' ? 'active' : ''}`}>
+            <Trophy className="icon" />
             Achievements
           </button>
-          
-          <button
-            onClick={() => navigate('/challenges')}
-            className={`nav-link ${location.pathname === '/challenges' ? 'active' : ''}`}
-          >
-            <Award className="w-4 h-4" />
+
+          <button onClick={() => navigate('/challenges')} className={`nav-link ${location.pathname === '/challenges' ? 'active' : ''}`}>
+            <Award className="icon" />
             Challenges
           </button>
-          
-          <button
-            onClick={() => navigate('/leaderboard')}
-            className={`nav-link ${location.pathname === '/leaderboard' ? 'active' : ''}`}
-          >
-            <Users className="w-4 h-4" />
+
+          <button onClick={() => navigate('/leaderboard')} className={`nav-link ${location.pathname === '/leaderboard' ? 'active' : ''}`}>
+            <Users className="icon" />
             Leaderboard
           </button>
-          
-          <button
-            onClick={handleLogoutClick}
-            className="nav-link logout-link"
-          >
-            <LogOut className="w-4 h-4" />
+
+          <button onClick={handleLogoutClick} className="nav-link logout-link">
+            <LogOut className="icon" />
             Logout
           </button>
         </div>
