@@ -1,57 +1,70 @@
-.readlist-container {
-  min-height: 100vh;
-  background-color: #f8f9fa;
-  padding: 20px;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: calc(100vh - 4.5rem); /* Adjust for navbar height */
+  background-color: #ffffff;
+  font-family: 'Inter', sans-serif;
 }
 
 .readlist-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
 }
 
 .readlist-title {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e3a8a;
 }
 
-/* ✅ Corrected button name */
 .add-readlist-button {
-  background-color: #4CAF50;
+  background-color: #2563eb;
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 0.625rem 1.25rem;
   cursor: pointer;
-  font-size: 16px;
-  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease;
 }
 
 .add-readlist-button:hover {
-  background-color: #45a049;
+  background-color: #1e40af;
 }
 
 .readlist-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
 }
 
 .readlist-card {
-  width: 180px;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 10px;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
   text-align: center;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.readlist-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .readlist-cover {
   width: 100%;
   height: 200px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 0.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .empty-cover {
@@ -60,22 +73,53 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ddd;
-  color: #666;
-  border-radius: 4px;
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
 }
 
-/* ✅ Use standardized remove button */
+.readlist-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
 .delete-button {
-  margin-top: 10px;
-  background-color: #ff4444;
+  width: 100%;
+  background-color: #dc2626;
   color: white;
   border: none;
-  padding: 6px 10px;
+  padding: 0.5rem;
   cursor: pointer;
-  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease;
 }
 
 .delete-button:hover {
-  background-color: #cc0000;
+  background-color: #b91c1c;
+}
+
+@media (max-width: 640px) {
+  .page-container {
+    padding: 1rem;
+  }
+
+  .readlist-title {
+    font-size: 1.5rem;
+  }
+
+  .add-readlist-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .readlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
 }

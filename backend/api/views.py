@@ -385,30 +385,41 @@ def create_or_get_book(request):
         })
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_favorites(request):
-    favorites = Favorite.objects.filter(user=request.user).select_related('book')
-    books = [
-        {
-            'id': fav.book.id,
-            'google_books_id': fav.book.google_books_id,
-            'title': fav.book.title,
-            'author': fav.book.author,
-            'description': fav.book.description,
-            'genre': fav.book.genre,
-            'image': fav.book.image,
-            'year': fav.book.year
-        }
-        for fav in favorites
-    ]
-    return Response(books)
+    """Retrieve books from the 'Favorites' readlist"""
+    try:
+        favorites_readlist = Readlist.objects.get(user=request.user, is_favorites=True)
+        books = favorites_readlist.books.all()  # Fetch books linked to the readlist
+
+        book_data = [
+            {
+                "id": book.id,
+                "google_books_id": book.google_books_id,
+                "title": book.title,
+                "author": book.author,
+                "genre": book.genre,
+                "year": book.year,
+                "image": book.image,
+            }
+            for book in books
+        ]
+
+        return Response(book_data, status=status.HTTP_200_OK)
+
+    except Readlist.DoesNotExist:
+        return Response({"error": "Favorites readlist not found"}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_favorite(request):
+    """Add a book to the 'Favorites' readlist and award points"""
     book_data = request.data
+    user = request.user
+
+    # Ensure the book exists or create it
     book, created = Book.objects.get_or_create(
         google_books_id=book_data['id'],
         defaults={
@@ -420,22 +431,82 @@ def add_favorite(request):
             'year': book_data.get('year', '')
         }
     )
-    favorite, created = Favorite.objects.get_or_create(user=request.user, book=book)
-    return Response({'message': 'Book added to favorites'})
+
+    try:
+        favorites_readlist = Readlist.objects.get(user=user, is_favorites=True)
+        _, added = ReadlistBook.objects.get_or_create(readlist=favorites_readlist, book=book)
+
+        if added:
+            # Award points for adding a book to favorites
+            award_points(user, 2, "Added a book to favorites")
+            
+            # Check for collection achievements
+            favorites_count = favorites_readlist.books.count()
+            achievement_messages = []
+
+            if favorites_count == 5:
+                achievement_messages.append("🏆 Collector: Added 5 books to favorites!")
+            elif favorites_count == 25:
+                achievement_messages.append("🏆 Enthusiast: Added 25 books to favorites!")
+            elif favorites_count == 50:
+                achievement_messages.append("🏆 Book Lover: Added 50 books to favorites!")
+
+            # Prepare gamification response
+            gamification_data = {
+                "notification": {
+                    "show": True,
+                    "message": "Book added to favorites!",
+                    "points": 2,
+                    "type": "success"
+                },
+                "achievements": achievement_messages
+            }
+
+            return Response({
+                'message': 'Book added to favorites',
+                'gamification': gamification_data
+            }, status=status.HTTP_200_OK)
+
+        return Response({'message': 'Book already in favorites'}, status=status.HTTP_200_OK)
+
+    except Readlist.DoesNotExist:
+        return Response({'error': 'Favorites readlist not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def remove_favorite(request):
+    """Remove a book from the 'Favorites' readlist"""
     book_id = request.data.get('book_id')
+    user = request.user
+
     try:
-        favorite = Favorite.objects.get(
-            user=request.user,
-            book__google_books_id=book_id
-        )
-        favorite.delete()
-        return Response({'message': 'Book removed from favorites'})
-    except Favorite.DoesNotExist:
-        return Response({'error': 'Favorite not found'}, status=404)
+        book = Book.objects.get(google_books_id=book_id)
+        favorites_readlist = Readlist.objects.get(user=user, is_favorites=True)
+        readlist_book = ReadlistBook.objects.filter(readlist=favorites_readlist, book=book)
+
+        if readlist_book.exists():
+            readlist_book.delete()
+
+            gamification_data = {
+                "notification": {
+                    "show": True,
+                    "message": "Book removed from favorites.",
+                    "points": 0,  # No points for removing
+                    "type": "info"
+                }
+            }
+
+            return Response({
+                'message': 'Book removed from favorites',
+                'gamification': gamification_data
+            }, status=status.HTTP_200_OK)
+
+        return Response({'error': 'Book not found in favorites'}, status=status.HTTP_404_NOT_FOUND)
+
+    except (Book.DoesNotExist, Readlist.DoesNotExist):
+        return Response({'error': 'Favorites readlist or book not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -915,6 +986,36 @@ def delete_readlist(request, readlist_id):
 
 # Gamification views
 @api_view(['GET'])
+<<<<<<< HEAD
+=======
+@permission_classes([IsAuthenticated])
+def get_readlist_books(request, readlist_id):
+    """Retrieve books from a specific readlist"""
+    try:
+        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
+        books = readlist.books.all()  
+
+        book_data = [
+            {
+                "id": book.id,
+                "google_books_id": book.google_books_id,
+                "title": book.title,
+                "author": book.author,
+                "genre": book.genre,
+                "year": book.year,
+                "image": book.image,
+            }
+            for book in books
+        ]
+
+        return Response({"name": readlist.name, "books": book_data}, status=status.HTTP_200_OK)
+
+    except Readlist.DoesNotExist:
+        return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+>>>>>>> 8a8128097e1412a5b27a6827e4eb6c34ae9e2256
 def get_achievements(request):
     """Get all available achievements in the system"""
     achievements = Achievement.objects.all()
