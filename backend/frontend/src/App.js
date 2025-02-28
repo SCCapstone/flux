@@ -6,12 +6,13 @@ import Home from './pages/Home';
 import BookDetails from './pages/Book-Details';
 import Profile from './pages/Profile';
 import Favorites from './pages/Favorites';
-import AuthorDetails from './pages/Author-Details';
+import AuthorDetails from "./pages/Author-Details";
 import BestSellers from './pages/BestSellers';
-import { AuthContext } from './AuthContext';
+import UserProfile from './pages/UserProfile';
+import UserSearch from './pages/UserSearch';
 import Readlist from './pages/Readlist';
 import ReadlistPage from './pages/ReadlistPage';
-import LoadingSpinner from './components/LoadingSpinner';
+import { AuthContext } from './AuthContext';
 
 // Lazy loaded gamification pages
 const Challenges = lazy(() => import('./components/Challenges'));
@@ -22,89 +23,24 @@ function App() {
   const { isLoggedIn } = useContext(AuthContext);
   
   const ProtectedRoute = ({ children }) => {
-    return isLoggedIn ? children : <Navigate to="/login" replace />;
+    if (!isLoggedIn) {
+      return <Navigate to="/login" replace />;
+    }
+    return children;
   };
   
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/register" element={isLoggedIn ? <Navigate to="/" replace /> : <Register />} />
-
-        {/* Protected Routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/book-details"
-          element={
-            <ProtectedRoute>
-              <BookDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/author-details"
-          element={
-            <ProtectedRoute>
-              <AuthorDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/favorites"
-          element={
-            <ProtectedRoute>
-              <Favorites />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/readlists"
-          element={
-            <ProtectedRoute>
-              <Readlist />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/readlist/:readlistId"
-          element={
-            <ProtectedRoute>
-              <ReadlistPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bestsellers"
-          element={
-            <ProtectedRoute>
-              <BestSellers />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Redirect any unknown routes to Home */}
         <Route path="/login" element={
           isLoggedIn ? <Navigate to="/" replace /> : <Login />
         } />
         <Route path="/register" element={
           isLoggedIn ? <Navigate to="/" replace /> : <Register />
         } />
+
+        {/* Protected Routes */}
         <Route path="/" element={
           <ProtectedRoute>
             <Home />
@@ -136,24 +72,48 @@ function App() {
           </ProtectedRoute>
         } />
         
+        {/* User follow functionality */}
+        <Route path="/user/:username" element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/search-users" element={
+          <ProtectedRoute>
+            <UserSearch />
+          </ProtectedRoute>
+        } />
+        
+        {/* Readlist functionality */}
+        <Route path="/readlists" element={
+          <ProtectedRoute>
+            <Readlist />
+          </ProtectedRoute>
+        } />
+        <Route path="/readlist/:readlistId" element={
+          <ProtectedRoute>
+            <ReadlistPage />
+          </ProtectedRoute>
+        } />
+        
         {/* Lazy loaded gamification routes */}
         <Route path="/challenges" element={
           <ProtectedRoute>
-            <Suspense fallback={<LoadingSpinner message="Loading challenges..." />}>
+            <Suspense fallback={<div>Loading challenges...</div>}>
               <Challenges />
             </Suspense>
           </ProtectedRoute>
         } />
         <Route path="/leaderboard" element={
           <ProtectedRoute>
-            <Suspense fallback={<LoadingSpinner message="Loading leaderboard..." />}>
+            <Suspense fallback={<div>Loading leaderboard...</div>}>
               <Leaderboard />
             </Suspense>
           </ProtectedRoute>
         } />
         <Route path="/achievements" element={
           <ProtectedRoute>
-            <Suspense fallback={<LoadingSpinner message="Loading achievements..." />}>
+            <Suspense fallback={<div>Loading achievements...</div>}>
               <Achievements />
             </Suspense>
           </ProtectedRoute>

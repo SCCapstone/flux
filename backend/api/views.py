@@ -11,6 +11,7 @@ import requests
 import base64
 import os
 import time
+from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -20,13 +21,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
-from .models import Profile, Rating, Book, Favorite, Review, UserBookStatus, Readlist, ReadlistBook
-from .serializers import ReadlistSerializer
 from .models import (
-    Profile, Rating, Book, Favorite, Review, UserBookStatus,
-    Achievement, UserAchievement, ReadingChallenge,
+    Profile, Rating, Book, Favorite, Review, UserBookStatus, UserFollow,
+    Readlist, ReadlistBook, Achievement, UserAchievement, ReadingChallenge,
     UserChallenge, UserPoints, PointsHistory, ReadingStreak
 )
+from .serializers import ReadlistSerializer
 
 GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
 
@@ -472,7 +472,6 @@ def add_favorite(request):
     except Readlist.DoesNotExist:
         return Response({'error': 'Favorites readlist not found'}, status=status.HTTP_404_NOT_FOUND)
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def remove_favorite(request):
@@ -506,7 +505,6 @@ def remove_favorite(request):
 
     except (Book.DoesNotExist, Readlist.DoesNotExist):
         return Response({'error': 'Favorites readlist or book not found'}, status=status.HTTP_404_NOT_FOUND)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -676,6 +674,275 @@ def get_user_book_statuses(request):
     ]
     return Response(data, status=status.HTTP_200_OK)
 
+# User Following System Views
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def follow_user(request):
+    """Follow a user"""
+    username = request.data.get('username')
+    
+    if not username:
+        return Response({'error': 'Username is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if username == request.user.username:
+        return Response({'error': 'You cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Print debug information
+        print(f"User {request.user.username} is trying to follow {username}")
+        
+        user_to_follow = User.objects.get(username=username)
+        print(f"Found user to follow: {user_to_follow.username} (ID: {user_to_follow.id})")
+        
+        # Check if already following
+        existing_follow = UserFollow.objects.filter(
+            follower=request.user,
+            followed=user_to_follow
+        ).exists()
+        
+        if existing_follow:
+            print(f"User {request.user.username} is already following {username}")
+            return Response({
+                'message': f'Already following {username}',
+                'is_following': True
+            })
+            
+        # Create the follow relationship
+        follow = UserFollow.objects.create(
+            follower=request.user,
+            followed=user_to_follow
+        )
+        print(f"Created follow relationship: {follow.id}")
+            
+        return Response({
+            'message': f'Now following {username}',
+            'is_following': True
+        })
+    except User.DoesNotExist:
+        print(f"User not found: {username}")
+        return Response({'error': f"User '{username}' not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error following user: {str(e)}")
+        return Response({'error': f"Error following user: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def unfollow_user(request):
+    """Unfollow a user"""
+    username = request.data.get('username')
+    
+    if not username:
+        return Response({'error': 'Username is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Print debug information
+        print(f"User {request.user.username} is trying to unfollow {username}")
+        
+        user_to_unfollow = User.objects.get(username=username)
+        print(f"Found user to unfollow: {user_to_unfollow.username} (ID: {user_to_unfollow.id})")
+        
+        # Find and delete the follow relationship
+        follow = UserFollow.objects.filter(
+            follower=request.user,
+            followed=user_to_unfollow
+        )
+        
+        if follow.exists():
+            follow_count = follow.count()
+            follow.delete()
+            print(f"Deleted {follow_count} follow relationship(s)")
+            return Response({
+                'message': f'Unfollowed {username}',
+                'is_following': False
+            })
+        else:
+            print(f"User {request.user.username} was not following {username}")
+            return Response({
+                'message': f'You were not following {username}',
+                'is_following': False
+            })
+    except User.DoesNotExist:
+        print(f"User not found: {username}")
+        return Response({'error': f"User '{username}' not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error unfollowing user: {str(e)}")
+        return Response({'error': f"Error unfollowing user: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_follow_status(request, username):
+    """Check if the authenticated user is following the specified user"""
+    try:
+        # Print debug information
+        print(f"Checking if {request.user.username} is following {username}")
+        
+        user_to_check = User.objects.get(username=username)
+        is_following = UserFollow.objects.filter(
+            follower=request.user,
+            followed=user_to_check
+        ).exists()
+        
+        print(f"Follow status: {is_following}")
+        
+        return Response({'is_following': is_following})
+    except User.DoesNotExist:
+        print(f"User not found: {username}")
+        return Response({'error': f"User '{username}' not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error checking follow status: {str(e)}")
+        return Response({'error': f"Error checking follow status: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_followers(request, username):
+    """Get a list of users who follow the specified user"""
+    try:
+        user = User.objects.get(username=username)
+        followers = UserFollow.objects.filter(followed=user).select_related('follower')
+        
+        followers_data = []
+        for follow in followers:
+            try:
+                profile = Profile.objects.get(user=follow.follower)
+                profile_image = request.build_absolute_uri(profile.profile_image.url) if profile.profile_image else None
+            except Profile.DoesNotExist:
+                profile_image = None
+                
+            followers_data.append({
+                'username': follow.follower.username,
+                'profile_image': profile_image,
+                'follow_date': follow.created_at
+            })
+            
+        return Response(followers_data)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_following(request, username):
+    """Get a list of users that the specified user follows"""
+    try:
+        user = User.objects.get(username=username)
+        following = UserFollow.objects.filter(follower=user).select_related('followed')
+        
+        following_data = []
+        for follow in following:
+            try:
+                profile = Profile.objects.get(user=follow.followed)
+                profile_image = request.build_absolute_uri(profile.profile_image.url) if profile.profile_image else None
+            except Profile.DoesNotExist:
+                profile_image = None
+                
+            following_data.append({
+                'username': follow.followed.username,
+                'profile_image': profile_image,
+                'follow_date': follow.created_at
+            })
+            
+        return Response(following_data)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_user_profile(request, username):
+    """Get a user's profile with additional follow statistics"""
+    try:
+        # Print debug information
+        print(f"Fetching profile for username: {username}")
+        
+        # Get the user
+        user = User.objects.get(username=username)
+        print(f"User found: {user.username} (ID: {user.id})")
+        
+        # Get or create profile
+        try:
+            profile = Profile.objects.get(user=user)
+        except Profile.DoesNotExist:
+            profile = Profile.objects.create(user=user)
+            print(f"Created new profile for user {username}")
+        
+        # Count followers and following
+        followers_count = UserFollow.objects.filter(followed=user).count()
+        following_count = UserFollow.objects.filter(follower=user).count()
+        print(f"Followers: {followers_count}, Following: {following_count}")
+        
+        # Get recent reviews by the user
+        recent_reviews = Review.objects.filter(user=user).order_by('-added_date')[:5]
+        reviews_data = []
+        
+        for review in recent_reviews:
+            reviews_data.append({
+                'id': review.id,
+                'book': {
+                    'id': review.book.id,
+                    'google_books_id': review.book.google_books_id,
+                    'title': review.book.title,
+                    'author': review.book.author,
+                    'image': review.book.image
+                },
+                'review_text': review.review_text,
+                'added_date': review.added_date
+            })
+        
+        # Check if logged-in user is following this profile
+        is_following = False
+        if request.user.is_authenticated:
+            is_following = UserFollow.objects.filter(
+                follower=request.user,
+                followed=user
+            ).exists()
+        
+        # Prepare response data
+        response_data = {
+            'username': user.username,
+            'email': user.email,  # Add email to the response
+            'bio': profile.bio,
+            'profile_image': request.build_absolute_uri(profile.profile_image.url) if profile.profile_image else None,
+            'followers_count': followers_count,
+            'following_count': following_count,
+            'is_following': is_following,
+            'recent_reviews': reviews_data
+        }
+        
+        print(f"Successfully prepared profile data for {username}")
+        return Response(response_data)
+        
+    except User.DoesNotExist:
+        print(f"User not found: {username}")
+        return Response({'error': f"User '{username}' not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error fetching profile: {str(e)}")
+        return Response({'error': f"Error fetching profile: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def search_users(request):
+    """Search for users by username"""
+    query = request.GET.get('q', '')
+    
+    if not query:
+        return Response([])
+    
+    users = User.objects.filter(username__icontains=query)[:20]  # Limit to 20 results
+    
+    results = []
+    for user in users:
+        try:
+            profile = Profile.objects.get(user=user)
+            profile_image = request.build_absolute_uri(profile.profile_image.url) if profile.profile_image else None
+            bio = profile.bio
+        except Profile.DoesNotExist:
+            profile_image = None
+            bio = ''
+            
+        results.append({
+            'username': user.username,
+            'profile_image': profile_image,
+            'bio': bio
+        })
+        
+    return Response(results)
+
+# Readlist views
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_readlists(request):
@@ -688,7 +955,6 @@ def get_readlists(request):
     readlists = Readlist.objects.filter(user=user).order_by("is_favorites")  # Ensures "Favorites" appears first
     serializer = ReadlistSerializer(readlists, many=True)
     return Response(serializer.data)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -715,72 +981,7 @@ def delete_readlist(request, readlist_id):
     except Readlist.DoesNotExist:
         return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)
 
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def update_readlist_books(request):
-    book_id = request.data.get("book_id")
-    readlist_ids = request.data.get("readlist_ids", [])
-
-    if not book_id:
-        return Response({"error": "Book ID is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Fetch or create book and update fields unconditionally
-    book, created = Book.objects.get_or_create(google_books_id=book_id)
-
-    # Force update all book fields
-    updated_fields = {
-        "title": request.data.get("title", "").strip(),
-        "author": request.data.get("author", "").strip(),
-        "description": request.data.get("description", "").strip(),
-        "genre": request.data.get("genre", "").strip(),
-        "image": request.data.get("image", "").strip(),
-        "year": request.data.get("year", "").strip(),
-    }
-
-    # Only update non-empty fields
-    for field, value in updated_fields.items():
-        if value:
-            setattr(book, field, value)
-
-    book.save()  
-
-    # Handle ReadlistBook relationships
-    for readlist in Readlist.objects.filter(user=request.user):
-        if readlist.id in readlist_ids:
-            ReadlistBook.objects.get_or_create(readlist=readlist, book=book)
-        else:
-            ReadlistBook.objects.filter(readlist=readlist, book=book).delete()
-
-    return Response({"message": "Book readlist associations updated"})
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_readlist_books(request, readlist_id):
-    """Retrieve books from a specific readlist"""
-    try:
-        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
-        books = readlist.books.all()  
-
-        book_data = [
-            {
-                "id": book.id,
-                "google_books_id": book.google_books_id,
-                "title": book.title,
-                "author": book.author,
-                "genre": book.genre,
-                "year": book.year,
-                "image": book.image,
-            }
-            for book in books
-        ]
-
-        return Response({"name": readlist.name, "books": book_data}, status=status.HTTP_200_OK)
-
-    except Readlist.DoesNotExist:
-        return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)
-
-
+# Gamification views
 @api_view(['GET'])
 def get_achievements(request):
     """Get all available achievements in the system"""
@@ -880,7 +1081,6 @@ def award_points(user, amount, description):
     
     return user_points
 
-# Challenge related views
 @api_view(['GET'])
 def get_challenges(request):
     """Get all active reading challenges"""
@@ -1033,7 +1233,7 @@ def process_finished_book_achievements(user):
     # Check each threshold and award achievements
     for count, name, description, points in achievement_thresholds:
         if finished_books_count >= count:
-            # Try to get the achievement or create it if it doesn't exist
+            # Try to get the achievement or create it if it doesn’t exist
             achievement, created = Achievement.objects.get_or_create(
                 name=name,
                 defaults={
@@ -1042,7 +1242,7 @@ def process_finished_book_achievements(user):
                 }
             )
             
-            # Award the achievement if the user doesn't have it yet
+            # Award the achievement if the user doesn’t have it yet
             user_achievement, achievement_created = UserAchievement.objects.get_or_create(
                 user=user,
                 achievement=achievement
@@ -1051,221 +1251,6 @@ def process_finished_book_achievements(user):
             # If this is a new achievement for the user, award points
             if achievement_created:
                 award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
-
-# EXTENDING EXISTING VIEW FUNCTIONS
-
-# Extend update_book_status to integrate with gamification
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def update_book_status_with_gamification(request, google_books_id):
-    """Update a book's status with gamification elements"""
-    # Keep the original function logic
-    response = update_book_status(request, google_books_id)
-    
-    # If the update was successful and the new status is 'FINISHED'
-    if response.status_code == status.HTTP_200_OK and request.data.get('status') == 'FINISHED':
-        user = request.user
-        
-        # Update reading streak
-        streak, created = ReadingStreak.objects.get_or_create(
-            user=user,
-            defaults={'current_streak': 0, 'longest_streak': 0}
-        )
-        
-        today = timezone.now().date()
-        
-        # If this is the first book or it's been more than a day since the last book
-        if streak.last_read_date is None or (today - streak.last_read_date).days > 1:
-            streak.current_streak = 1
-        # If the user finished a book today or yesterday, increment the streak
-        elif (today - streak.last_read_date).days <= 1 and streak.last_read_date != today:
-            streak.current_streak += 1
-        
-        # Update longest streak if current is higher
-        if streak.current_streak > streak.longest_streak:
-            streak.longest_streak = streak.current_streak
-        
-        streak.last_read_date = today
-        streak.save()
-        
-        # Award points for finishing the book
-        book = Book.objects.get(google_books_id=google_books_id)
-        award_points(user, 10, f"Finished reading: {book.title}")
-        
-        # Process achievements
-        process_finished_book_achievements(user)
-        
-        # Update challenges progress
-        active_challenges = UserChallenge.objects.filter(
-            user=user,
-            completed=False,
-            challenge__start_date__lte=today,
-            challenge__end_date__gte=today
-        )
-        
-        for user_challenge in active_challenges:
-            user_challenge.books_read += 1
-            
-            # Check if challenge is completed
-            if user_challenge.books_read >= user_challenge.challenge.target_books:
-                user_challenge.completed = True
-                user_challenge.completed_date = today
-                
-                # Award points for completing the challenge
-                award_points(
-                    user, 
-                    user_challenge.challenge.target_books * 5, 
-                    f"Completed challenge: {user_challenge.challenge.name}"
-                )
-                
-                # Create a challenge completion achievement
-                achievement, created = Achievement.objects.get_or_create(
-                    name=f"Challenge: {user_challenge.challenge.name}",
-                    defaults={
-                        'description': f"Completed the {user_challenge.challenge.name} challenge",
-                        'points': user_challenge.challenge.target_books * 5
-                    }
-                )
-                
-                UserAchievement.objects.get_or_create(user=user, achievement=achievement)
-            
-            user_challenge.save()
-        
-        # Add gamification data to the response
-        updated_response_data = response.data.copy()
-        updated_response_data.update({
-            'gamification': {
-                'points_earned': 10,
-                'current_streak': streak.current_streak,
-                'challenges_updated': active_challenges.count()
-            }
-        })
-        
-        return Response(updated_response_data, status=response.status_code)
-    
-    return response
-
-# Extend create_book_review to award points for reviews
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create_book_review_with_gamification(request):
-    """Create a book review and award points"""
-    # Keep the original function logic
-    response = create_book_review(request)
-    
-    # If the review was created successfully
-    if response.status_code == status.HTTP_201_CREATED:
-        user = request.user
-        
-        # Award points for writing a review
-        award_points(user, 5, "Wrote a book review")
-        
-        # Check for review count achievements
-        review_count = Review.objects.filter(user=user).count()
-        
-        # Define achievement thresholds for reviews
-        review_achievements = [
-            (1, "First Review", "Wrote your first book review", 5),
-            (5, "Reviewer", "Wrote 5 book reviews", 15),
-            (10, "Critic", "Wrote 10 book reviews", 25),
-            (25, "Expert Reviewer", "Wrote 25 book reviews", 50),
-            (50, "Professional Critic", "Wrote 50 book reviews", 100)
-        ]
-        
-        # Check each threshold and award achievements
-        for count, name, description, points in review_achievements:
-            if review_count >= count:
-                # Try to get the achievement or create it if it doesn't exist
-                achievement, created = Achievement.objects.get_or_create(
-                    name=name,
-                    defaults={
-                        'description': description,
-                        'points': points
-                    }
-                )
-                
-                # Award the achievement if the user doesn't have it yet
-                user_achievement, achievement_created = UserAchievement.objects.get_or_create(
-                    user=user,
-                    achievement=achievement
-                )
-                
-                # If this is a new achievement for the user, award points
-                if achievement_created:
-                    award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
-        
-        # Add gamification data to the response
-        updated_response_data = response.data.copy()
-        updated_response_data.update({
-            'gamification': {
-                'points_earned': 5,
-                'total_reviews': review_count
-            }
-        })
-        
-        return Response(updated_response_data, status=response.status_code)
-    
-    return response
-
-# Extend add_favorite to award points for adding favorites
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def add_favorite_with_gamification(request):
-    """Add a book to favorites and award points"""
-    # Keep the original function logic
-    response = add_favorite(request)
-    
-    # If the favorite was added successfully
-    if response.status_code == status.HTTP_200_OK:
-        user = request.user
-        
-        # Award points for adding a favorite
-        award_points(user, 2, "Added a book to favorites")
-        
-        # Check for favorites count achievements
-        favorites_count = Favorite.objects.filter(user=user).count()
-        
-        # Define achievement thresholds for favorites
-        favorite_achievements = [
-            (5, "Collector", "Added 5 books to favorites", 10),
-            (25, "Enthusiast", "Added 25 books to favorites", 25),
-            (50, "Book Lover", "Added 50 books to favorites", 50)
-        ]
-        
-        # Check each threshold and award achievements
-        for count, name, description, points in favorite_achievements:
-            if favorites_count >= count:
-                # Try to get the achievement or create it if it doesn't exist
-                achievement, created = Achievement.objects.get_or_create(
-                    name=name,
-                    defaults={
-                        'description': description,
-                        'points': points
-                    }
-                )
-                
-                # Award the achievement if the user doesn't have it yet
-                user_achievement, achievement_created = UserAchievement.objects.get_or_create(
-                    user=user,
-                    achievement=achievement
-                )
-                
-                # If this is a new achievement for the user, award points
-                if achievement_created:
-                    award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
-        
-        # Add gamification data to the response
-        updated_response_data = response.data.copy()
-        updated_response_data.update({
-            'gamification': {
-                'points_earned': 2,
-                'total_favorites': favorites_count
-            }
-        })
-        
-        return Response(updated_response_data, status=response.status_code)
-    
-    return response
 
 # Initialize challenges (admin function)
 @api_view(['POST'])
@@ -1310,3 +1295,67 @@ def create_challenge(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_readlist_books(request):
+    book_id = request.data.get("book_id")
+    readlist_ids = request.data.get("readlist_ids", [])
+
+    if not book_id:
+        return Response({"error": "Book ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Fetch or create book and update fields unconditionally
+    book, created = Book.objects.get_or_create(google_books_id=book_id)
+
+    # Force update all book fields
+    updated_fields = {
+        "title": request.data.get("title", "").strip(),
+        "author": request.data.get("author", "").strip(),
+        "description": request.data.get("description", "").strip(),
+        "genre": request.data.get("genre", "").strip(),
+        "image": request.data.get("image", "").strip(),
+        "year": request.data.get("year", "").strip(),
+    }
+
+    # Only update non-empty fields
+    for field, value in updated_fields.items():
+        if value:
+            setattr(book, field, value)
+
+    book.save()  
+
+    # Handle ReadlistBook relationships
+    for readlist in Readlist.objects.filter(user=request.user):
+        if readlist.id in readlist_ids:
+            ReadlistBook.objects.get_or_create(readlist=readlist, book=book)
+        else:
+            ReadlistBook.objects.filter(readlist=readlist, book=book).delete()
+
+    return Response({"message": "Book readlist associations updated"})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_readlist_books(request, readlist_id):
+    """Retrieve books from a specific readlist"""
+    try:
+        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
+        books = readlist.books.all()  
+
+        book_data = [
+            {
+                "id": book.id,
+                "google_books_id": book.google_books_id,
+                "title": book.title,
+                "author": book.author,
+                "genre": book.genre,
+                "year": book.year,
+                "image": book.image,
+            }
+            for book in books
+        ]
+
+        return Response({"name": readlist.name, "books": book_data}, status=status.HTTP_200_OK)
+
+    except Readlist.DoesNotExist:
+        return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)

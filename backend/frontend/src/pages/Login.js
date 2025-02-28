@@ -21,6 +21,8 @@ const Login = () => {
     }
 
     try {
+      console.log('Logging in with username:', username);
+      
       const response = await axios.post('http://127.0.0.1:8000/api/login/', {
         username,
         password,
@@ -29,17 +31,32 @@ const Login = () => {
       console.log('Login response:', response.data);
 
       if (response.data && response.data.token) {
+        // Store token in localStorage
         localStorage.setItem('token', response.data.token);
         
-        handleLogin({
-          username: response.data.username,
-          email: response.data.email,
+        // Make sure username is provided, fall back to form input if needed
+        const loginUsername = response.data.username || username;
+        console.log('Using username for login:', loginUsername);
+        
+        // Create user object
+        const userData = {
+          username: loginUsername,
+          email: response.data.email || '',
           token: response.data.token,
           bio: response.data.bio || ''
-        });
+        };
+        
+        console.log('Login user data to be stored:', userData);
+        
+        // Store user object directly in localStorage as a backup
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Update context with login handler
+        handleLogin(userData);
         
         navigate('/');
       } else {
+        console.error('Invalid login response:', response.data);
         setError('Invalid login response from server');
       }
     } catch (err) {

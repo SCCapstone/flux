@@ -4,9 +4,29 @@ export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    const token = localStorage.getItem('token');
-    return userData && token ? { ...userData, token } : null;
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      const token = localStorage.getItem('token');
+      
+      console.log("Loading auth from local storage:", 
+        userData ? `User found: ${userData.username || 'no username'}` : "No user", 
+        token ? "Token found" : "No token");
+      
+      if (userData && token) {
+        // Ensure the username is present
+        if (!userData.username) {
+          console.error("User data missing username!");
+          return null;
+        }
+        return { ...userData, token };
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing user data from localStorage:", error);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      return null;
+    }
   });
 
   const [isLoggedIn, setIsLoggedIn] = useState(!!user);
@@ -79,13 +99,20 @@ const AuthProvider = ({ children }) => {
       return;
     }
     
+    // Ensure username is present
+    if (!userData.username) {
+      console.error('Login data missing username!');
+      return;
+    }
+
     const userToStore = {
       username: userData.username,
-      email: userData.email,
+      email: userData.email || '',
       bio: userData.bio || '',
       token: userData.token
     };
     
+    console.log('Storing user data:', userToStore);
     setUser(userToStore);
     setIsLoggedIn(true);
     
@@ -107,6 +134,7 @@ const AuthProvider = ({ children }) => {
       
       if (token) {
         try {
+          console.log('Verifying token');
           const response = await fetch('http://127.0.0.1:8000/api/verify-token/', {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -114,23 +142,43 @@ const AuthProvider = ({ children }) => {
           });
           
           if (response.ok) {
+            console.log('Token verification successful');
             setIsLoggedIn(true);
+            
+            // If user context is empty but we have a valid token, try to restore from localStorage
+            if (!user) {
+              try {
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                  const userData = JSON.parse(storedUser);
+                  if (userData && userData.username) {
+                    console.log('Restoring user data from localStorage:', userData.username);
+                    setUser({...userData, token});
+                  }
+                }
+              } catch (error) {
+                console.error('Error restoring user from localStorage:', error);
+              }
+            }
+            
             // Fetch gamification data when token is verified
             fetchGamificationData(token);
           } else {
+            console.log('Token verification failed, logging out');
             handleLogout();
           }
         } catch (error) {
-          console.error('Token verification failed:', error);
+          console.error('Token verification error:', error);
           handleLogout();
         }
       } else {
+        console.log('No token found, not logged in');
         setIsLoggedIn(false);
       }
     };
     
     verifyAuth();
-  }, [handleLogout, fetchGamificationData]);
+  }, [handleLogout, fetchGamificationData, user]);
 
   const contextValue = {
     user,

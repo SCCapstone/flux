@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
 import Navigation from '../components/Navigation';
 import '../styles/Profile.css';
 import '../styles/Gamification.css';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { user, handleLogin } = useContext(AuthContext);
   const [profile, setProfile] = useState({ 
     username: '', 
@@ -31,7 +33,14 @@ const Profile = () => {
   const [readingStreak, setReadingStreak] = useState(null);
   const [challenges, setChallenges] = useState([]);
   const [pointsHistory, setPointsHistory] = useState([]);
+  const [recentReviews, setRecentReviews] = useState([]);
   const [isLoadingGamification, setIsLoadingGamification] = useState(true);
+  
+  // User following states
+  const [followers, setFollowers] = useState([]);
+  const [following, setFollowing] = useState([]);
+  const [loadingFollowers, setLoadingFollowers] = useState(false);
+  const [loadingFollowing, setLoadingFollowing] = useState(false);
 
   useEffect(() => {
     if (user?.token) {
@@ -53,13 +62,31 @@ const Profile = () => {
             profile_image: ''
           });
           setPreviewImage(data.profile_image);
+          
+          // Initial fetch of followers and following
+          fetchFollowers();
+          fetchFollowing();
         })
         .catch(err => console.error('Error fetching profile:', err));
       
       // Fetch gamification data
       fetchGamificationData();
+      
+      // Fetch reviews
+      fetchUserReviews();
     }
   }, [user]);
+  
+  // Fetch followers/following when tab changes
+  useEffect(() => {
+    if (user?.token) {
+      if (activeTab === 'followers') {
+        fetchFollowers();
+      } else if (activeTab === 'following') {
+        fetchFollowing();
+      }
+    }
+  }, [activeTab, user?.token]);
   
   const fetchGamificationData = async () => {
     if (!user?.token) return;
@@ -100,6 +127,80 @@ const Profile = () => {
       console.error('Error fetching gamification data:', error);
     } finally {
       setIsLoadingGamification(false);
+    }
+  };
+  
+  const fetchFollowers = async () => {
+    if (loadingFollowers || !user?.username) return;
+    
+    try {
+      setLoadingFollowers(true);
+      
+      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.username}/followers/`, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFollowers(data || []);
+      } else {
+        setFollowers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching followers:', error);
+      setFollowers([]);
+    } finally {
+      setLoadingFollowers(false);
+    }
+  };
+
+  const fetchFollowing = async () => {
+    if (loadingFollowing || !user?.username) return;
+    
+    try {
+      setLoadingFollowing(true);
+      
+      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.username}/following/`, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFollowing(data || []);
+      } else {
+        setFollowing([]);
+      }
+    } catch (error) {
+      console.error('Error fetching following:', error);
+      setFollowing([]);
+    } finally {
+      setLoadingFollowing(false);
+    }
+  };
+  
+  const fetchUserReviews = async () => {
+    if (!user?.token || !user?.username) return;
+    
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.username}/profile/`, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.recent_reviews) {
+          setRecentReviews(data.recent_reviews || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user reviews:', error);
+      setRecentReviews([]);
     }
   };
 
@@ -186,13 +287,39 @@ const Profile = () => {
     }
   };
 
-  // Rendering gamification UI based on active tab
+  // Navigation functions
+  const handleUserClick = (username) => {
+    window.location.href = `/user/${username}`;
+  };
+  
+  const handleBookClick = (book) => {
+    navigate('/book-details', { 
+      state: { 
+        book: {
+          id: book.google_books_id,
+          title: book.title,
+          author: book.author,
+          image: book.image,
+          description: book.description,
+          genre: book.genre,
+          year: book.year
+        }
+      } 
+    });
+  };
+
+  // Rendering UI based on active tab
   const renderGamificationContent = () => {
-    if (isLoadingGamification) {
-      return <div className="text-center py-8">Loading gamification data...</div>;
+    if (isLoadingGamification && (activeTab !== 'followers' && activeTab !== 'following')) {
+      return <div className="text-center py-8">Loading data...</div>;
     }
     
     switch(activeTab) {
+      case 'followers':
+        return renderFollowers();
+      
+      case 'following':
+        return renderFollowing();
       case 'achievements':
         return (
           <div className="bg-white shadow-md rounded-lg p-6">
@@ -323,29 +450,33 @@ const Profile = () => {
               </div>
             </div>
             
-            {/* Points History */}
+            {/* Recent Reviews */}
             <div className="bg-white shadow-md rounded-lg p-6">
-              <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
-              {pointsHistory.length > 0 ? (
-                <div className="divide-y">
-                  {pointsHistory.slice(0, 10).map((item, index) => (
-                    <div key={index} className="py-3 flex items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                        item.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                      }`}>
-                        {item.amount > 0 ? '+' : ''}{item.amount}
-                      </div>
-                      <div>
-                        <div className="font-medium">{item.description}</div>
-                        <div className="text-xs text-gray-500">
-                          {new Date(item.timestamp).toLocaleString()}
+              <h3 className="text-xl font-bold mb-4">Recent Reviews</h3>
+              {recentReviews.length > 0 ? (
+                <div className="reviews-list">
+                  {recentReviews.map(review => (
+                    <div key={review.id} className="review-card">
+                      <div className="review-header">
+                        <div className="review-book-info">
+                          <h4 
+                            className="review-book-title"
+                            onClick={() => handleBookClick(review.book)}
+                          >
+                            {review.book.title}
+                          </h4>
+                          <p className="review-book-author">{review.book.author}</p>
                         </div>
+                      </div>
+                      <p className="review-text">{review.review_text}</p>
+                      <div className="review-date">
+                        {new Date(review.added_date).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-gray-500">No activity recorded yet.</p>
+                <p className="text-center text-gray-500">No reviews yet. Start reviewing books!</p>
               )}
             </div>
           </div>
@@ -456,6 +587,92 @@ const Profile = () => {
     }
   };
 
+  const renderFollowers = () => {
+    if (loadingFollowers) {
+      return <div className="loading-message">Loading followers...</div>;
+    }
+
+    if (!followers.length) {
+      return (
+        <div className="empty-state">
+          <p>No followers yet.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <h2 className="section-title">Your Followers</h2>
+        <div className="user-grid">
+          {followers.map(follower => (
+            <div 
+              key={follower.username} 
+              className="user-card"
+              onClick={() => handleUserClick(follower.username)}
+            >
+              <div className="user-avatar-container">
+                <img 
+                  src={follower.profile_image || '/default-profile.png'} 
+                  alt={follower.username}
+                  className="user-avatar"
+                />
+              </div>
+              <div className="user-details">
+                <h3 className="user-name">{follower.username}</h3>
+                <p className="user-meta">
+                  Following since {new Date(follower.follow_date).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderFollowing = () => {
+    if (loadingFollowing) {
+      return <div className="loading-message">Loading following...</div>;
+    }
+
+    if (!following.length) {
+      return (
+        <div className="empty-state">
+          <p>You are not following anyone yet.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <h2 className="section-title">Accounts You Follow</h2>
+        <div className="user-grid">
+          {following.map(followedUser => (
+            <div 
+              key={followedUser.username} 
+              className="user-card"
+              onClick={() => handleUserClick(followedUser.username)}
+            >
+              <div className="user-avatar-container">
+                <img 
+                  src={followedUser.profile_image || '/default-profile.png'} 
+                  alt={followedUser.username}
+                  className="user-avatar"
+                />
+              </div>
+              <div className="user-details">
+                <h3 className="user-name">{followedUser.username}</h3>
+                <p className="user-meta">
+                  Following since {new Date(followedUser.follow_date).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (!user) {
     return <p className="profile-container">Please log in to view your profile.</p>;
   }
@@ -463,73 +680,73 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="profile-container">
         {error && <div className="alert alert-error">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
         
         {/* Gamification Summary */}
-<div className="bg-white shadow-md rounded-lg p-4 mb-6 flex flex-col md:flex-row items-center justify-between">
-  <div className="flex items-center mb-4 md:mb-0">
-    <div className="w-16 h-16 rounded-full overflow-hidden mr-4 border-4 border-blue-500">
-      <img 
-        src={previewImage || '/default-profile.png'} 
-        alt="Profile" 
-        className="w-full h-full object-cover"
-      />
-    </div>
-    <div>
-      <h1 className="text-2xl font-bold">{profile.username}</h1>
-      <div className="flex space-x-4 text-sm text-gray-600">
-        <span className="badge bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-          Level {userPoints?.level || 1}
-        </span>
-        <span className="badge bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
-          {userPoints?.total_points || 0} Points
-        </span>
-        <span className="badge bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
-          {readingStreak?.current_streak || 0} Day Streak
-        </span>
-      </div>
-    </div>
-  </div>
-  
-  {/* Progress to next level - styled */}
-  {userPoints && (
-    <div className="w-full md:w-1/3">
-      <div className="flex justify-between text-xs mb-1">
-        <span>Level {userPoints.level}</span>
-        <span>Level {userPoints.level + 1}</span>
-      </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
-          className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-in-out" 
-          style={{ width: `${userPoints.total_points % 100}%` }}
-        ></div>
-      </div>
-      <div className="text-xs text-center mt-1">
-        {100 - (userPoints.total_points % 100)} points to next level
-      </div>
-    </div>
-  )}
-</div>
+        <div className="profile-summary">
+          <div className="summary-left">
+            <div className="summary-avatar">
+              <img 
+                src={previewImage || '/default-profile.png'} 
+                alt="Profile" 
+                className="summary-avatar-img"
+              />
+            </div>
+            <div className="summary-info">
+              <h1 className="summary-username">{profile.username}</h1>
+              <div className="badge-container">
+                <span className="badge level-badge">
+                  Level {userPoints?.level || 1}
+                </span>
+                <span className="badge points-badge">
+                  {userPoints?.total_points || 0} Points
+                </span>
+                <span className="badge streak-badge">
+                  {readingStreak?.current_streak || 0} Day Streak
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Progress to next level */}
+          {userPoints && (
+            <div className="level-progress">
+              <div className="level-labels">
+                <span>Level {userPoints.level}</span>
+                <span>Level {userPoints.level + 1}</span>
+              </div>
+              <div className="progress-bar-bg">
+                <div 
+                  className="progress-bar-fill"
+                  style={{ width: `${userPoints.total_points % 100}%` }}
+                ></div>
+              </div>
+              <div className="progress-text">
+                {100 - (userPoints.total_points % 100)} points to next level
+              </div>
+            </div>
+          )}
+        </div>
         
         {/* Navigation Tabs */}
-        <div className="flex mb-6">
-  {['profile', 'stats', 'achievements', 'challenges'].map((tab) => (
-    <button
-      key={tab}
-      className={`px-4 py-2 font-medium ${activeTab === tab 
-        ? 'border-b-2 border-blue-500 text-blue-600' 
-        : 'text-gray-500 hover:text-gray-700'}`}
-      onClick={() => setActiveTab(tab)}
-    >
-      {tab.charAt(0).toUpperCase() + tab.slice(1)}
-    </button>
-  ))}
-</div>
+        <div className="profile-tabs">
+          {['profile', 'stats', 'achievements', 'challenges', 'followers', 'following'].map((tab) => (
+            <button
+              key={tab}
+              className={`tab-button ${activeTab === tab ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
         
         {/* Main Content */}
-        {renderGamificationContent()}
+        <div className="profile-content">
+          {renderGamificationContent()}
+        </div>
       </div>
     </div>
   );

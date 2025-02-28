@@ -62,33 +62,39 @@ const Readlist = () => {
   };
 
   return (
-    <div className="readlist-container">
+    <>
       <Navigation />
-      <div className="readlist-header">
-        <h1>My Readlists</h1>
-        <button className="add-readlist-button" onClick={handleCreateReadlist}>
-          + Add Readlist
-        </button>
-      </div>
+      <div className="page-container">
+        <header className="readlist-header">
+          <h1 className="readlist-title">My Readlists</h1>
+          <button className="add-readlist-button" onClick={handleCreateReadlist}>
+            + Add Readlist
+          </button>
+        </header>
 
-      <div className="readlist-grid">
-        {readlists.map((list) => (
-          <div key={list.id} className="readlist-card">
-            <div onClick={() => navigate(`/readlist/${list.id}`)}>
+        <div className="readlist-grid">
+          {readlists.map((list) => (
+            <div key={list.id} className="readlist-card" onClick={() => navigate(`/readlist/${list.id}`)}>
               {list.books.length > 0 ? (
                 <img src={list.books[0].image} alt={list.name} className="readlist-cover" />
               ) : (
                 <div className="empty-cover">No Books</div>
               )}
-              <h3>{list.name}</h3>
+              <h3 className="readlist-card-title">{list.name}</h3>
+              <button
+                className="delete-button"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent navigating when clicking delete
+                  handleDeleteReadlist(list.id);
+                }}
+              >
+                Delete
+              </button>
             </div>
-            <button className="delete-button" onClick={() => handleDeleteReadlist(list.id)}>
-              Delete
-            </button>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

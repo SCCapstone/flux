@@ -34,6 +34,15 @@ urlpatterns = [
     path('books/<str:google_books_id>/update-status/', views.update_book_status, name='update_book_status'),
     path('books/status/', views.get_user_book_statuses, name='get_user_book_statuses'),
     
+    # User following system routes
+    path('users/follow/', views.follow_user, name='follow_user'),
+    path('users/unfollow/', views.unfollow_user, name='unfollow_user'),
+    path('users/<str:username>/followers/', views.get_followers, name='get_followers'),
+    path('users/<str:username>/following/', views.get_following, name='get_following'),
+    path('users/<str:username>/check-follow/', views.check_follow_status, name='check_follow_status'),
+    path('users/<str:username>/profile/', views.get_user_profile, name='get_user_profile'),
+    path('users/search/', views.search_users, name='search_users'),
+    
     # Readlists
     path("readlists/", views.get_readlists, name="get_readlists"),
     path("readlists/create/", views.create_readlist, name="create_readlist"),
@@ -41,6 +50,7 @@ urlpatterns = [
     path("readlists/delete/<int:readlist_id>/", views.delete_readlist, name="delete_readlist"),
     path("readlists/update/", views.update_readlist_books, name="update_readlist_books"),
 
+    # Gamification routes
     path('achievements/', views.get_achievements, name='get_achievements'),
     path('user/achievements/', views.get_user_achievements, name='get_user_achievements'),
     path('user/points/', views.get_user_points, name='get_user_points'),
