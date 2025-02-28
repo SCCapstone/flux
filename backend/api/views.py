@@ -472,7 +472,6 @@ def add_favorite(request):
     except Readlist.DoesNotExist:
         return Response({'error': 'Favorites readlist not found'}, status=status.HTTP_404_NOT_FOUND)
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def remove_favorite(request):
@@ -506,7 +505,6 @@ def remove_favorite(request):
 
     except (Book.DoesNotExist, Readlist.DoesNotExist):
         return Response({'error': 'Favorites readlist or book not found'}, status=status.HTTP_404_NOT_FOUND)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -958,7 +956,6 @@ def get_readlists(request):
     serializer = ReadlistSerializer(readlists, many=True)
     return Response(serializer.data)
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_readlist(request):
@@ -986,36 +983,6 @@ def delete_readlist(request, readlist_id):
 
 # Gamification views
 @api_view(['GET'])
-<<<<<<< HEAD
-=======
-@permission_classes([IsAuthenticated])
-def get_readlist_books(request, readlist_id):
-    """Retrieve books from a specific readlist"""
-    try:
-        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
-        books = readlist.books.all()  
-
-        book_data = [
-            {
-                "id": book.id,
-                "google_books_id": book.google_books_id,
-                "title": book.title,
-                "author": book.author,
-                "genre": book.genre,
-                "year": book.year,
-                "image": book.image,
-            }
-            for book in books
-        ]
-
-        return Response({"name": readlist.name, "books": book_data}, status=status.HTTP_200_OK)
-
-    except Readlist.DoesNotExist:
-        return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)
-
-
-@api_view(['GET'])
->>>>>>> 8a8128097e1412a5b27a6827e4eb6c34ae9e2256
 def get_achievements(request):
     """Get all available achievements in the system"""
     achievements = Achievement.objects.all()
@@ -1266,7 +1233,7 @@ def process_finished_book_achievements(user):
     # Check each threshold and award achievements
     for count, name, description, points in achievement_thresholds:
         if finished_books_count >= count:
-            # Try to get the achievement or create it if it doesn't exist
+            # Try to get the achievement or create it if it doesn’t exist
             achievement, created = Achievement.objects.get_or_create(
                 name=name,
                 defaults={
@@ -1275,7 +1242,7 @@ def process_finished_book_achievements(user):
                 }
             )
             
-            # Award the achievement if the user doesn't have it yet
+            # Award the achievement if the user doesn’t have it yet
             user_achievement, achievement_created = UserAchievement.objects.get_or_create(
                 user=user,
                 achievement=achievement
@@ -1328,7 +1295,6 @@ def create_challenge(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
