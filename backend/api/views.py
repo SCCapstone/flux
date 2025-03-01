@@ -254,11 +254,11 @@ def get_book_ratings(request, google_books_id):
 def get_book_reviews(request, google_books_id):
     try:
         book = Book.objects.get(google_books_id=google_books_id)
-        reviews = Review.objects.filter(book=book)
+        reviews = Review.objects.filter(book=book, parent=None)
         reviews_data = []
-        
-        for review in reviews:
-            reviews_data.append({
+
+        def get_review_data(review):
+            review_data = {
                 'id': review.id,
                 'user': {
                     'id': review.user.id,
@@ -266,9 +266,20 @@ def get_book_reviews(request, google_books_id):
                 },
                 'review_text': review.review_text,
                 'added_date': review.added_date,
-                'updated_at': review.updated_at
-            })
+                'updated_at': review.updated_at,
+                'replies': []
+            }
+            
+            replies = review.replies.all()
+            for reply in replies:
+                review_data['replies'].append(get_review_data(reply))
+
+            return review_data
+        
+        for review in reviews:
+            reviews_data.append(get_review_data(review))
         return Response(reviews_data)
+        
     except Book.DoesNotExist:
         return Response([])
 
@@ -286,6 +297,7 @@ def create_book_review(request):
             )
         
         book = Book.objects.get(id=book_id)
+        
         review = Review.objects.create(
             user=request.user,
             book=book,
@@ -300,7 +312,8 @@ def create_book_review(request):
             },
             'review_text': review.review_text,
             'added_date': review.added_date,
-            'updated_at': review.updated_at
+            'updated_at': review.updated_at,
+            'parent': None
         }, status=status.HTTP_201_CREATED)
         
     except Book.DoesNotExist:
@@ -308,6 +321,45 @@ def create_book_review(request):
             {'error': 'Book not found.'}, 
             status=status.HTTP_404_NOT_FOUND
         )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_reply(request, review_id):
+    """
+    Handles creating a reply to an existing review.
+    """
+    try:
+        review_text = request.data.get('review_text')
+
+        if not review_text:
+            return Response({'error': 'Reply text is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            parent_review = Review.objects.get(id=review_id)
+        except Review.DoesNotExist:
+            return Response({'error': 'Parent review not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        reply = Review.objects.create(
+            user=request.user,
+            book=parent_review.book,  # Same book as the parent review
+            review_text=review_text,
+            parent=parent_review
+        )
+
+        return Response({
+            'id': reply.id,
+            'user': {
+                'id': reply.user.id,
+                'username': reply.user.username
+            },
+            'review_text': reply.review_text,
+            'added_date': reply.added_date,
+            'updated_at': reply.updated_at,
+            'parent': review_id
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
@@ -347,6 +399,7 @@ def update_review(request, review_id):
 def delete_review(request, review_id):
     try:
         review = Review.objects.get(id=review_id, user=request.user)
+        review.replies.all().delete()
         review.delete()
         return Response(
             {'message': 'Review deleted successfully.'}, 
