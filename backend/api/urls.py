@@ -15,6 +15,7 @@ urlpatterns = [
     path('reviews/', views.create_book_review, name='create_book_review'),
     path('reviews/<int:review_id>/', views.update_review, name='update_review'),
     path('reviews/<int:review_id>/delete/', views.delete_review, name='delete_review'),
+    path('reviews/<int:review_id>/reply/', views.create_reply, name='create_reply'),
     path('books/<str:google_books_id>/ratings/', views.get_book_ratings, name='get_book_ratings'),
     path('books/create-or-get/', views.create_or_get_book, name='create_or_get_book'),
     
