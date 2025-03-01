@@ -1359,3 +1359,93 @@ def get_readlist_books(request, readlist_id):
 
     except Readlist.DoesNotExist:
         return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_shared_readlists(request):
+    """Retrieve all readlists shared with the current user."""
+    user = request.user
+    shared_readlists = Readlist.objects.filter(shared_with=user)
+
+    readlist_data = [
+        {
+            "id": readlist.id,
+            "name": readlist.name,
+            "owner": readlist.user.username,
+            "books": [
+                {
+                    "id": book.id,
+                    "google_books_id": book.google_books_id,
+                    "title": book.title,
+                    "author": book.author,
+                    "genre": book.genre,
+                    "year": book.year,
+                    "image": book.image,
+                }
+                for book in readlist.books.all()
+            ],
+        }
+        for readlist in shared_readlists
+    ]
+
+    return Response(readlist_data, status=status.HTTP_200_OK)
+
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def share_readlist(request):
+    """Share a readlist with another user."""
+    user = request.user
+    readlist_id = request.data.get('readlist_id')
+    target_username = request.data.get('target_username')  # Who to share with
+
+    if not readlist_id or not target_username:
+        return Response({'error': 'Readlist ID and target username are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        readlist = Readlist.objects.get(id=readlist_id, user=user)
+        target_user = User.objects.get(username=target_username)
+
+        # Prevent duplicate sharing
+        if readlist.shared_with.filter(id=target_user.id).exists():
+            return Response({'message': 'Readlist already shared with this user.'}, status=status.HTTP_200_OK)
+
+        # Add the user to shared_with
+        readlist.shared_with.add(target_user)
+        readlist.save()
+
+        return Response({'message': f'Readlist "{readlist.name}" shared with {target_username}.'}, status=status.HTTP_200_OK)
+
+    except Readlist.DoesNotExist:
+        return Response({'error': 'Readlist not found or you do not have permission to share it.'}, status=status.HTTP_404_NOT_FOUND)
+    except User.DoesNotExist:
+        return Response({'error': 'Target user not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def unshare_readlist(request):
+    """Unshare a readlist from a specific user."""
+    user = request.user
+    readlist_id = request.data.get('readlist_id')
+    target_username = request.data.get('target_username')  # Remove this user
+
+    if not readlist_id or not target_username:
+        return Response({'error': 'Readlist ID and target username are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        readlist = Readlist.objects.get(id=readlist_id, user=user)
+        target_user = User.objects.get(username=target_username)
+
+        if not readlist.shared_with.filter(id=target_user.id).exists():
+            return Response({'error': 'This user does not have access to the readlist.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Remove the user
+        readlist.shared_with.remove(target_user)
+        readlist.save()
+
+        return Response({'message': f'Readlist "{readlist.name}" is no longer shared with {target_username}.'}, status=status.HTTP_200_OK)
+
+    except Readlist.DoesNotExist:
+        return Response({'error': 'Readlist not found or you do not have permission to unshare it.'}, status=status.HTTP_404_NOT_FOUND)
+    except User.DoesNotExist:
+        return Response({'error': 'Target user not found.'}, status=status.HTTP_404_NOT_FOUND)
