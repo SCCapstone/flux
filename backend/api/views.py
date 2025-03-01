@@ -312,7 +312,7 @@ def create_book_review(request):
         review = Review.objects.create(
             user=request.user,
             book=book,
-            review_text=review_text
+            review_text=review_text,
             parent=parent_review
         )
         
@@ -324,7 +324,7 @@ def create_book_review(request):
             },
             'review_text': review.review_text,
             'added_date': review.added_date,
-            'updated_at': review.updated_at
+            'updated_at': review.updated_at,
             'parent': review.parent.id if review.parent else None
         }, status=status.HTTP_201_CREATED)
         
