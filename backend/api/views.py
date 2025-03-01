@@ -196,7 +196,7 @@ def search_books(request):
                 for item in data.get('items', []):
                     volume_info = item.get('volumeInfo', {})
                     books.append({
-                        'id': item.get('id'),
+                        'google_books_id': item.get('id'),
                         'title': volume_info.get('title', 'No Title'),
                         'genre': ', '.join(volume_info.get('categories', ['Unknown Genre'])),
                         'author': ', '.join(volume_info.get('authors', ['Unknown Author'])),
@@ -216,7 +216,7 @@ def search_books(request):
 @permission_classes([IsAuthenticated])
 def rate_book(request):
     user = request.user
-    book_id = request.data.get('book_id')
+    book_id = request.data.get('google_books_id')
     rating_value = request.data.get('rating')
 
     if not book_id or not rating_value:
@@ -226,7 +226,7 @@ def rate_book(request):
         return Response({'error': 'Rating must be between 1 and 5.'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        book = Book.objects.get(id=book_id)
+        book = Book.objects.get(google_books_id=book_id)
         rating, created = Rating.objects.update_or_create(
             user=user, book=book, defaults={'rating': rating_value}
         )
@@ -396,7 +396,6 @@ def get_favorites(request):
 
         book_data = [
             {
-                "id": book.id,
                 "google_books_id": book.google_books_id,
                 "title": book.title,
                 "author": book.author,
@@ -421,7 +420,7 @@ def add_favorite(request):
 
     # Ensure the book exists or create it
     book, created = Book.objects.get_or_create(
-        google_books_id=book_data['id'],
+        google_books_id=book_data['google_books_id'],
         defaults={
             'title': book_data.get('title', ''),
             'author': book_data.get('author', ''),
@@ -476,7 +475,7 @@ def add_favorite(request):
 @permission_classes([IsAuthenticated])
 def remove_favorite(request):
     """Remove a book from the 'Favorites' readlist"""
-    book_id = request.data.get('book_id')
+    book_id = request.data.get('google_books_id')
     user = request.user
 
     try:
