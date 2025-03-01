@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import { AuthContext } from '../AuthContext';
 import Navigation from './Navigation';
-import '../styles/Gamification.css';
+import '../styles/Achievements.css';
 
 const Achievements = () => {
   const { user, userPoints, userLevel, refreshGamificationData } = useContext(AuthContext);
@@ -82,28 +82,28 @@ const Achievements = () => {
     ];
     
     return (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Collection Achievements</h2>
+      <div className="collection-achievements">
+        <h2 className="category-title">Collection Achievements</h2>
         
         {bookCount === 0 ? (
-          <p>Start adding books to your favorites to earn collection achievements!</p>
+          <p className="empty-state">Start adding books to your favorites to earn collection achievements!</p>
         ) : (
-          <div className="space-y-4">
+          <div>
             {collectionDefinitions.map((achievement) => (
-              <div key={achievement.id} className="mb-6">
-                <div className="flex items-center">
-                  <span className="mr-2">🔶</span>
-                  <span className="font-medium">{achievement.name}</span>
+              <div key={achievement.id} className="collection-achievement">
+                <div className="collection-title">
+                  <span className="collection-title-icon">🔶</span>
+                  <span className="collection-title-text">{achievement.name}</span>
                 </div>
-                <div className="pl-6 text-gray-700">
+                <div className="collection-progress">
                   {achievement.progress} / {achievement.target} books
                 </div>
-                <div className="pl-6 text-sm text-gray-600">
+                <div className="collection-description">
                   {achievement.description}
                 </div>
                 
                 {/* Progress bar */}
-                <div className="progress-container pl-6 mt-2" style={{ maxWidth: '300px' }}>
+                <div className="progress-container">
                   <div className="progress-bar">
                     <div 
                       className="progress-fill progress-fill-blue" 
@@ -154,35 +154,38 @@ const Achievements = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <h1 className="text-3xl font-bold mb-4">Achievements</h1>
+      <div className="achievements-container">
+        <div className="achievements-header">
+          <h1 className="achievements-title">Achievements</h1>
+        </div>
         
         {/* Level and Points Display */}
-        <div className="mb-6">
-          <div>Level {userLevel || 1}</div>
-          <div>{userPoints || 0} PTS</div>
+        <div className="level-badge-container">
+          <div className="level-badge">
+            <span className="level-label">Level</span>
+            <span className="level-value">{userLevel || 1}</span>
+            <span className="points-value">{userPoints || 0} PTS</span>
+          </div>
         </div>
         
         {/* Tabs */}
-        <div className="mb-4">
+        <div className="tab-buttons">
           <button
             onClick={() => setActiveTab('earned')}
-            className="mr-1 px-3 py-1 border bg-white"
-            style={{ backgroundColor: activeTab === 'earned' ? '#e5e7eb' : '' }}
+            className={`tab-button ${activeTab === 'earned' ? 'active' : ''}`}
           >
             Earned ({achievements.length})
           </button>
           <button
             onClick={() => setActiveTab('all')}
-            className="px-3 py-1 border bg-white"
-            style={{ backgroundColor: activeTab === 'all' ? '#e5e7eb' : '' }}
+            className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
           >
             All Achievements
           </button>
         </div>
         
         {loading ? (
-          <div className="text-center py-10">
+          <div className="loading-state">
             <p>Loading achievements...</p>
           </div>
         ) : (
@@ -190,8 +193,8 @@ const Achievements = () => {
             {activeTab === 'earned' && renderSimpleCollectionAchievements()}
             
             {Object.entries(groupedAchievements()).map(([category, categoryAchievements]) => (
-              <div key={category} className="mb-10">
-                <h2 className="text-2xl font-bold mb-4">{category} Achievements</h2>
+              <div key={category} className="achievement-category">
+                <h2 className="category-title">{category} Achievements</h2>
                 <div className="badges-container">
                   {categoryAchievements.map((achievement) => {
                     const earned = isAchievementEarned(achievement.id);
@@ -205,7 +208,7 @@ const Achievements = () => {
                             <img 
                               src={achievement.badge_image} 
                               alt={achievement.name} 
-                              className="w-8 h-8" 
+                              style={{ width: '2rem', height: '2rem' }}
                             />
                           ) : earned ? (
                             <span>🏆</span>
@@ -227,49 +230,45 @@ const Achievements = () => {
                 </div>
                 
                 {/* List view for achievements */}
-                <div className="mt-8 space-y-4">
+                <div className="achievements-list">
                   {categoryAchievements.map((achievement) => {
                     const earned = isAchievementEarned(achievement.id);
                     return (
                       <div 
                         key={`list-${achievement.id}`} 
-                        className="border-b pb-4 mb-4"
+                        className="achievement-item"
                       >
-                        <div className="flex items-start">
-                          <div 
-                            className={`badge-icon mr-3 ${earned ? '' : 'badge-locked'}`}
-                            style={{ width: '2.5rem', height: '2.5rem', fontSize: '1.25rem' }}
-                          >
-                            {achievement.badge_image ? (
-                              <img 
-                                src={achievement.badge_image} 
-                                alt={achievement.name} 
-                                className="w-6 h-6" 
-                              />
-                            ) : earned ? (
-                              <span>🏆</span>
-                            ) : (
-                              <span>🔒</span>
-                            )}
+                        <div className={`badge-icon ${earned ? '' : 'badge-locked'}`}>
+                          {achievement.badge_image ? (
+                            <img 
+                              src={achievement.badge_image} 
+                              alt={achievement.name} 
+                              style={{ width: '1.5rem', height: '1.5rem' }}
+                            />
+                          ) : earned ? (
+                            <span>🏆</span>
+                          ) : (
+                            <span>🔒</span>
+                          )}
+                        </div>
+                        
+                        <div className="achievement-info">
+                          <h3 className="achievement-name">{achievement.name}</h3>
+                          <p className="achievement-description">{achievement.description}</p>
+                          <div className="achievement-status">
+                            <span className={earned ? 'earned-status' : 'locked-status'}>
+                              {earned ? 'Earned' : 'Locked'}
+                            </span>
+                            <span className="status-separator">•</span>
+                            <span className="achievement-points">
+                              +{achievement.points} pts
+                            </span>
                           </div>
-                          <div>
-                            <h3 className="font-bold">{achievement.name}</h3>
-                            <p className="text-sm text-gray-600 mb-2">{achievement.description}</p>
-                            <div className="flex items-center text-sm">
-                              <span className={`font-medium ${earned ? 'text-green-600' : 'text-gray-500'}`}>
-                                {earned ? 'Earned' : 'Locked'}
-                              </span>
-                              <span className="mx-2">•</span>
-                              <span className="achievement-points inline-block text-xs">
-                                +{achievement.points} pts
-                              </span>
-                            </div>
-                            {earned && achievement.date_earned && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                Earned on {new Date(achievement.date_earned).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
+                          {earned && achievement.date_earned && (
+                            <p className="earned-date">
+                              Earned on {new Date(achievement.date_earned).toLocaleDateString()}
+                            </p>
+                          )}
                         </div>
                       </div>
                     );

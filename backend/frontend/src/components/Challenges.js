@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from '../AuthContext';
 import Navigation from './Navigation';
-import '../styles/Gamification.css';
+import '../styles/Challenges.css';
 
 const Challenges = () => {
   const { user } = useContext(AuthContext);
@@ -151,10 +151,11 @@ const Challenges = () => {
       
       {/* Gamification Notification */}
       {notification.show && (
-        <div className={`gamification-notification animate-in`}>
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <svg className={`h-5 w-5 ${notification.isPositive ? 'text-green-500' : 'text-red-500'}`} 
+        <div className={`gamification-notification ${notification.show ? 'animate-in' : 'animate-out'}`}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ flexShrink: 0 }}>
+              <svg className={`h-5 w-5`} 
+                   style={{ color: notification.isPositive ? '#10b981' : '#ef4444' }}
                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {notification.isPositive ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
@@ -165,126 +166,129 @@ const Challenges = () => {
                 )}
               </svg>
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{notification.message}</p>
+            <div style={{ marginLeft: '0.75rem' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827' }}>{notification.message}</p>
             </div>
           </div>
         </div>
       )}
       
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <h1 className="text-3xl font-bold mb-4">Reading Challenges</h1>
+      <div className="challenges-container">
+        <h1 className="challenges-title">Reading Challenges</h1>
         
-        <div className="mb-6">
-          <div>Level 1</div>
-          <div>0 PTS</div>
+        <div className="level-badge-container">
+          <div className="level-badge">
+            <span className="level-label">Level</span>
+            <span className="level-value">1</span>
+            <span className="points-value">0 PTS</span>
+          </div>
         </div>
         
-        <div className="mb-4">
+        <div className="tab-buttons">
           <button
             onClick={() => setActiveTab('active')}
-            className="mr-1 px-3 py-1 border bg-white"
-            style={{ backgroundColor: activeTab === 'active' ? '#e5e7eb' : '' }}
+            className={`tab-button ${activeTab === 'active' ? 'active' : ''}`}
           >
             Active Challenges
           </button>
           <button
             onClick={() => setActiveTab('completed')}
-            className="mr-1 px-3 py-1 border bg-white"
-            style={{ backgroundColor: activeTab === 'completed' ? '#e5e7eb' : '' }}
+            className={`tab-button ${activeTab === 'completed' ? 'active' : ''}`}
           >
             Completed
           </button>
           <button
             onClick={() => setActiveTab('expired')}
-            className="mr-1 px-3 py-1 border bg-white"
-            style={{ backgroundColor: activeTab === 'expired' ? '#e5e7eb' : '' }}
+            className={`tab-button ${activeTab === 'expired' ? 'active' : ''}`}
           >
             Expired
           </button>
           <button
             onClick={() => setActiveTab('available')}
-            className="px-3 py-1 border bg-white"
-            style={{ backgroundColor: activeTab === 'available' ? '#e5e7eb' : '' }}
+            className={`tab-button ${activeTab === 'available' ? 'active' : ''}`}
           >
             Available Challenges
           </button>
         </div>
         
-        <div className="mb-6">
+        <div>
           <button
             onClick={handleCreateChallenge}
-            className="px-3 py-1 border bg-white"
+            className="create-challenge-btn"
           >
             Create New Challenge
           </button>
         </div>
         
         {loading ? (
-          <div className="text-center py-10">
+          <div className="loading-state">
             <p>Loading challenges...</p>
           </div>
         ) : (
           <div>
             {getFilteredChallenges().length > 0 ? (
               getFilteredChallenges().map(challenge => (
-                <div key={challenge.id} className="mb-8 border-b pb-6">
-                  <h2 className="text-2xl font-bold mb-2">{challenge.name}</h2>
-                  <p className="mb-4">{challenge.description}</p>
+                <div key={challenge.id} className="challenge-card">
+                  <h2 className="challenge-title">{challenge.name}</h2>
+                  <p className="challenge-description">{challenge.description}</p>
                   
-                  <div className="mb-4">
-                    <p><strong>Goal:</strong> Read {challenge.target_books} books</p>
+                  <div className="challenge-stats">
+                    <div className="challenge-stat">
+                      <span className="stat-label">Goal</span>
+                      <span className="stat-value">Read {challenge.target_books} books</span>
+                    </div>
                     
                     {activeTab === 'active' && (
-                      <div className="mt-2 mb-3">
+                      <div className="progress-container">
                         <div className="progress-labels">
                           <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
                           <span>{challenge.progress_percentage}%</span>
                         </div>
-                        <div className="progress-container">
-                          <div className="progress-bar">
-                            <div 
-                              className="progress-fill progress-fill-blue" 
-                              style={{ width: `${challenge.progress_percentage}%` }}
-                            ></div>
-                          </div>
+                        <div className="progress-bar">
+                          <div 
+                            className="progress-fill progress-fill-blue" 
+                            style={{ width: `${challenge.progress_percentage}%` }}
+                          ></div>
                         </div>
                       </div>
                     )}
-                    
-                    <p>
-                      <strong>Starts:</strong> {challenge.start_date}
-                      <br />
-                      <strong>Ends:</strong> {challenge.end_date}
-                    </p>
-                    <p className="mt-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {challenge.days_remaining} days remaining
-                      </span>
-                    </p>
                   </div>
                   
-                  {activeTab === 'available' && (
-                    <button 
-                      onClick={() => handleJoinChallenge(challenge.id)}
-                      className="px-3 py-1 border bg-white"
-                    >
-                      Join Challenge
-                    </button>
-                  )}
+                  <div className="challenge-dates">
+                    <div>
+                      <span className="date-label">Starts:</span> {challenge.start_date}
+                    </div>
+                    <div>
+                      <span className="date-label">Ends:</span> {challenge.end_date}
+                    </div>
+                    <div className="days-remaining">
+                      {challenge.days_remaining} days remaining
+                    </div>
+                  </div>
                   
-                  {activeTab === 'active' && (
-                    <button 
-                      onClick={() => handleQuitChallenge(challenge.id)}
-                      className="px-3 py-1 border bg-white"
-                    >
-                      Quit Challenge
-                    </button>
-                  )}
+                  <div className="challenge-action">
+                    {activeTab === 'available' && (
+                      <button 
+                        onClick={() => handleJoinChallenge(challenge.id)}
+                        className="join-button"
+                      >
+                        Join Challenge
+                      </button>
+                    )}
+                    
+                    {activeTab === 'active' && (
+                      <button 
+                        onClick={() => handleQuitChallenge(challenge.id)}
+                        className="quit-button"
+                      >
+                        Quit Challenge
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))
             ) : (
-              <div className="py-4">
+              <div className="empty-state">
                 <p>
                   {activeTab === 'active' && "You're not participating in any active challenges."}
                   {activeTab === 'completed' && "You haven't completed any challenges yet."}

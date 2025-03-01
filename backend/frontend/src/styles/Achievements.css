@@ -1,0 +1,331 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.achievements-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: calc(100vh - 4.5rem); /* Adjust for navbar height */
+  font-family: 'Inter', sans-serif;
+}
+
+.achievements-header {
+  margin-bottom: 2rem;
+}
+
+.achievements-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 1rem;
+}
+
+.level-badge-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.level-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  color: white;
+  border-radius: 0.5rem;
+  min-width: 120px;
+  padding: 0.5rem 0.75rem;
+}
+
+.level-label, .points-value {
+  opacity: 0.9;
+  font-size: 0.875rem;
+  margin: 0 0.25rem;
+}
+
+.level-value {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin: 0 0.25rem;
+}
+
+.tab-buttons {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-buttons::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-button {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  font-family: 'Inter', sans-serif;
+}
+
+.tab-button:hover {
+  color: #111827;
+}
+
+.tab-button.active {
+  color: #2563eb;
+  border-bottom: 2px solid #2563eb;
+  font-weight: 600;
+}
+
+.achievement-category {
+  margin-bottom: 3rem;
+}
+
+.category-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.badges-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 5rem;
+}
+
+.badge-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.badge-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  color: #374151;
+}
+
+.badge-locked {
+  opacity: 0.5;
+}
+
+.badge-locked .badge-icon {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+}
+
+.achievement-points {
+  display: inline-block;
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: flex-start;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.achievement-info {
+  margin-left: 1rem;
+  flex: 1;
+}
+
+.achievement-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.achievement-description {
+  font-size: 0.9rem;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.achievement-status {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.earned-status {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.locked-status {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.status-separator {
+  margin: 0 0.5rem;
+  color: #9ca3af;
+}
+
+.earned-date {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.collection-achievements {
+  margin-bottom: 2.5rem;
+}
+
+.collection-achievement {
+  margin-bottom: 1.5rem;
+}
+
+.collection-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.collection-title-icon {
+  margin-right: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.collection-title-text {
+  font-weight: 600;
+  color: #111827;
+}
+
+.collection-progress {
+  padding-left: 1.5rem;
+  color: #4b5563;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.collection-description {
+  padding-left: 1.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.progress-container {
+  width: 100%;
+  max-width: 300px;
+  margin-top: 0.5rem;
+  margin-left: 1.5rem;
+}
+
+.progress-bar {
+  height: 0.625rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+.progress-fill-blue {
+  background-color: #2563eb;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem 0;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem 0;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.achievements-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@media (max-width: 768px) {
+  .achievements-container {
+    padding: 1.5rem;
+  }
+
+  .achievements-title {
+    font-size: 1.75rem;
+  }
+  
+  .badges-container {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .tab-buttons {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .tab-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .badge-item {
+    width: 4rem;
+  }
+  
+  .badge-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+  }
+}

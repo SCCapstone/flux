@@ -1,0 +1,344 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.challenges-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: calc(100vh - 4.5rem); /* Adjust for navbar height */
+  font-family: 'Inter', sans-serif;
+}
+
+.challenges-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.challenges-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 1rem;
+}
+
+.level-badge-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.level-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  color: white;
+  border-radius: 0.5rem;
+  min-width: 120px;
+  padding: 0.5rem 0.75rem;
+}
+
+.level-label, .points-value {
+  opacity: 0.9;
+  font-size: 0.875rem;
+  margin: 0 0.25rem;
+}
+
+.level-value {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin: 0 0.25rem;
+}
+
+.tab-buttons {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-buttons::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-button {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  font-family: 'Inter', sans-serif;
+}
+
+.tab-button:hover {
+  color: #111827;
+}
+
+.tab-button.active {
+  color: #2563eb;
+  border-bottom: 2px solid #2563eb;
+  font-weight: 600;
+}
+
+.create-challenge-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-bottom: 2rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.create-challenge-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.challenge-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.challenge-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.challenge-description {
+  font-size: 1.1rem;
+  color: #4b5563;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.challenge-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.challenge-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.progress-container {
+  margin-bottom: 1.5rem;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  height: 0.75rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+.progress-fill-blue {
+  background-color: #2563eb;
+}
+
+.challenge-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  color: #4b5563;
+}
+
+.date-label {
+  font-weight: 600;
+  color: #111827;
+}
+
+.days-remaining {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #dbeafe;
+  color: #1e40af;
+  margin-top: 0.5rem;
+}
+
+.challenge-action {
+  margin-top: 1rem;
+}
+
+.join-button, .quit-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.join-button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+}
+
+.join-button:hover {
+  background-color: #1d4ed8;
+}
+
+.quit-button {
+  background-color: white;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+}
+
+.quit-button:hover {
+  background-color: #fef2f2;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.gamification-notification {
+  position: fixed;
+  top: 5rem;
+  right: 1rem;
+  max-width: 20rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #10b981;
+  padding: 1rem;
+  z-index: 50;
+  font-family: 'Inter', sans-serif;
+  transform: translateY(0);
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.gamification-notification.animate-in {
+  animation: slideIn 0.3s ease forwards;
+}
+
+.gamification-notification.animate-out {
+  animation: slideOut 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .challenges-container {
+    padding: 1.5rem;
+  }
+
+  .challenges-title {
+    font-size: 1.75rem;
+  }
+
+  .challenge-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .tab-buttons {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tab-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .create-challenge-btn {
+    width: 100%;
+  }
+
+  .challenge-title {
+    font-size: 1.25rem;
+  }
+}
