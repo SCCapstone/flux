@@ -51,6 +51,7 @@ class Review(models.Model):
     added_date = models.DateTimeField(auto_now_add=True)
     review_text = models.TextField()
     updated_at = models.DateTimeField(auto_now=True)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
 
     def __str__(self):
         return f"{self.book.title} review by {self.user.username}"
