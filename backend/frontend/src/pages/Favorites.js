@@ -25,7 +25,7 @@ const Favorites = () => {
           'Authorization': `Bearer ${user.token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: book.google_books_id, ...book }),
+        body: JSON.stringify({ google_books_id: book.google_books_id, ...book }),
       });
 
       if (response.ok) {

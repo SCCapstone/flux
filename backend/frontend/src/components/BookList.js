@@ -56,7 +56,7 @@ const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          book_id: book.google_books_id,
+          google_books_id: book.google_books_id,
           readlist_ids: [],
         }),
       });

@@ -76,9 +76,14 @@ function BookDetails() {
 
 
   const [bookStatus, setBookStatus] = useState('NOT_ADDED');
+  const statusDisplayMap = {
+  WILL_READ: "Will Read",
+  READING: "Currently Reading",
+  FINISHED: "Finished Reading"
+};
 
 
-  
+
 
 
   // Gamification states
@@ -150,7 +155,7 @@ function BookDetails() {
   useEffect(() => {
 
 
-    if (book && book.id) {
+    if (book && book.google_books_id) {
 
 
       const fetchRatings = async () => {
@@ -159,7 +164,7 @@ function BookDetails() {
         try {
 
 
-          const response = await axios.get(`http://127.0.0.1:8000/api/books/${book.id}/ratings/`);
+          const response = await axios.get(`http://127.0.0.1:8000/api/books/${book.google_books_id}/ratings/`);
 
 
           setAverageRating(response.data.average_rating);
@@ -195,7 +200,7 @@ function BookDetails() {
         try {
 
 
-          const response = await axios.get(`http://127.0.0.1:8000/api/books/${book.id}/reviews/`);
+          const response = await axios.get(`http://127.0.0.1:8000/api/books/${book.google_books_id}/reviews/`);
 
 
           setReviews(response.data);
@@ -216,7 +221,7 @@ function BookDetails() {
       };
 
 
-      
+
 
 
       const fetchBookStatus = async () => {
@@ -225,7 +230,7 @@ function BookDetails() {
         if (!user?.token) return;
 
 
-        
+
 
 
         try {
@@ -234,7 +239,7 @@ function BookDetails() {
           const response = await axios.get(
 
 
-            `http://127.0.0.1:8000/api/books/${book.id}/status/`,
+            `http://127.0.0.1:8000/api/books/${book.google_books_id}/status/`,
 
 
             { headers: { Authorization: `Bearer ${user.token}` } }
@@ -284,10 +289,10 @@ function BookDetails() {
 
   const handleRatingSubmit = async (newRating) => {
 
+    console.log("newRating:", newRating);
+  console.log("book:", book);
 
-    if (!book || !book.id) {
-
-
+    if (!newRating || !book) {
       console.error('Book ID is missing. Cannot submit rating.');
 
 
@@ -306,7 +311,7 @@ function BookDetails() {
       const bookData = {
 
 
-        google_books_id: book.id,
+        google_books_id: book.google_books_id,
 
 
         title: book.title,
@@ -357,13 +362,13 @@ function BookDetails() {
         'http://127.0.0.1:8000/api/rate-book/',
 
 
-        { 
+        {
 
 
-          book_id: bookResponse.data.id, 
+          google_books_id: bookResponse.data.google_books_id,
 
 
-          rating: newRating 
+          rating: newRating
 
 
         },
@@ -381,7 +386,7 @@ function BookDetails() {
       setRating(newRating);
 
 
-      
+
 
 
       // Show gamification notification if points were earned
@@ -408,7 +413,7 @@ function BookDetails() {
         });
 
 
-        
+
 
 
         // If there's a new achievement
@@ -432,7 +437,7 @@ function BookDetails() {
         }
 
 
-        
+
 
 
         // Hide notification after 3 seconds
@@ -450,13 +455,13 @@ function BookDetails() {
       }
 
 
-      
+
 
 
       // Refresh ratings
 
 
-      const newRatingsResponse = await axios.get(`http://127.0.0.1:8000/api/books/${book.id}/ratings/`);
+      const newRatingsResponse = await axios.get(`http://127.0.0.1:8000/api/books/${book.google_books_id}/ratings/`);
 
 
       setAverageRating(newRatingsResponse.data.average_rating);
@@ -498,7 +503,7 @@ function BookDetails() {
       const bookData = {
 
 
-        google_books_id: book.id,
+        google_books_id: book.google_books_id,
 
 
         title: book.title,
@@ -573,7 +578,7 @@ function BookDetails() {
       setNewReviewText('');
 
 
-      
+
 
 
       // Show gamification notification if points were earned
@@ -600,7 +605,7 @@ function BookDetails() {
         });
 
 
-        
+
 
 
         // If there's a new achievement
@@ -624,7 +629,7 @@ function BookDetails() {
         }
 
 
-        
+
 
 
         // Hide notification after 3 seconds
@@ -721,7 +726,7 @@ function BookDetails() {
     setSelectedReview(reviewId);
   };
 
-  
+
 
 
   // Handle updating book reading status
@@ -733,7 +738,7 @@ function BookDetails() {
     if (!user?.token || !book) return;
 
 
-    
+
 
 
     try {
@@ -742,7 +747,7 @@ function BookDetails() {
       const response = await axios.post(
 
 
-        `http://127.0.0.1:8000/api/books/${book.id}/update-status/`,
+        `http://127.0.0.1:8000/api/books/${book.google_books_id}/update-status/`,
 
 
         { status },
@@ -754,13 +759,13 @@ function BookDetails() {
       );
 
 
-      
+
 
 
       setBookStatus(status);
 
 
-      
+
 
 
       // Show gamification notification if points were earned
@@ -787,7 +792,7 @@ function BookDetails() {
         });
 
 
-        
+
 
 
         // If there's a new achievement
@@ -811,7 +816,7 @@ function BookDetails() {
         }
 
 
-        
+
 
 
         // Hide notification after 3 seconds
@@ -841,7 +846,7 @@ function BookDetails() {
   };
 
 
-  
+
 
 
   // Close achievement popup
@@ -919,7 +924,7 @@ function BookDetails() {
       <Navigation />
 
 
-      
+
 
 
       {/* Gamification Notification */}
@@ -976,7 +981,7 @@ function BookDetails() {
       )}
 
 
-      
+
 
 
       {/* Achievement Popup */}
@@ -1000,16 +1005,16 @@ function BookDetails() {
                 {achievementPopup.achievement.badge_image ? (
 
 
-                  <img 
+                  <img
 
 
-                    src={achievementPopup.achievement.badge_image} 
+                    src={achievementPopup.achievement.badge_image}
 
 
-                    alt={achievementPopup.achievement.name} 
+                    alt={achievementPopup.achievement.name}
 
 
-                    className="w-16 h-16" 
+                    className="w-16 h-16"
 
 
                   />
@@ -1045,7 +1050,7 @@ function BookDetails() {
               </div>
 
 
-              <button 
+              <button
 
 
                 onClick={closeAchievementPopup}
@@ -1075,7 +1080,7 @@ function BookDetails() {
       )}
 
 
-      
+
 
 
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -1153,7 +1158,7 @@ function BookDetails() {
               )}
 
 
-              
+
 
 
               {/* Reading Status Controls - only show if user is logged in */}
@@ -1162,109 +1167,110 @@ function BookDetails() {
               {user && (
 
 
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                  <div className="mt-4 p-4 rounded-lg border">
 
 
-                  <h4 className="font-semibold mb-3">Update Reading Status:</h4>
+                    <h4 className="font-semibold mb-3">Update Reading Status: </h4>
+                    <h4 className="font-semibold mb-3">Currently: {statusDisplayMap[bookStatus] || "Book not added"}</h4>
 
 
-                  <div className="flex space-x-2">
+                    <div className="flex space-x-2">
 
 
-                    <button 
+                      <button
 
 
-                      onClick={() => handleUpdateBookStatus('WILL_READ')}
+                          onClick={() => handleUpdateBookStatus('WILL_READ')}
 
 
-                      className={`flex-1 py-2 rounded ${
+                          className={`flex-1 py-2 rounded ${
 
 
-                        bookStatus === 'WILL_READ' 
+                              bookStatus === 'WILL_READ'
 
 
-                          ? 'bg-gray-600 text-white' 
+                                  ? 'bg-gray-600 text-white'
 
 
-                          : 'bg-gray-200 hover:bg-gray-300'
+                                  : 'bg-gray-200 hover:bg-gray-300'
 
 
-                      }`}
+                          }`}
 
 
-                    >
+                      >
 
 
-                      Want to Read
+                        Want to Read
 
 
-                    </button>
+                      </button>
 
 
-                    <button 
+                      <button
 
 
-                      onClick={() => handleUpdateBookStatus('READING')}
+                          onClick={() => handleUpdateBookStatus('READING')}
 
 
-                      className={`flex-1 py-2 rounded ${
+                          className={`flex-1 py-2 rounded ${
 
 
-                        bookStatus === 'READING' 
+                              bookStatus === 'READING'
 
 
-                          ? 'bg-blue-600 text-white' 
+                                  ? 'bg-blue-600 text-white'
 
 
-                          : 'bg-blue-100 hover:bg-blue-200'
+                                  : 'bg-blue-100 hover:bg-blue-200'
 
 
-                      }`}
+                          }`}
 
 
-                    >
+                      >
 
 
-                      Currently Reading
+                        Currently Reading
 
 
-                    </button>
+                      </button>
 
 
-                    <button 
+                      <button
 
 
-                      onClick={() => handleUpdateBookStatus('FINISHED')}
+                          onClick={() => handleUpdateBookStatus('FINISHED')}
 
 
-                      className={`flex-1 py-2 rounded ${
+                          className={`flex-1 py-2 rounded ${
 
 
-                        bookStatus === 'FINISHED' 
+                              bookStatus === 'FINISHED'
 
 
-                          ? 'bg-green-600 text-white' 
+                                  ? 'bg-green-600 text-white'
 
 
-                          : 'bg-green-100 hover:bg-green-200'
+                                  : 'bg-green-100 hover:bg-green-200'
 
 
-                      }`}
+                          }`}
 
 
-                    >
+                      >
 
 
-                      Finished
+                        Finished
 
 
-                    </button>
+                      </button>
+
+
+                    </div>
 
 
                   </div>
-
-
-                </div>
 
 
               )}
@@ -1276,13 +1282,10 @@ function BookDetails() {
           </div>
 
 
-
-
-
           <div className="rating-section mt-8">
 
 
-            <h3 className="text-xl font-semibold mb-4">Rate Book</h3>
+          <h3 className="text-xl font-semibold mb-4">Rate Book</h3>
 
 
             <StarRating totalStars={5} value={rating} onRatingChange={handleRatingSubmit} />

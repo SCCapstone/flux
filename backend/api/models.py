@@ -88,7 +88,8 @@ class Readlist(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="readlists")
     is_favorites = models.BooleanField(default=False) 
-    books = models.ManyToManyField(Book, through="ReadlistBook", related_name="readlists")  
+    books = models.ManyToManyField(Book, through="ReadlistBook", related_name="readlists")
+    shared_with = models.ManyToManyField(User, related_name="shared_readlists", blank=True)  
     
     def __str__(self):
         return f"{self.name} ({self.user.username})"

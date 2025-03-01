@@ -61,4 +61,8 @@ urlpatterns = [
     path('user/challenges/', views.get_user_challenges, name='get_user_challenges'),
     path('user/streak/', views.get_reading_streak, name='get_reading_streak'),
     path('leaderboard/', views.get_leaderboard, name='get_leaderboard'),
+
+    path('readlists/share/', views.share_readlist, name='share_readlist'),
+    path('readlists/shared/', views.get_shared_readlists, name='get_shared_readlists'),
+
 ]
