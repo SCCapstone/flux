@@ -8,7 +8,8 @@ import '../styles/Gamification.css';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { user, readingStreak, userPoints, refreshGamificationData } = useContext(AuthContext);
+  // Remove userPoints from destructuring since it's not being used
+  const { user, readingStreak, refreshGamificationData } = useContext(AuthContext);
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -24,7 +25,8 @@ const Home = () => {
     type: 'success',
     points: 0
   });
-  const [showChallenges, setShowChallenges] = useState(false);
+  // Either use showChallenges or comment out the state if it's planned for future use
+  const [showChallenges] = useState(false); // Removed setShowChallenges since it's not being used
   const [challenges, setChallenges] = useState([]);
 
   const fetchFavorites = useCallback(async () => {
@@ -251,24 +253,22 @@ const Home = () => {
       {/* Reading streak reminder (show only if logged in) */}
       {user && readingStreak && (
         <div className="max-w-7xl mx-auto px-4 mt-4">
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <div>
-              <p className="font-medium">
+          <div className="streak-reminder">
+            <div className="streak-reminder-text">
+              <p>
                 {readingStreak.is_active 
                   ? `${readingStreak.current_streak} day streak! Keep it up!` 
                   : "Don't break your streak! Mark a book as read today."}
               </p>
-              <p className="text-sm text-gray-600">
+              <p>
                 Reading daily helps you progress faster and earn more achievements.
               </p>
             </div>
+            <button onClick={() => navigate('/challenges')} className="view-challenges-btn">
+              View Challenges
+            </button>
           </div>
-          <button onClick={() => navigate('/challenges')} className="view-challenges-btn">
-            View Challenges
-          </button>
         </div>
-      </div>
       )}
       
       {/* Active Challenges */}

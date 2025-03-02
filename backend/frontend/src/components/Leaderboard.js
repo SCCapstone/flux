@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from '../AuthContext';
 import Navigation from '../components/Navigation';
+import '../styles/Leaderboard.css';
 
 const Leaderboard = () => {
   const { user } = useContext(AuthContext);

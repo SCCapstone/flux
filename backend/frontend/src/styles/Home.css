@@ -71,6 +71,59 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+.streak-reminder {
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.streak-reminder-text {
+  flex: 1;
+}
+
+.streak-reminder-text p:first-child {
+  font-weight: 600;
+  color: #1e40af;
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+}
+
+.streak-reminder-text p:last-child {
+  color: #4b5563;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.view-challenges-btn {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+}
+
+.view-challenges-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.view-challenges-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 .pagination {
   display: flex;
   justify-content: center;
@@ -121,6 +174,16 @@
   }
 
   .search-button {
+    width: 100%;
+  }
+  
+  .streak-reminder {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .view-challenges-btn {
+    margin-top: 1rem;
     width: 100%;
   }
 }

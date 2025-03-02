@@ -96,6 +96,7 @@
   padding: 1.25rem;
   border-radius: 0.375rem;
   border-left: 4px solid #2563eb;
+  position: relative;
 }
 
 .review-item p {
@@ -109,6 +110,130 @@
   color: #111827;
   font-size: 1.1rem;
   font-family: 'Inter', sans-serif;
+}
+
+.review-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.edit-button, .delete-button {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.edit-button {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.edit-button:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.delete-button {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.delete-button:hover {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.reply-button {
+  margin-top: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.reply-button:hover {
+  background-color: #bae6fd;
+  color: #0284c7;
+}
+
+.reply-form {
+  margin-top: 1rem;
+  background-color: #f0f9ff;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #e0f2fe;
+}
+
+.reply-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border: 1px solid #bae6fd;
+  border-radius: 0.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.reply-textarea:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+}
+
+.submit-reply-button {
+  padding: 0.5rem 1rem;
+  background-color: #0ea5e9;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.submit-reply-button:hover {
+  background-color: #0284c7;
+}
+
+.replies {
+  margin-top: 1rem;
+  margin-left: 1.5rem;
+  border-left: 2px solid #bae6fd;
+  padding-left: 1rem;
+}
+
+.reply-item {
+  background-color: #f0f9ff;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.reply-item:last-child {
+  margin-bottom: 0;
+}
+
+.reply-item p {
+  font-size: 1rem;
+  margin: 0;
 }
 
 .add-review {
@@ -195,6 +320,17 @@
   
   .text-2xl {
     font-size: 1.75rem !important;
+  }
+  
+  .review-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .edit-button, .delete-button, .reply-button {
+    width: 100%;
+    text-align: center;
   }
 }
 
