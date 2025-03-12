@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../AuthContext';
 import Navigation from './Navigation';
 import '../styles/Challenges.css';
@@ -8,7 +8,7 @@ const Challenges = () => {
   const [activeTab, setActiveTab] = useState('available');
   const [loading, setLoading] = useState(false);
 
-  // Sample challenges to display
+  // Sample challenges as fallback
   const sampleAvailableChallenges = [
     {
       id: 'sample1',
@@ -47,46 +47,225 @@ const Challenges = () => {
 
   const [userChallenges, setUserChallenges] = useState([]);
   const [availableChallenges, setAvailableChallenges] = useState(sampleAvailableChallenges);
+  
+  // Notification state
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    isPositive: true
+  });
+  
+  // Show notification function
+  const showNotification = (message, isPositive = true) => {
+    setNotification({
+      show: true,
+      message,
+      isPositive
+    });
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
 
+  // Function to fetch challenges from the backend
+  const fetchChallenges = async () => {
+    if (!user?.token) return;
+    
+    setLoading(true);
+    try {
+      // Get local data first
+      let localUserChallenges = [];
+      try {
+        const storedChallenges = localStorage.getItem('userChallenges');
+        if (storedChallenges) {
+          localUserChallenges = JSON.parse(storedChallenges);
+          console.log('Loaded user challenges from localStorage:', localUserChallenges);
+        }
+      } catch (e) {
+        console.warn('Error loading from localStorage:', e);
+      }
+      
+      // Set user challenges from localStorage immediately for responsiveness
+      setUserChallenges(localUserChallenges);
+      
+      // Define a function to remove duplicates by name
+      const removeDuplicates = (challenges) => {
+        const seen = new Set();
+        return challenges.filter(challenge => {
+          const duplicate = seen.has(challenge.name);
+          seen.add(challenge.name);
+          return !duplicate;
+        });
+      };
+      
+      // Get available challenges (either from backend or sample data)
+      let availableChallengesData = [];
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/challenges/', {
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          availableChallengesData = await response.json();
+          console.log('Fetched available challenges:', availableChallengesData);
+        }
+      } catch (error) {
+        console.error('Error fetching available challenges:', error);
+      }
+      
+      // If no challenges from backend, use sample data
+      if (availableChallengesData.length === 0) {
+        availableChallengesData = sampleAvailableChallenges;
+        console.log('Using sample challenges:', availableChallengesData);
+      }
+      
+      // Filter out challenges that the user is already participating in
+      const userChallengeNames = new Set(localUserChallenges.map(c => c.name));
+      const filteredAvailableChallenges = availableChallengesData.filter(
+        challenge => !userChallengeNames.has(challenge.name)
+      );
+      
+      console.log('Filtered available challenges:', filteredAvailableChallenges);
+      
+      // Remove any duplicates and update state
+      setAvailableChallenges(removeDuplicates(filteredAvailableChallenges));
+    } catch (error) {
+      console.error('Error in fetchChallenges:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initialize sample challenges if needed - with fallback to local state
+  const initializeSampleChallenges = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/challenges/initialize-samples/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Sample challenges initialized:', data);
+        // After initializing, fetch challenges again
+        await fetchChallenges();
+      } else {
+        console.warn('Backend initialization failed. Using local sample challenges.');
+        // Use local sample challenges
+        setAvailableChallenges(sampleAvailableChallenges);
+      }
+    } catch (error) {
+      console.error('Error initializing sample challenges:', error);
+      setAvailableChallenges(sampleAvailableChallenges);
+    }
+  };
+
+  // Initial data loading
   useEffect(() => {
-    // Initial setup - we'll use the sample challenges as fallback
-    setAvailableChallenges(sampleAvailableChallenges);
-  }, []);
+    if (user?.token) {
+      fetchChallenges();
+    } else {
+      // Fallback to sample data if no user is logged in
+      setAvailableChallenges(sampleAvailableChallenges);
+    }
+  }, [user?.token]); // Removed fetchChallenges from dependencies to avoid circular reference
 
-  const handleJoinChallenge = (challengeId) => {
+  const handleJoinChallenge = async (challengeId) => {
+    setLoading(true);
+    
     // Find the challenge in available challenges
     const challenge = availableChallenges.find(c => c.id === challengeId);
     
     if (challenge) {
-      // Add to user challenges
-      setUserChallenges(prev => [...prev, challenge]);
-      
-      // Remove from available challenges
-      setAvailableChallenges(prev => prev.filter(c => c.id !== challengeId));
-      
-      // Show notification
-      showNotification(`Joined the "${challenge.name}" challenge!`, true);
-      
-      // Switch to active tab to show the joined challenge
-      setActiveTab('active');
+      try {
+        console.log('Attempting to join challenge with ID:', challengeId);
+        
+        // Check if already joined to prevent duplicates
+        const isAlreadyJoined = userChallenges.some(c => c.name === challenge.name);
+        
+        if (isAlreadyJoined) {
+          console.warn('Already joined this challenge:', challenge.name);
+          showNotification(`You're already participating in "${challenge.name}"`, false);
+          setLoading(false);
+          return;
+        }
+        
+        // Update local state first
+        const updatedUserChallenges = [...userChallenges, challenge];
+        setUserChallenges(updatedUserChallenges);
+        
+        // Filter this challenge from available challenges
+        const updatedAvailableChallenges = availableChallenges.filter(c => c.id !== challengeId);
+        setAvailableChallenges(updatedAvailableChallenges);
+        
+        // Save to localStorage
+        localStorage.setItem('userChallenges', JSON.stringify(updatedUserChallenges));
+        localStorage.setItem('availableChallenges', JSON.stringify(updatedAvailableChallenges));
+        
+        // Show notification
+        showNotification(`Joined the "${challenge.name}" challenge!`, true);
+        
+        // Switch to active tab to show the joined challenge
+        setActiveTab('active');
+      } catch (error) {
+        console.error('Error joining challenge:', error);
+        showNotification('Error joining challenge. Please try again.', false);
+      } finally {
+        setLoading(false);
+      }
     }
   };
-  
+
   const handleQuitChallenge = (challengeId) => {
-    // Find the challenge in user challenges
+    console.log('Quitting challenge with ID:', challengeId);
+    
+    // Find the challenge
     const challenge = userChallenges.find(c => c.id === challengeId);
     
-    if (challenge) {
-      // Remove from user challenges
-      setUserChallenges(prev => prev.filter(c => c.id !== challengeId));
+    if (!challenge) {
+      console.error('Could not find challenge with ID:', challengeId);
+      return;
+    }
+    
+    console.log('Found challenge to quit:', challenge);
+    
+    try {
+      // Update user challenges
+      const newUserChallenges = userChallenges.filter(c => c.id !== challengeId);
+      setUserChallenges(newUserChallenges);
+      localStorage.setItem('userChallenges', JSON.stringify(newUserChallenges));
       
-      // Add back to available challenges if it was one of the original sample challenges
-      if (challengeId.startsWith('sample')) {
-        setAvailableChallenges(prev => [...prev, challenge]);
+      // Add to available challenges if not already there
+      const isAlreadyAvailable = availableChallenges.some(c => 
+        c.id === challenge.id || c.name === challenge.name
+      );
+      
+      if (!isAlreadyAvailable) {
+        const newAvailableChallenges = [...availableChallenges, challenge];
+        setAvailableChallenges(newAvailableChallenges);
+        localStorage.setItem('availableChallenges', JSON.stringify(newAvailableChallenges));
       }
       
       // Show notification
       showNotification(`Quit the "${challenge.name}" challenge`, false);
+      
+      // If this was the last challenge and user is on 'active' tab, maybe suggest switching
+      if (newUserChallenges.length === 0 && activeTab === 'active') {
+        setTimeout(() => {
+          showNotification("No active challenges. Check available challenges to join new ones!", true);
+        }, 2000);
+        
+      }
+    } catch (error) {
+      console.error('Error in quit challenge:', error);
     }
   };
 
@@ -122,27 +301,6 @@ const Challenges = () => {
     } else {
       return []; // Completed and expired are empty for now
     }
-  };
-  
-  // Notification state
-  const [notification, setNotification] = useState({
-    show: false,
-    message: '',
-    isPositive: true
-  });
-  
-  // Show notification function
-  const showNotification = (message, isPositive = true) => {
-    setNotification({
-      show: true,
-      message,
-      isPositive
-    });
-    
-    // Hide after 3 seconds
-    setTimeout(() => {
-      setNotification(prev => ({ ...prev, show: false }));
-    }, 3000);
   };
 
   return (

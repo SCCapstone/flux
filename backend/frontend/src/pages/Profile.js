@@ -98,6 +98,43 @@ const Profile = () => {
         'Content-Type': 'application/json',
       };
       
+    // Fetch user points
+    try {
+      const pointsResponse = await fetch('http://127.0.0.1:8000/api/user/points/', { headers });
+      const pointsData = await pointsResponse.json();
+      setUserPoints(pointsData);
+    } catch (error) {
+      console.error('Error fetching user points:', error);
+    }
+    
+    // Fetch achievements with localStorage fallback
+    try {
+      // First check localStorage for achievements
+      const localAchievements = localStorage.getItem('userAchievements');
+      if (localAchievements) {
+        try {
+          const parsedAchievements = JSON.parse(localAchievements);
+          setAchievements(parsedAchievements);
+          console.log('Loaded achievements from localStorage');
+        } catch (e) {
+          console.warn('Could not parse achievements from localStorage');
+        }
+      }
+      
+      // Try to fetch from backend
+      const achievementsResponse = await fetch('http://127.0.0.1:8000/api/user/achievements/', { headers });
+      if (achievementsResponse.ok) {
+        const achievementsData = await achievementsResponse.json();
+        setAchievements(achievementsData);
+        // Save to localStorage for future use
+        localStorage.setItem('userAchievements', JSON.stringify(achievementsData));
+        console.log('Loaded achievements from backend and saved to localStorage');
+      }
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+      // If we already loaded from localStorage, we'll keep that data
+    }
+
       // Fetch points and stats
       const pointsResponse = await fetch('http://127.0.0.1:8000/api/user/points/', { headers });
       const pointsData = await pointsResponse.json();
@@ -113,10 +150,30 @@ const Profile = () => {
       const streakData = await streakResponse.json();
       setReadingStreak(streakData);
       
-      // Fetch challenges
-      const challengesResponse = await fetch('http://127.0.0.1:8000/api/user/challenges/', { headers });
-      const challengesData = await challengesResponse.json();
-      setChallenges(challengesData);
+      // Fetch challenges from localStorage first
+      const localUserChallenges = localStorage.getItem('userChallenges');
+      if (localUserChallenges) {
+        try {
+          const parsedChallenges = JSON.parse(localUserChallenges);
+          setChallenges(parsedChallenges);
+          console.log('Loaded challenges from localStorage:', parsedChallenges);
+        } catch (e) {
+          console.warn('Could not parse user challenges from localStorage');
+        }
+      }
+      
+      // Then try fetching challenges from backend
+      try {
+        const challengesResponse = await fetch('http://127.0.0.1:8000/api/user/challenges/', { headers });
+        if (challengesResponse.ok) {
+          const challengesData = await challengesResponse.json();
+          setChallenges(challengesData);
+          console.log('Loaded challenges from backend:', challengesData);
+        }
+      } catch (error) {
+        console.error('Error fetching challenges from backend:', error);
+        // If we already loaded from localStorage, we'll keep that data
+      }
       
       // Fetch points history
       const historyResponse = await fetch('http://127.0.0.1:8000/api/user/points/history/', { headers });
@@ -127,6 +184,64 @@ const Profile = () => {
       console.error('Error fetching gamification data:', error);
     } finally {
       setIsLoadingGamification(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'challenges' && user?.token) {
+      // Re-fetch challenges data when the challenges tab is selected
+      fetchGamificationData();
+    }
+  }, [activeTab, user?.token]);
+
+  const fetchUserChallenges = async () => {
+    if (!user?.token) return;
+    
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/user/challenges/', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setChallenges(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user challenges:', error);
+    }
+  };
+
+  const handleQuitChallenge = (challengeId) => {
+    // Find the challenge to remove
+    const challenge = challenges.find(c => c.id === challengeId);
+    
+    if (challenge) {
+      // Update local state immediately for UI responsiveness
+      const updatedChallenges = challenges.filter(c => c.id !== challengeId);
+      setChallenges(updatedChallenges);
+      
+      // Update localStorage to persist the change
+      localStorage.setItem('userChallenges', JSON.stringify(updatedChallenges));
+      
+      // Optional: Show a notification that the challenge was quit
+      setSuccess(`You've quit the "${challenge.name}" challenge.`);
+      
+      // Add the challenge back to available challenges in localStorage (if needed)
+      try {
+        const availableChallengesString = localStorage.getItem('availableChallenges');
+        if (availableChallengesString) {
+          const availableChallenges = JSON.parse(availableChallengesString);
+          availableChallenges.push(challenge);
+          localStorage.setItem('availableChallenges', JSON.stringify(availableChallenges));
+        }
+      } catch (error) {
+        console.error('Error updating available challenges:', error);
+      }
+      
+      console.log(`Successfully quit challenge: ${challenge.name}`);
     }
   };
   
@@ -320,90 +435,112 @@ const Profile = () => {
       
       case 'following':
         return renderFollowing();
-      case 'achievements':
-        return (
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6">Your Achievements</h2>
-            {achievements.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {achievements.map((achievement) => (
-                  <div key={achievement.id} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 shadow">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full mr-4">
-                        {achievement.badge_image ? (
-                          <img src={achievement.badge_image} alt={achievement.name} className="w-10 h-10" />
-                        ) : (
-                          <span className="text-2xl">🏆</span>
-                        )}
+        case 'achievements':
+          return (
+            <div className="bg-white shadow-md rounded-lg p-6">
+              <h2 className="text-2xl font-bold mb-6">Your Achievements</h2>
+              {isLoadingGamification ? (
+                <div className="text-center py-8">Loading achievements...</div>
+              ) : achievements && achievements.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {achievements.map((achievement) => (
+                    <div key={achievement.id} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 shadow">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full mr-4">
+                          {achievement.badge_image ? (
+                            <img src={achievement.badge_image} alt={achievement.name} className="w-10 h-10" />
+                          ) : (
+                            <span className="text-2xl">🏆</span>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-bold">{achievement.name}</h3>
+                          <p className="text-sm text-gray-600">{achievement.description}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold">{achievement.name}</h3>
-                        <p className="text-sm text-gray-600">{achievement.description}</p>
+                      <div className="mt-2 flex justify-between items-center">
+                        <span className="text-xs text-gray-500">
+                          Earned: {new Date(achievement.date_earned).toLocaleDateString()}
+                        </span>
+                        <span className="text-sm font-semibold text-blue-600">+{achievement.points} pts</span>
                       </div>
                     </div>
-                    <div className="mt-2 flex justify-between items-center">
-                      <span className="text-xs text-gray-500">
-                        Earned: {new Date(achievement.date_earned).toLocaleDateString()}
-                      </span>
-                      <span className="text-sm font-semibold text-blue-600">+{achievement.points} pts</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-gray-500">You haven't earned any achievements yet. Keep reading and reviewing books to earn achievements!</p>
-            )}
-          </div>
-        );
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-center text-gray-500">You haven't earned any achievements yet. Keep reading and reviewing books to earn achievements!</p>
+                </div>
+              )}
+            </div>
+          );
         
-      case 'challenges':
-        return (
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6">Reading Challenges</h2>
-            {challenges.length > 0 ? (
-              <div className="space-y-6">
-                {challenges.map((challenge) => (
-                  <div key={challenge.id} className="border rounded-lg p-4">
-                    <h3 className="text-xl font-bold">{challenge.name}</h3>
-                    <p className="text-gray-600 mb-3">{challenge.description}</p>
+        case 'challenges':
+          return (
+            <div className="challenges-section">
+              <h2 className="text-2xl font-bold mb-4">Reading Challenges</h2>
+              
+              {isLoadingGamification ? (
+                <div className="loading-state">
+                  <p>Loading challenges...</p>
+                </div>
+              ) : challenges.length > 0 ? (
+                challenges.map((challenge) => (
+                  <div key={challenge.id} className="challenge-item">
+                    <h3 className="challenge-title">{challenge.name}</h3>
+                    <p className="challenge-description">{challenge.description}</p>
                     
-                    <div className="mb-2">
-                      <div className="flex justify-between text-sm mb-1">
+                    <div className="challenge-progress">
+                      <div className="challenge-progress-text">
                         <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
-                        <span>{challenge.progress_percentage}%</span>
+                        <span>{challenge.progress_percentage || 0}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className="challenge-progress-bar">
                         <div 
-                          className="bg-blue-600 h-2.5 rounded-full" 
-                          style={{ width: `${challenge.progress_percentage}%` }}
+                          className="challenge-progress-fill" 
+                          style={{ width: `${challenge.progress_percentage || 0}%` }}
                         ></div>
                       </div>
                     </div>
                     
-                    <div className="flex justify-between text-sm">
-                      <span className={challenge.completed ? "text-green-600" : "text-blue-600"}>
-                        {challenge.completed ? "Completed!" : `${challenge.days_remaining} days remaining`}
-                      </span>
-                      <span>
-                        {challenge.completed 
-                          ? `Completed on ${new Date(challenge.completed_date).toLocaleDateString()}`
-                          : `Ends on ${new Date(challenge.end_date).toLocaleDateString()}`
-                        }
-                      </span>
+                    <div className="challenge-meta">
+                      <div className="challenge-dates">
+                        <div className="challenge-date-item">
+                          <span>Starts:</span> {challenge.start_date}
+                        </div>
+                        <div className="challenge-date-item">
+                          <span>Ends:</span> {challenge.end_date}
+                        </div>
+                      </div>
+                      
+                      <div className="challenge-days">
+                        {challenge.days_remaining || 0} days remaining
+                      </div>
+                    </div>
+                    
+                    <div className="challenge-action">
+                      <button 
+                        onClick={() => handleQuitChallenge(challenge.id)}
+                        className="quit-challenge-btn"
+                      >
+                        Quit Challenge
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-gray-500 mb-4">You're not participating in any reading challenges yet.</p>
-                <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
-                  Join a Challenge
-                </button>
-              </div>
-            )}
-          </div>
-        );
+                ))
+              ) : (
+                <div className="challenges-empty">
+                  <p>You're not participating in any reading challenges yet.</p>
+                  <button 
+                    className="join-challenge-btn"
+                    onClick={() => window.location.href = '/challenges'}
+                  >
+                    Join a Challenge
+                  </button>
+                </div>
+              )}
+            </div>
+          );
         
       case 'stats':
         return (
