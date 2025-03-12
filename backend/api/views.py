@@ -1225,6 +1225,71 @@ def get_user_challenges(request):
     
     return Response(challenge_data)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def initialize_sample_challenges(request):
+    """Initialize sample reading challenges for the system"""
+    
+    # Sample challenge data
+    sample_challenges = [
+        {
+            'name': 'Summer Reading Challenge',
+            'description': 'Read 10 books during summer vacation',
+            'target_books': 10,
+            'start_date': '2025-06-01',
+            'end_date': '2025-08-31',
+        },
+        {
+            'name': 'Genre Explorer',
+            'description': 'Read books from 5 different genres',
+            'target_books': 5,
+            'start_date': '2025-03-01',
+            'end_date': '2025-04-30',
+        },
+        {
+            'name': 'Classics Marathon',
+            'description': 'Read 3 classic literature books',
+            'target_books': 3,
+            'start_date': '2025-02-01',
+            'end_date': '2025-05-01',
+        }
+    ]
+    
+    created_challenges = []
+    
+    for challenge_data in sample_challenges:
+        # Check if this challenge already exists
+        existing = ReadingChallenge.objects.filter(name=challenge_data['name']).first()
+        if existing:
+            created_challenges.append({
+                'id': existing.id,
+                'name': existing.name,
+                'description': existing.description,
+                'already_existed': True
+            })
+            continue
+            
+        # Create the challenge
+        challenge = ReadingChallenge.objects.create(
+            name=challenge_data['name'],
+            description=challenge_data['description'],
+            target_books=challenge_data['target_books'],
+            start_date=challenge_data['start_date'],
+            end_date=challenge_data['end_date']
+        )
+        
+        created_challenges.append({
+            'id': challenge.id,
+            'name': challenge.name,
+            'description': challenge.description,
+            'already_existed': False
+        })
+    
+    return Response({
+        'message': f'Successfully initialized {len(created_challenges)} sample challenges',
+        'challenges': created_challenges
+    }, status=status.HTTP_201_CREATED)
+
 # Reading streak related views
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

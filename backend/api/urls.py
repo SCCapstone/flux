@@ -59,6 +59,7 @@ urlpatterns = [
     path('challenges/', views.get_challenges, name='get_challenges'),
     path('challenges/join/', views.join_challenge, name='join_challenge'),
     path('user/challenges/', views.get_user_challenges, name='get_user_challenges'),
+    path('challenges/initialize-samples/', views.initialize_sample_challenges, name='initialize_sample_challenges'),
     path('user/streak/', views.get_reading_streak, name='get_reading_streak'),
     path('leaderboard/', views.get_leaderboard, name='get_leaderboard'),
 

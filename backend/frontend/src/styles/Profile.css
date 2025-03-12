@@ -529,3 +529,144 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* Challenge section on profile */
+.challenges-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.challenge-item {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.challenge-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.challenge-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.challenge-description {
+  font-size: 1rem;
+  color: #4b5563;
+  margin-bottom: 1rem;
+}
+
+.challenge-progress {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.challenge-progress-bar {
+  height: 0.5rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.challenge-progress-fill {
+  height: 100%;
+  background-color: #2563eb;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.challenge-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.challenge-dates {
+  display: flex;
+  gap: 1rem;
+}
+
+.challenge-date-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.challenge-days {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.challenge-action {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.quit-challenge-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  background-color: transparent;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quit-challenge-btn:hover {
+  background-color: #fef2f2;
+}
+
+/* Empty state for challenges */
+.challenges-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  color: #6b7280;
+}
+
+.challenges-empty p {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.join-challenge-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.join-challenge-btn:hover {
+  background-color: #1d4ed8;
+}
