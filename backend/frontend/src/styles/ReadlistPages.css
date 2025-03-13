@@ -22,7 +22,6 @@
     gap: 15px;
   }
   
-  /* ✅ Add spacing & styles for dropdowns */
   .filters select {
     padding: 5px;
     font-size: 14px;
@@ -60,3 +59,127 @@
     margin-top: 10px;
   }
   
+@media (max-width: 768px) {
+  .readlist-page {
+    padding: 15px;
+  }
+  
+  .readlist-title {
+    font-size: 22px;
+    margin-bottom: 15px;
+  }
+  
+  .readlist-controls {
+    margin-bottom: 15px;
+  }
+  
+  .filters {
+    gap: 10px;
+  }
+  
+  .readlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  
+  .book-cover {
+    height: 180px;
+  }
+}
+
+@media (max-width: 640px) {
+  .readlist-page {
+    padding: 12px;
+  }
+  
+  .readlist-title {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  
+  .readlist-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .filters {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+  .filters select {
+    flex-grow: 1;
+  }
+  
+  .readlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+  
+  .book-card {
+    padding: 8px;
+  }
+  
+  .book-cover {
+    height: 160px;
+  }
+  
+  .book-info {
+    margin-top: 8px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .readlist-page {
+    padding: 10px;
+  }
+  
+  .readlist-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  
+  .filters {
+    gap: 8px;
+  }
+  
+  .filters label {
+    font-size: 13px;
+  }
+  
+  .filters select {
+    font-size: 13px;
+    padding: 4px;
+  }
+  
+  .readlist-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .book-cover {
+    height: 150px;
+  }
+  
+  .book-info {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .readlist-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .book-card {
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  
+  .book-cover {
+    height: 180px;
+  }
+}

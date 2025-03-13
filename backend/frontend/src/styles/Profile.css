@@ -317,9 +317,90 @@
   border: 1px solid #bbf7d0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .profile-container {
+    margin: 1rem auto;
+    padding: 0 0.75rem;
+  }
+  
   .profile-content {
     padding: 1.5rem;
+  }
+  
+  .profile-summary {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .summary-avatar {
+    width: 4rem;
+    height: 4rem;
+  }
+  
+  .summary-username {
+    font-size: 1.3rem;
+  }
+  
+  .badge {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .bio-section h3 {
+    font-size: 1.2rem;
+  }
+  
+  .profile-info p {
+    font-size: 1rem;
+  }
+  
+  .tab-button {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .form-group label {
+    font-size: 1rem;
+  }
+  
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="password"],
+  .bio-input {
+    padding: 0.6rem;
+    font-size: 1rem;
+  }
+  
+  .btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+    margin-bottom: 1.2rem;
+  }
+  
+  .review-card {
+    padding: 1rem;
+  }
+  
+  .review-book-title {
+    font-size: 1rem;
+  }
+  
+  .challenge-item {
+    padding: 1.2rem;
+  }
+  
+  .challenge-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-content {
+    padding: 1rem;
   }
 
   .profile-image {
@@ -334,22 +415,123 @@
   .btn {
     width: 100%;
   }
+  
+  .profile-tabs {
+    gap: 0.5rem;
+  }
+  
+  .tab-button {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.85rem;
+  }
+  
+  .review-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .review-book-cover-container {
+    margin-bottom: 0.75rem;
+    width: 100%;
+    height: 8rem;
+  }
+  
+  .review-book-cover {
+    width: auto;
+    height: 100%;
+    margin: 0 auto;
+  }
+  
+  .challenge-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .challenge-dates {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .summary-stats {
+    width: 100%;
+  }
+  
+  .reading-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (max-width: 480px) {
+  .profile-container {
+    margin: 0.75rem auto;
+    padding: 0 0.5rem;
+  }
+  
+  .profile-content {
+    padding: 0.75rem;
+  }
+  
+  .profile-summary {
+    padding: 0.75rem;
+  }
+  
+  .summary-avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  
+  .summary-username {
+    font-size: 1.1rem;
+  }
+  
+  .badge-container {
+    gap: 0.3rem;
+  }
+  
+  .badge {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+  }
+  
+  .profile-image {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .user-card {
+    padding: 0.75rem;
+  }
+  
+  .user-avatar-container {
+    width: 3rem;
+    height: 3rem;
+    margin-right: 0.75rem;
+  }
+  
+  .user-name {
+    font-size: 0.9rem;
+  }
+  
+  .user-meta {
+    font-size: 0.7rem;
+  }
+  
+  .review-text {
+    font-size: 0.9rem;
+  }
+  
+  .challenge-description {
+    font-size: 0.9rem;
+  }
 }
 
-.btn:focus {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-.btn:focus:not(:focus-visible) {
-  outline: none;
-}
-/* User Grid Styles */
 .section-title {
   font-size: 1.5rem;
   font-weight: 700;
@@ -445,7 +627,6 @@
   font-size: 1.1rem;
 }
 
-/* Reviews styles */
 .reviews-list {
   display: flex;
   flex-direction: column;
@@ -669,4 +850,18 @@
 
 .join-challenge-btn:hover {
   background-color: #1d4ed8;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.btn:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.btn:focus:not(:focus-visible) {
+  outline: none;
 }

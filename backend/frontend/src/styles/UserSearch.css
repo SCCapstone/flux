@@ -152,27 +152,124 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  line-clamp: 2;
   overflow: hidden;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
+  .user-search-container {
+    margin: 1.5rem auto;
+  }
+  
+  .search-title {
+    font-size: 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+  
   .search-form {
     flex-direction: column;
+    margin-bottom: 1.5rem;
+  }
+  
+  .search-input {
+    font-size: 1rem;
+    padding: 0.7rem 0.9rem;
   }
   
   .search-button {
     width: 100%;
+    padding: 0.7rem 1rem;
+  }
+  
+  .error-message, .loading-message, .no-results {
+    font-size: 1rem;
+    padding: 0.75rem 0;
+  }
+  
+  .users-grid {
+    gap: 1.25rem;
+  }
+  
+  .user-card {
+    padding: 1.25rem;
   }
 }
 
 @media (max-width: 640px) {
-  .users-grid {
-    grid-template-columns: 1fr;
+  .user-search-container {
+    margin: 1rem auto;
+    padding: 0 0.75rem;
   }
   
   .search-title {
     font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .users-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .user-card {
+    padding: 1rem;
+  }
+  
+  .user-avatar {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .user-name {
+    font-size: 1rem;
+  }
+  
+  .user-bio {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-search-container {
+    margin: 0.75rem auto;
+    padding: 0 0.5rem;
+  }
+  
+  .search-title {
+    font-size: 1.35rem;
+  }
+  
+  .search-input {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.95rem;
+  }
+  
+  .search-button {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.95rem;
+  }
+  
+  .user-card {
+    padding: 0.9rem;
+  }
+  
+  .user-card-info {
+    gap: 0.75rem;
+  }
+  
+  .user-avatar {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .user-name {
+    font-size: 0.95rem;
+  }
+  
+  .error-message, .loading-message, .no-results {
+    font-size: 0.95rem;
+    padding: 0.6rem 0;
   }
 }
 
