@@ -104,6 +104,34 @@
   background-color: #b91c1c;
 }
 
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1.5rem;
+  }
+  
+  .readlist-header {
+    margin-bottom: 1.5rem;
+  }
+  
+  .readlist-title {
+    font-size: 1.6rem;
+  }
+  
+  .add-readlist-button {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.875rem;
+  }
+  
+  .readlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  .readlist-cover, .empty-cover {
+    height: 180px;
+  }
+}
+
 @media (max-width: 640px) {
   .page-container {
     padding: 1rem;
@@ -121,5 +149,84 @@
   .readlist-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
+  }
+  
+  .readlist-cover, .empty-cover {
+    height: 160px;
+  }
+  
+  .readlist-card {
+    padding: 0.75rem;
+  }
+  
+  .readlist-card-title {
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+  }
+  
+  .delete-button {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container {
+    padding: 0.75rem;
+  }
+  
+  .readlist-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .readlist-title {
+    font-size: 1.35rem;
+  }
+  
+  .add-readlist-button {
+    width: 100%;
+    padding: 0.5rem;
+  }
+  
+  .readlist-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .readlist-card {
+    padding: 0.6rem;
+  }
+  
+  .readlist-cover, .empty-cover {
+    height: 140px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .readlist-card-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .readlist-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .readlist-card {
+    max-width: 220px;
+    margin: 0 auto;
+  }
+  
+  .readlist-cover, .empty-cover {
+    height: 180px;
+  }
+  
+  .readlist-card-title {
+    font-size: 1rem;
   }
 }

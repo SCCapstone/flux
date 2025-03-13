@@ -309,9 +309,25 @@
     width: max-content;
     margin: 0 auto;
   }
+  
+  .book-image {
+    max-height: 300px;
+  }
 
   .book-details {
     padding: 1rem;
+  }
+  
+  .book-info p, .book-info strong {
+    font-size: 1rem;
+  }
+  
+  .rating-section h3, .reviews-section h3 {
+    font-size: 1.25rem;
+  }
+  
+  .rating-section p, .review-item p {
+    font-size: 1rem;
   }
 
   .review-item {
@@ -319,7 +335,8 @@
   }
   
   .text-2xl {
-    font-size: 1.75rem !important;
+    font-size: 1.5rem !important;
+    margin-bottom: 1rem;
   }
   
   .review-actions {
@@ -332,10 +349,144 @@
     width: 100%;
     text-align: center;
   }
+  
+  .review-textarea, .reply-textarea {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+  
+  .submit-review-button, .btn-primary {
+    font-size: 1rem;
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .book-details {
+    padding: 0.75rem;
+  }
+  
+  .book-image {
+    max-height: 250px;
+  }
+  
+  .book-info {
+    gap: 1rem;
+  }
+  
+  .review-item {
+    padding: 0.75rem;
+  }
+  
+  .review-item strong {
+    font-size: 0.95rem;
+  }
+  
+  .review-item p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  
+  .text-2xl {
+    font-size: 1.25rem !important;
+  }
+  
+  .rating-section, .reviews-section {
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  
+  .rating-section h3, .reviews-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .replies {
+    margin-left: 1rem;
+    padding-left: 0.75rem;
+  }
+  
+  .reply-item {
+    padding: 0.6rem;
+  }
+  
+  .reply-item p {
+    font-size: 0.9rem;
+  }
+  
+  .add-review {
+    margin-top: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .book-image {
+    max-height: 200px;
+  }
+  
+  .book-image-container {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .book-info p, .book-info strong {
+    font-size: 0.95rem;
+  }
+  
+  .book-info {
+    gap: 0.75rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.15rem !important;
+    margin-bottom: 0.75rem;
+  }
+  
+  .rating-section, .reviews-section {
+    padding-top: 1.25rem;
+    margin-top: 1.25rem;
+  }
+  
+  .rating-section h3, .reviews-section h3 {
+    font-size: 1rem;
+  }
+  
+  .review-textarea, .reply-textarea {
+    min-height: 100px;
+    padding: 0.6rem;
+  }
+  
+  .submit-review-button, .btn-primary {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    width: 100%;
+  }
+  
+  .edit-button, .delete-button, .reply-button {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+  }
+  
+  .reply-form {
+    padding: 0.75rem;
+  }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
   .book-content {
     grid-template-columns: max-content 1fr;
+    gap: 1.5rem;
+  }
+  
+  .book-image {
+    max-height: 350px;
+  }
+  
+  .book-details {
+    padding: 1.5rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.75rem !important;
   }
 }

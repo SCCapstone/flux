@@ -54,3 +54,69 @@
 .register-link a:hover {
   text-decoration: underline;
 }
+
+@media (max-width: 768px) {
+  .login-container {
+    max-width: 90%;
+    margin: 30px auto;
+    padding: 18px;
+  }
+  
+  .login-container h2 {
+    font-size: 1.6rem;
+    margin-bottom: 20px;
+  }
+  
+  .login-form input,
+  .login-form button {
+    font-size: 15px;
+    padding: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    max-width: 95%;
+    margin: 20px auto;
+    padding: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .login-container h2 {
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+  }
+  
+  .login-form {
+    gap: 12px;
+  }
+  
+  .login-form input,
+  .login-form button {
+    font-size: 14px;
+    padding: 10px;
+  }
+  
+  .register-link {
+    margin-top: 14px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 320px) {
+  .login-container {
+    padding: 12px;
+    margin: 15px auto;
+  }
+  
+  .login-container h2 {
+    font-size: 1.3rem;
+    margin-bottom: 14px;
+  }
+  
+  .login-form input,
+  .login-form button {
+    font-size: 13px;
+    padding: 9px;
+  }
+}
