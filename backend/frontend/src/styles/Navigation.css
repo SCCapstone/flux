@@ -81,7 +81,6 @@
   padding: 0.5rem;
   cursor: pointer;
   color: #1e3a8a;
-  display: flex;
   align-items: center;
   justify-content: center;
 }
