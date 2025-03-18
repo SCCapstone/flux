@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ReadlistPopup from "./ReadlistPopup"; // Import the new popup component
+import ReadlistPopup from "./ReadlistPopup";
 import "../styles/DisplayBooks.css";
 
 const DisplayBooks = ({ books, loading, error }) => {

@@ -411,7 +411,7 @@ const Profile = () => {
     navigate('/book-details', { 
       state: { 
         book: {
-          id: book.google_books_id,
+          google_books_id: book.google_books_id,
           title: book.title,
           author: book.author,
           image: book.image,
@@ -545,25 +545,6 @@ const Profile = () => {
       case 'stats':
         return (
           <div className="space-y-6">
-            {/* Points and Level Card */}
-            <div className="bg-white shadow-md rounded-lg p-6">
-              <div className="flex flex-col md:flex-row justify-between">
-                <div className="text-center mb-4 md:mb-0">
-                  <div className="text-gray-600">Your Level</div>
-                  <div className="text-5xl font-bold text-blue-600">{userPoints?.level || 1}</div>
-                  <div className="text-sm text-gray-500">Keep reading to level up!</div>
-                </div>
-                
-                <div className="text-center">
-                  <div className="text-gray-600">Total Points</div>
-                  <div className="text-5xl font-bold text-purple-600">{userPoints?.total_points || 0}</div>
-                  <div className="text-sm text-gray-500">
-                    {userPoints?.level ? `${100 - (userPoints.total_points % 100)} points to next level` : 'Start earning points!'}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
             {/* Reading Stats Card */}
             <div className="bg-white shadow-md rounded-lg p-6">
               <h3 className="text-xl font-bold mb-4">Reading Stats</h3>
