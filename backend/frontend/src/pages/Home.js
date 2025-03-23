@@ -17,6 +17,7 @@ const Home = () => {
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [filterType, setFilterType] = useState('title');
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
   
   // Gamification states
   const [notification, setNotification] = useState({
@@ -33,7 +34,7 @@ const Home = () => {
     if (!user?.token) return;
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/favorites/', {
+      const response = await fetch(`${apiBaseUrl}/favorites/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`,
         }
@@ -52,7 +53,7 @@ const Home = () => {
     if (!user?.token) return;
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/user/challenges/', {
+      const response = await fetch(`${apiBaseUrl}/user/challenges/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`,
         }
@@ -133,7 +134,7 @@ const Home = () => {
     const isFavorite = favorites.some((fav) => fav.google_books_id === book.id);
     
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/favorites/${isFavorite ? 'remove' : 'add'}/`, {
+      const response = await fetch(`${apiBaseUrl}/favorites/${isFavorite ? 'remove' : 'add'}/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user.token}`,
@@ -189,7 +190,7 @@ const Home = () => {
     if (!user?.token) return;
     
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/books/${book.id}/update-status/`, {
+      const response = await fetch(`${apiBaseUrl}/books/${book.id}/update-status/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user.token}`,

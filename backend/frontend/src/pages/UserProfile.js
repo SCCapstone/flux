@@ -18,6 +18,7 @@ const UserProfile = () => {
   const [following, setFollowing] = useState([]);
   const [loadingFollowers, setLoadingFollowers] = useState(false);
   const [loadingFollowing, setLoadingFollowing] = useState(false);
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -27,7 +28,7 @@ const UserProfile = () => {
         setLoading(true);
         console.log(`Fetching profile for: ${username}`);
         
-        const response = await axios.get(`http://127.0.0.1:8000/api/users/${username}/profile/`, {
+        const response = await axios.get(`${apiBaseUrl}/users/${username}/profile/`, {
           headers: {
             'Authorization': `Bearer ${user.token}`
           }
@@ -52,7 +53,7 @@ const UserProfile = () => {
     
     try {
       setLoadingFollowers(true);
-      const response = await axios.get(`http://127.0.0.1:8000/api/users/${username}/followers/`, {
+      const response = await axios.get(`${apiBaseUrl}/users/${username}/followers/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`
         }
@@ -70,7 +71,7 @@ const UserProfile = () => {
     
     try {
       setLoadingFollowing(true);
-      const response = await axios.get(`http://127.0.0.1:8000/api/users/${username}/following/`, {
+      const response = await axios.get(`${apiBaseUrl}/users/${username}/following/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`
         }
@@ -118,7 +119,7 @@ const UserProfile = () => {
     navigate('/book-details', { 
       state: { 
         book: {
-          id: book.google_books_id,
+          google_books_id: book.google_books_id,
           title: book.title,
           author: book.author,
           image: book.image,

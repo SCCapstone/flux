@@ -8,13 +8,14 @@ const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState(null);
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   const fetchLeaderboard = useCallback(async () => {
     if (!user?.token) return;
     
     setLoading(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/leaderboard/', {
+      const response = await fetch(`${apiBaseUrl}/leaderboard/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`,
         }

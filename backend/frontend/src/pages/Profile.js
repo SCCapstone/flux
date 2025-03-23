@@ -41,11 +41,12 @@ const Profile = () => {
   const [following, setFollowing] = useState([]);
   const [loadingFollowers, setLoadingFollowers] = useState(false);
   const [loadingFollowing, setLoadingFollowing] = useState(false);
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
     if (user?.token) {
       // Fetch profile data
-      fetch('http://127.0.0.1:8000/api/profile/', {
+      fetch(`${apiBaseUrl}/profile/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`,
           'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ const Profile = () => {
       
     // Fetch user points
     try {
-      const pointsResponse = await fetch('http://127.0.0.1:8000/api/user/points/', { headers });
+      const pointsResponse = await fetch(`${apiBaseUrl}/user/points/`, { headers });
       const pointsData = await pointsResponse.json();
       setUserPoints(pointsData);
     } catch (error) {
@@ -122,7 +123,7 @@ const Profile = () => {
       }
       
       // Try to fetch from backend
-      const achievementsResponse = await fetch('http://127.0.0.1:8000/api/user/achievements/', { headers });
+      const achievementsResponse = await fetch(`${apiBaseUrl}/user/achievements/`, { headers });
       if (achievementsResponse.ok) {
         const achievementsData = await achievementsResponse.json();
         setAchievements(achievementsData);
@@ -136,17 +137,17 @@ const Profile = () => {
     }
 
       // Fetch points and stats
-      const pointsResponse = await fetch('http://127.0.0.1:8000/api/user/points/', { headers });
+      const pointsResponse = await fetch(`${apiBaseUrl}/user/points/`, { headers });
       const pointsData = await pointsResponse.json();
       setUserPoints(pointsData);
       
       // Fetch achievements
-      const achievementsResponse = await fetch('http://127.0.0.1:8000/api/user/achievements/', { headers });
+      const achievementsResponse = await fetch(`${apiBaseUrl}/user/achievements/`, { headers });
       const achievementsData = await achievementsResponse.json();
       setAchievements(achievementsData);
       
       // Fetch reading streak
-      const streakResponse = await fetch('http://127.0.0.1:8000/api/user/streak/', { headers });
+      const streakResponse = await fetch(`${apiBaseUrl}/user/streak/`, { headers });
       const streakData = await streakResponse.json();
       setReadingStreak(streakData);
       
@@ -164,7 +165,7 @@ const Profile = () => {
       
       // Then try fetching challenges from backend
       try {
-        const challengesResponse = await fetch('http://127.0.0.1:8000/api/user/challenges/', { headers });
+        const challengesResponse = await fetch(`${apiBaseUrl}/user/challenges/`, { headers });
         if (challengesResponse.ok) {
           const challengesData = await challengesResponse.json();
           setChallenges(challengesData);
@@ -176,7 +177,7 @@ const Profile = () => {
       }
       
       // Fetch points history
-      const historyResponse = await fetch('http://127.0.0.1:8000/api/user/points/history/', { headers });
+      const historyResponse = await fetch(`${apiBaseUrl}/user/points/history/`, { headers });
       const historyData = await historyResponse.json();
       setPointsHistory(historyData);
       
@@ -198,7 +199,7 @@ const Profile = () => {
     if (!user?.token) return;
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/user/challenges/', {
+      const response = await fetch(`${apiBaseUrl}/user/challenges/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`,
           'Content-Type': 'application/json',
@@ -251,7 +252,7 @@ const Profile = () => {
     try {
       setLoadingFollowers(true);
       
-      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.username}/followers/`, {
+      const response = await fetch(`${apiBaseUrl}/users/${user.username}/followers/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`
         }
@@ -277,7 +278,7 @@ const Profile = () => {
     try {
       setLoadingFollowing(true);
       
-      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.username}/following/`, {
+      const response = await fetch(`${apiBaseUrl}/users/${user.username}/following/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`
         }
@@ -301,7 +302,7 @@ const Profile = () => {
     if (!user?.token || !user?.username) return;
     
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.username}/profile/`, {
+      const response = await fetch(`${apiBaseUrl}/users/${user.username}/profile/`, {
         headers: {
           'Authorization': `Bearer ${user.token}`
         }
@@ -367,7 +368,7 @@ const Profile = () => {
     setSuccess('');
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/profile/update/', {
+      const response = await fetch(`${apiBaseUrl}/profile/update/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${user.token}`,

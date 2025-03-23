@@ -26,6 +26,7 @@ const ShareReadlistModal = ({ isOpen, onClose, onShare }) => {
     </div>
   );
 };
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
 const Readlist = () => {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ const Readlist = () => {
   const fetchReadlists = useCallback(async () => {
     if (!user?.token) return;
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/readlists/", {
+      const response = await fetch(`${apiBaseUrl}/readlists/`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
       if (response.ok) {
@@ -55,7 +56,7 @@ const Readlist = () => {
   const fetchSharedReadlists = useCallback(async () => {
     if (!user?.token) return;
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/readlists/shared/", {
+      const response = await fetch(`${apiBaseUrl}/readlists/shared/`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
       if (response.ok) {
@@ -78,7 +79,7 @@ const Readlist = () => {
     if (!name) return;
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/readlists/create/", {
+      const response = await fetch(`${apiBaseUrl}/readlists/create/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -95,7 +96,7 @@ const Readlist = () => {
   // Function to delete a readlist
   const handleDeleteReadlist = async (id) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/readlists/delete/${id}/`, {
+      const response = await fetch(`${apiBaseUrl}/readlists/delete/${id}/`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${user.token}` },
       });
@@ -112,7 +113,7 @@ const Readlist = () => {
   const handleShareReadlist = async (username) => {
     if (!selectedReadlistId || !username) return;
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/readlists/share/", {
+      const response = await fetch(`${apiBaseUrl}/readlists/share/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${user.token}`,

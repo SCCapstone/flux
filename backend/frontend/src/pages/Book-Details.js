@@ -24,6 +24,7 @@ function BookDetails() {
   const [replyText, setReplyText] = useState('');
   const [selectedReview, setSelectedReview] = useState(null);
   const [bookStatus, setBookStatus] = useState('NOT_ADDED');
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
   const statusDisplayMap = {
     WILL_READ: "Will Read",
     READING: "Currently Reading",
@@ -56,7 +57,7 @@ function BookDetails() {
     if (book && book.google_books_id) {
       const fetchRatings = async () => {
         try {
-          const response = await axios.get(`http://127.0.0.1:8000/api/books/${book.google_books_id}/ratings/`);
+          const response = await axios.get(`${apiBaseUrl}/books/${book.google_books_id}/ratings/`);
           setAverageRating(response.data.average_rating);
           setTotalRatings(response.data.total_ratings);
         } catch (error) {
@@ -68,7 +69,7 @@ function BookDetails() {
 
       const fetchReviews = async () => {
         try {
-          const response = await axios.get(`http://127.0.0.1:8000/api/books/${book.google_books_id}/reviews/`);
+          const response = await axios.get(`${apiBaseUrl}/books/${book.google_books_id}/reviews/`);
           setReviews(response.data);
         } catch (error) {
           console.error("Error fetching reviews:", error);
@@ -81,7 +82,7 @@ function BookDetails() {
 
         try {
           const response = await axios.get(
-            `http://127.0.0.1:8000/api/books/${book.google_books_id}/status/`,
+            `${apiBaseUrl}/books/${book.google_books_id}/status/`,
             { headers: { Authorization: `Bearer ${user.token}` } }
           );
           setBookStatus(response.data.status);
@@ -118,13 +119,13 @@ function BookDetails() {
       };
 
       const bookResponse = await axios.post(
-        'http://127.0.0.1:8000/api/books/create-or-get/',
+        `${apiBaseUrl}/books/create-or-get/`,
         bookData,
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
       const ratingResponse = await axios.post(
-        'http://127.0.0.1:8000/api/rate-book/',
+        `${apiBaseUrl}/rate-book/`,
         {
           google_books_id: bookResponse.data.google_books_id,
           rating: newRating
@@ -158,7 +159,7 @@ function BookDetails() {
       }
 
       // Refresh ratings
-      const newRatingsResponse = await axios.get(`http://127.0.0.1:8000/api/books/${book.google_books_id}/ratings/`);
+      const newRatingsResponse = await axios.get(`${apiBaseUrl}/books/${book.google_books_id}/ratings/`);
       setAverageRating(newRatingsResponse.data.average_rating);
       setTotalRatings(newRatingsResponse.data.total_ratings);
     } catch (err) {
@@ -181,13 +182,13 @@ function BookDetails() {
         year: book.publishedDate ? book.publishedDate.substring(0, 4) : ''
       };
       const bookResponse = await axios.post(
-        'http://127.0.0.1:8000/api/books/create-or-get/',
+        `${apiBaseUrl}/books/create-or-get/`,
         bookData,
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/reviews/',
+        `${apiBaseUrl}/reviews/`,
         {
           review_text: newReviewText,
           book: bookResponse.data.id,
@@ -229,7 +230,7 @@ function BookDetails() {
   const handleReviewDelete = async (reviewId) => {
     try {
       await axios.delete(
-        `http://127.0.0.1:8000/api/reviews/${reviewId}/delete/`,
+        `${apiBaseUrl}/reviews/${reviewId}/delete/`,
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
@@ -245,7 +246,7 @@ function BookDetails() {
   
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/api/reviews/${reviewId}/`,
+        `${apiBaseUrl}/reviews/${reviewId}/`,
         { review_text: newReviewText },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
@@ -266,7 +267,7 @@ function BookDetails() {
 
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/reviews/${reviewId}/reply/`,
+        `${apiBaseUrl}/reviews/${reviewId}/reply/`,
         {
           review_text: replyText,
           parent: reviewId,
@@ -299,7 +300,7 @@ function BookDetails() {
 
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/books/${book.google_books_id}/update-status/`,
+        `${apiBaseUrl}/books/${book.google_books_id}/update-status/`,
         { status },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );

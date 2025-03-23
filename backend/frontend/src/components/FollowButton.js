@@ -9,6 +9,7 @@ const FollowButton = ({ username, onFollowChange }) => {
   const [error, setError] = useState(null);
   const { user } = useContext(AuthContext);
   const isOwnProfile = user?.username === username;
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
     // Skip checking follow status if it's the user's own profile
@@ -18,7 +19,7 @@ const FollowButton = ({ username, onFollowChange }) => {
       try {
         setIsLoading(true);
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/users/${username}/check-follow/`,
+          `${apiBaseUrl}/users/${username}/check-follow/`,
           {
             headers: {
               'Authorization': `Bearer ${user.token}`
@@ -49,7 +50,7 @@ const FollowButton = ({ username, onFollowChange }) => {
     try {
       const endpoint = isFollowing ? '/api/users/unfollow/' : '/api/users/follow/';
       const response = await axios.post(
-        `http://127.0.0.1:8000${endpoint}`,
+        `${apiBaseUrl}${endpoint}`,
         { username },
         {
           headers: {

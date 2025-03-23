@@ -6,12 +6,13 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
   const [selectedReadlists, setSelectedReadlists] = useState(new Set());
   const [newReadlistName, setNewReadlistName] = useState("");
   const [creatingReadlist, setCreatingReadlist] = useState(false);
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
     // Fetch user's readlists
     const fetchReadlists = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/readlists/", {
+        const response = await fetch(`${apiBaseUrl}/readlists/`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -85,7 +86,7 @@ const handleSave = async () => {
   };
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/readlists/update/", {
+    const response = await fetch(`${apiBaseUrl}/readlists/update/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -107,7 +108,7 @@ const handleCreateReadlist = async () => {
   if (!newReadlistName.trim()) return;
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/readlists/create/", {
+    const response = await fetch(`${apiBaseUrl}/readlists/create/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

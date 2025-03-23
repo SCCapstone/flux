@@ -13,6 +13,7 @@ const UserSearch = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -23,7 +24,7 @@ const UserSearch = () => {
     setError('');
     
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/users/search/?q=${searchQuery}`, {
+      const response = await axios.get(`${apiBaseUrl}/users/search/?q=${searchQuery}`, {
         headers: {
           'Authorization': `Bearer ${user.token}`
         }

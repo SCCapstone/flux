@@ -10,6 +10,7 @@ const Achievements = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('earned');
   const [favoriteBooks, setFavoriteBooks] = useState([]);
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   const fetchAchievements = useCallback(async () => {
     if (!user?.token) return;
@@ -21,17 +22,17 @@ const Achievements = () => {
       };
       
       // Fetch all possible achievements
-      const allResponse = await fetch('http://127.0.0.1:8000/api/achievements/', { headers });
+      const allResponse = await fetch(`${apiBaseUrl}/achievements/`, { headers });
       const allData = await allResponse.json();
       setAllAchievements(allData);
       
       // Fetch user's earned achievements
-      const userResponse = await fetch('http://127.0.0.1:8000/api/user/achievements/', { headers });
+      const userResponse = await fetch(`${apiBaseUrl}/user/achievements/`, { headers });
       const userData = await userResponse.json();
       setAchievements(userData);
       
       // Fetch user's favorite books
-      const favoritesResponse = await fetch('http://127.0.0.1:8000/api/favorites/', { headers });
+      const favoritesResponse = await fetch(`${apiBaseUrl}/favorites/`, { headers });
       const favoritesData = await favoritesResponse.json();
       setFavoriteBooks(favoritesData);
     } catch (error) {

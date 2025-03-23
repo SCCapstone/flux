@@ -8,11 +8,12 @@ const BestSellers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
     const fetchBestsellers = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/bestsellers/');
+        const response = await fetch(`${apiBaseUrl}/bestsellers/`);
         if (!response.ok) {
           throw new Error('Failed to fetch bestsellers');
         }
@@ -32,7 +33,7 @@ const BestSellers = () => {
     navigate('/book-details', { 
       state: { 
         book: {
-          id: book.google_books_id,
+          google_books_id: book.google_books_id,
           title: book.title,
           author: book.author,
           description: book.description,

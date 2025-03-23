@@ -10,6 +10,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const { handleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +24,7 @@ const Login = () => {
     try {
       console.log('Logging in with username:', username);
       
-      const response = await axios.post('http://127.0.0.1:8000/api/login/', {
+      const response = await axios.post(`${apiBaseUrl}/login/`, {
         username,
         password,
       });

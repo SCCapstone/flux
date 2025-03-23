@@ -7,6 +7,7 @@ const Challenges = () => {
   const { user } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('available');
   const [loading, setLoading] = useState(false);
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   // Sample challenges as fallback
   const sampleAvailableChallenges = [
@@ -103,7 +104,7 @@ const Challenges = () => {
       // Get available challenges (either from backend or sample data)
       let availableChallengesData = [];
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/challenges/', {
+        const response = await fetch(`${apiBaseUrl}/challenges/`, {
           headers: {
             'Authorization': `Bearer ${user.token}`,
             'Content-Type': 'application/json',
@@ -144,7 +145,7 @@ const Challenges = () => {
   // Initialize sample challenges if needed - with fallback to local state
   const initializeSampleChallenges = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/challenges/initialize-samples/', {
+      const response = await fetch(`${apiBaseUrl}/challenges/initialize-samples/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${user.token}`,

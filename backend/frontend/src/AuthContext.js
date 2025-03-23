@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useCallback } from 'react';
 
 export const AuthContext = createContext();
 
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
@@ -48,7 +49,7 @@ const AuthProvider = ({ children }) => {
       };
       
       // Fetch user points and level
-      const pointsResponse = await fetch('http://127.0.0.1:8000/api/user/points/', { headers });
+      const pointsResponse = await fetch(`${apiBaseUrl}/user/points/`, { headers });
       if (pointsResponse.ok) {
         const pointsData = await pointsResponse.json();
         setUserPoints(pointsData.total_points);
@@ -56,14 +57,14 @@ const AuthProvider = ({ children }) => {
       }
       
       // Fetch reading streak
-      const streakResponse = await fetch('http://127.0.0.1:8000/api/user/streak/', { headers });
+      const streakResponse = await fetch(`${apiBaseUrl}/user/streak/`, { headers });
       if (streakResponse.ok) {
         const streakData = await streakResponse.json();
         setReadingStreak(streakData);
       }
       
       // Fetch recent achievements (last 5)
-      const achievementsResponse = await fetch('http://127.0.0.1:8000/api/user/achievements/', { headers });
+      const achievementsResponse = await fetch(`${apiBaseUrl}/user/achievements/`, { headers });
       if (achievementsResponse.ok) {
         const achievementsData = await achievementsResponse.json();
         // Sort by date and get the 5 most recent
@@ -135,7 +136,7 @@ const AuthProvider = ({ children }) => {
       if (token) {
         try {
           console.log('Verifying token');
-          const response = await fetch('http://127.0.0.1:8000/api/verify-token/', {
+          const response = await fetch(`${apiBaseUrl}/verify-token/`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },

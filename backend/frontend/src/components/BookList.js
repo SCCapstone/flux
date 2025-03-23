@@ -7,6 +7,7 @@ const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
   const [activeFilters, setActiveFilters] = useState({
     decade: "all",
     genre: "all",
@@ -49,7 +50,7 @@ const BookList = ({ apiEndpoint, title, allowRemove = false }) => {
     if (!allowRemove) return;
     // Example: removing from the readlist is done by sending an empty readlist_ids array
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/readlists/update/", {
+      const response = await fetch(`${apiBaseUrl}/readlists/update/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${user.token}`,

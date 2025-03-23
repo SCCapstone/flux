@@ -8,13 +8,14 @@ const ReadlistPage = () => {
   const { readlistId } = useParams();
   const { user } = useContext(AuthContext);
   const [readlistName, setReadlistName] = useState("Loading...");
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
     const fetchReadlist = async () => {
       if (!user?.token) return;
 
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/readlists/${readlistId}/`, {
+        const response = await fetch(`${apiBaseUrl}/readlists/${readlistId}/`, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
 
@@ -33,7 +34,7 @@ const ReadlistPage = () => {
   return (
     <div>
       <Navigation />
-      <BookList apiEndpoint={`http://127.0.0.1:8000/api/readlists/${readlistId}/`} title={readlistName} allowRemove={true} />
+      <BookList apiEndpoint={`${apiBaseUrl}/readlists/${readlistId}/`} title={readlistName} allowRemove={true} />
     </div>
   );
 };

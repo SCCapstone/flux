@@ -11,6 +11,7 @@ const Favorites = () => {
   const { user, refreshGamificationData } = useContext(AuthContext);
   const [notification, setNotification] = useState(null);
   const [achievements, setAchievements] = useState([]);
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
   // Ensure the user is authenticated
   if (!user?.token) {
@@ -19,7 +20,7 @@ const Favorites = () => {
 
   const handleAddFavorite = async (book) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/favorites/add/', {
+      const response = await fetch(`${apiBaseUrl}/favorites/add/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user.token}`,
@@ -52,7 +53,7 @@ const Favorites = () => {
 
   const handleRemoveFavorite = async (book) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/favorites/remove/', {
+      const response = await fetch(`${apiBaseUrl}/favorites/remove/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user.token}`,
@@ -125,7 +126,7 @@ const Favorites = () => {
 
         {/* Use BookList Component to Display Favorites */}
         <BookList
-          apiEndpoint="http://127.0.0.1:8000/api/favorites/"
+          apiEndpoint={`${apiBaseUrl}/favorites/`}
           title="My Favorites"
           allowRemove={true}
           handleRemove={handleRemoveFavorite}
