@@ -25,6 +25,12 @@
   align-items: center;
 }
 
+/* Dark mode styles */
+.book-card.dark-card {
+  background: var(--card-background);
+  box-shadow: 0 2px 4px var(--shadow-color);
+}
+
 .book-card:hover {
   transform: translateY(-5px);
 }
@@ -50,73 +56,91 @@
 .book-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #111827;
-  margin: 5px 0;
-  line-height: 1.2;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  margin: 0.5rem 0 0.25rem;
+  color: #1a202c;
   text-align: center;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.book-title.dark-title {
+  color: var(--text-primary);
 }
 
 .book-title:hover {
-  color: #2563eb;
+  color: #3182ce;
+}
+
+.book-title.dark-title:hover {
+  color: var(--primary-color);
 }
 
 .book-author {
-  color: #666;
-  font-size: 0.9rem;
-  margin: 2px 0;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  color: #4a5568;
+  margin: 0;
   text-align: center;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.book-author.dark-author {
+  color: var(--text-secondary);
 }
 
 .book-author:hover {
-  color: #2563eb;
+  color: #3182ce;
 }
 
-.book-genre,
-.book-year {
-  color: #666;
-  font-size: 0.9rem;
-  margin: 2px 0;
-  font-family: 'Inter', sans-serif;
+.book-author.dark-author:hover {
+  color: var(--primary-color);
+}
+
+.book-genre, .book-year, .book-description {
+  font-size: 0.875rem;
+  color: #4a5568;
+  margin: 0.25rem 0;
   text-align: center;
+}
+
+.book-genre.dark-text, 
+.book-year.dark-text, 
+.book-description.dark-text {
+  color: var(--text-secondary);
 }
 
 .book-description {
-  font-size: 0.9rem;
-  color: #666;
-  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 3;
-  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin: 2px 0;
-  font-family: 'Inter', sans-serif;
-  text-align: center;
+  text-overflow: ellipsis;
+  max-height: 4.5em;
 }
 
 .nav-button {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  background-color: #2563eb;
+  background-color: #3182ce;
   color: white;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 1rem;
-  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  transition: background-color 0.2s;
   margin-top: 0.5rem;
 }
 
+.nav-button.dark-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
 .nav-button:hover {
-  background-color: #1d4ed8;
+  background-color: #2c5282;
+}
+
+.nav-button.dark-button:hover {
+  background-color: var(--primary-color-dark);
 }
 
 .loading-message,

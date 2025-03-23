@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useContext } from 'react';
 import { AuthContext } from '../AuthContext';
+import { ThemeContext } from '../ThemeContext';
 import Navigation from '../components/Navigation';
 import './Home';
 import '../styles/Book-Details.css';
@@ -11,6 +12,7 @@ import '../styles/Gamification.css';
 
 function BookDetails() {
   const { user } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const locationRouter = useLocation();
   
@@ -357,12 +359,12 @@ function BookDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Navigation />
 
       {/* Gamification Notification */}
       {notification.show && (
-        <div className="fixed top-20 right-4 max-w-xs bg-white rounded-lg shadow-lg p-4 border-l-4 border-green-500 z-50 animate-fade-in">
+        <div className={`fixed top-20 right-4 max-w-xs ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg p-4 border-l-4 border-green-500 z-50 animate-fade-in`}>
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -370,9 +372,9 @@ function BookDetails() {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{notification.message}</p>
+              <p className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>{notification.message}</p>
               {notification.points > 0 && (
-                <p className="text-sm text-gray-600 font-bold">+{notification.points} points earned!</p>
+                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} font-bold`}>+{notification.points} points earned!</p>
               )}
             </div>
           </div>
@@ -382,7 +384,7 @@ function BookDetails() {
       {/* Achievement Popup */}
       {achievementPopup.show && achievementPopup.achievement && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 m-4 max-w-sm w-full">
+          <div className={`bg-white ${theme === 'dark' ? 'bg-gray-800' : ''} rounded-lg shadow-xl p-6 m-4 max-w-sm w-full`}>
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 rounded-full bg-yellow-100 flex items-center justify-center mb-4">
                 {achievementPopup.achievement.badge_image ? (
@@ -395,15 +397,15 @@ function BookDetails() {
                   <span className="text-4xl">🏆</span>
                 )}
               </div>
-              <h3 className="text-2xl font-bold text-center mb-2">Achievement Unlocked!</h3>
-              <h4 className="text-xl font-semibold text-blue-600">{achievementPopup.achievement.name}</h4>
-              <p className="text-gray-600 text-center my-2">{achievementPopup.achievement.description}</p>
-              <div className="bg-blue-100 text-blue-800 font-bold py-1 px-3 rounded-full text-sm mt-2">
+              <h3 className={`text-2xl font-bold text-center mb-2 ${theme === 'dark' ? 'text-gray-300' : ''}`}>Achievement Unlocked!</h3>
+              <h4 className={`text-xl font-semibold text-blue-600 ${theme === 'dark' ? 'text-gray-400' : ''}`}>{achievementPopup.achievement.name}</h4>
+              <p className={`text-gray-600 ${theme === 'dark' ? 'text-gray-400' : ''} text-center my-2`}>{achievementPopup.achievement.description}</p>
+              <div className={`bg-blue-100 ${theme === 'dark' ? 'bg-gray-700' : ''} text-blue-800 ${theme === 'dark' ? 'text-gray-400' : ''} font-bold py-1 px-3 rounded-full text-sm mt-2`}>
                 +{achievementPopup.achievement.points} points
               </div>
               <button
                 onClick={closeAchievementPopup}
-                className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                className={`mt-6 ${theme === 'dark' ? 'bg-gray-600' : 'bg-blue-600'} hover:${theme === 'dark' ? 'bg-gray-700' : 'bg-blue-700'} text-white font-bold py-2 px-4 rounded`}
               >
                 Awesome!
               </button>
@@ -412,155 +414,155 @@ function BookDetails() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="book-details">
-          <h2 className="text-2xl font-bold mb-4">{book.title}</h2>
+      <div className={`max-w-7xl mx-auto px-4 py-6 ${theme === 'dark' ? 'text-gray-300' : ''}`}>
+        <div className={`book-details-container ${theme === 'dark' ? 'dark-container' : ''}`}>
+          <div className={`book-details ${theme === 'dark' ? 'dark-book-details' : ''}`}>
+            <h1 className={`text-2xl ${theme === 'dark' ? 'dark-text' : ''}`}>{book.title}</h1>
+            <div className="book-content">
+              <div className="book-image-container">
+                {book.image && <img src={book.image} alt={book.title} className="book-image" />}
+              </div>
+              <div className={`book-info ${theme === 'dark' ? 'dark-book-info' : ''}`}>
+                {book.author && (
+                  <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Author:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.author}</span></p>
+                )}
+                {book.year && (
+                  <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Published Date:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.year}</span></p>
+                )}
+                {book.description && (
+                  <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Description:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.description}</span></p>
+                )}
+                {book.pageCount && (
+                  <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Pages:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.pageCount}</span></p>
+                )}
+                {book.genre && (
+                  <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Genres:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.genre}</span></p>
+                )}
 
-          <div className="book-content">
-            <div className="book-image-container">
-              {book.image && <img src={book.image} alt={book.title} className="book-image" />}
-            </div>
-
-            <div className="book-info">
-              {book.author && (
-                <p><strong>Authors:</strong> {book.author}</p>
-              )}
-              {book.year && (
-                <p><strong>Published Date:</strong> {book.year}</p>
-              )}
-              {book.description && (
-                <p><strong>Description:</strong> {book.description}</p>
-              )}
-              {book.pageCount && (
-                <p><strong>Pages:</strong> {book.pageCount}</p>
-              )}
-              {book.genre && (
-                <p><strong>Genres:</strong> {book.genre}</p>
-              )}
-
-              {/* Reading Status Controls - only show if user is logged in */}
-              {user && (
-                <div className="mt-4 p-4 rounded-lg border">
-                  <h4 className="font-semibold mb-3">Update Reading Status: </h4>
-                  <h4 className="font-semibold mb-3">Currently: {statusDisplayMap[bookStatus] || "Book not added"}</h4>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleUpdateBookStatus('WILL_READ')}
-                      className={`flex-1 py-2 rounded ${
-                        bookStatus === 'WILL_READ'
-                          ? 'bg-gray-600 text-white'
-                          : 'bg-gray-200 hover:bg-gray-300'
-                      }`}
-                    >
-                      Want to Read
-                    </button>
-                    <button
-                      onClick={() => handleUpdateBookStatus('READING')}
-                      className={`flex-1 py-2 rounded ${
-                        bookStatus === 'READING'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-blue-100 hover:bg-blue-200'
-                      }`}
-                    >
-                      Currently Reading
-                    </button>
-                    <button
-                      onClick={() => handleUpdateBookStatus('FINISHED')}
-                      className={`flex-1 py-2 rounded ${
-                        bookStatus === 'FINISHED'
-                          ? 'bg-green-600 text-white'
-                          : 'bg-green-100 hover:bg-green-200'
-                      }`}
-                    >
-                      Finished
-                    </button>
+                {/* Reading Status Controls - only show if user is logged in */}
+                {user && (
+                  <div className={`mt-4 p-4 rounded-lg border ${theme === 'dark' ? 'dark-status-container' : ''}`}>
+                    <h4 className={`font-semibold mb-3 ${theme === 'dark' ? 'dark-text' : ''}`}>Update Reading Status: </h4>
+                    <h4 className={`font-semibold mb-3 ${theme === 'dark' ? 'dark-text' : ''}`}>Currently: {statusDisplayMap[bookStatus] || "Book not added"}</h4>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleUpdateBookStatus('WILL_READ')}
+                        className={`flex-1 py-2 rounded ${
+                          bookStatus === 'WILL_READ'
+                            ? theme === 'dark' ? 'dark-button-active' : 'bg-gray-600 text-white'
+                            : theme === 'dark' ? 'dark-button' : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                      >
+                        Want to Read
+                      </button>
+                      <button
+                        onClick={() => handleUpdateBookStatus('READING')}
+                        className={`flex-1 py-2 rounded ${
+                          bookStatus === 'READING'
+                            ? theme === 'dark' ? 'dark-button-blue-active' : 'bg-blue-600 text-white'
+                            : theme === 'dark' ? 'dark-button-blue' : 'bg-blue-100 hover:bg-blue-200'
+                        }`}
+                      >
+                        Currently Reading
+                      </button>
+                      <button
+                        onClick={() => handleUpdateBookStatus('FINISHED')}
+                        className={`flex-1 py-2 rounded ${
+                          bookStatus === 'FINISHED'
+                            ? theme === 'dark' ? 'dark-button-green-active' : 'bg-green-600 text-white'
+                            : theme === 'dark' ? 'dark-button-green' : 'bg-green-100 hover:bg-green-200'
+                        }`}
+                      >
+                        Finished
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-          <div className="rating-section mt-8">
-          <h3 className="text-xl font-semibold mb-4">Rate Book</h3>
-            <StarRating totalStars={5} value={rating} onRatingChange={handleRatingSubmit} />
-            <p className="mt-2">
-              Average Rating: {averageRating || "No ratings yet"} ({totalRatings} ratings)
-            </p>
-          </div>
+            <div className={`rating-section mt-8 ${theme === 'dark' ? 'dark-section' : ''}`}>
+            <h3 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'dark-heading' : ''}`}>Rate Book</h3>
+              <StarRating totalStars={5} value={rating} onRatingChange={handleRatingSubmit} />
+              <p className={`mt-2 ${theme === 'dark' ? 'dark-text' : ''}`}>
+                Average Rating: {averageRating || "No ratings yet"} ({totalRatings} ratings)
+              </p>
+            </div>
 
-          <div className="reviews-section mt-8">
-            <h3 className="text-xl font-semibold mb-4">Reviews</h3>
-            <div className="reviews-list">
-              {reviews.length === 0 ? (
-                <p>No reviews yet.</p>
-              ) : (
-                reviews.map((review) => (
-                  <div key={review.id} className="review-item">
-                    <p><strong>{review.user.username}</strong>: {review.review_text}</p>
-                    {review.user.id === user.id && (
-                      <div className="review-actions">
-                        <button 
-                          onClick={() => handleReviewEdit(review.id, review.review_text)}
-                          className="edit-button"
-                        >
+            <div className={`reviews-section mt-8 ${theme === 'dark' ? 'dark-section' : ''}`}>
+              <h3 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'dark-heading' : ''}`}>Reviews</h3>
+              <div className="reviews-list">
+                {reviews.length === 0 ? (
+                  <p className={theme === 'dark' ? 'dark-text' : ''}>No reviews yet.</p>
+                ) : (
+                  reviews.map((review) => (
+                    <div key={review.id} className={`review-item ${theme === 'dark' ? 'dark-review-item' : ''}`}>
+                      <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>{review.user.username}</strong>: <span className={theme === 'dark' ? 'dark-text' : ''}>{review.review_text}</span></p>
+                      {review.user.id === user.id && (
+                        <div className="review-actions">
+                          <button 
+                            onClick={() => handleReviewEdit(review.id, review.review_text)}
+                            className={`edit-button ${theme === 'dark' ? 'dark-edit-button' : ''}`}
+                          >
                             Edit
-                        </button>
+                          </button>
               
-                        <button 
-                          onClick={() => handleReviewDelete(review.id)} 
-                          className="delete-button"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                          <button 
+                            onClick={() => handleReviewDelete(review.id)} 
+                            className={`delete-button ${theme === 'dark' ? 'dark-delete-button' : ''}`}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
 
-                    <button 
-                      onClick={() => handleReplyClick(review.id)} 
-                      className="reply-button">
-                      
-                      Reply
-                    </button>
+                      <button 
+                        onClick={() => handleReplyClick(review.id)} 
+                        className={`reply-button ${theme === 'dark' ? 'dark-reply-button' : ''}`}
+                      >
+                        Reply
+                      </button>
 
-                    {selectedReview === review.id && (
-                      <div className="reply-form">
-                        <textarea
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          placeholder="Write a reply"
-                          className="reply-textarea"
-                        />
-                        <button 
-                          onClick={() => handleReplySubmit(review.id)}
-                          className="submit-reply-button"
-                        >
-                          Submit Reply
-                        </button>
-                      </div>
-                    )}
-                    {review.replies && review.replies.length > 0 && (
-                      <div className="replies">
-                        {review.replies.map((reply) => (
-                          <div key={reply.id} className="reply-item">
-                            <p><strong>{reply.user.username}</strong>: {reply.review_text}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
+                      {selectedReview === review.id && (
+                        <div className={`reply-form ${theme === 'dark' ? 'dark-reply-form' : ''}`}>
+                          <textarea
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Write a reply"
+                            className={`reply-textarea ${theme === 'dark' ? 'dark-reply-textarea' : ''}`}
+                          />
+                          <button 
+                            onClick={() => handleReplySubmit(review.id)}
+                            className={`submit-reply-button ${theme === 'dark' ? 'dark-submit-reply-button' : ''}`}
+                          >
+                            Submit Reply
+                          </button>
+                        </div>
+                      )}
+                      {review.replies && review.replies.length > 0 && (
+                        <div className={`replies ${theme === 'dark' ? 'dark-replies' : ''}`}>
+                          {review.replies.map((reply) => (
+                            <div key={reply.id} className={`reply-item ${theme === 'dark' ? 'dark-reply-item' : ''}`}>
+                              <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>{reply.user.username}</strong>: <span className={theme === 'dark' ? 'dark-text' : ''}>{reply.review_text}</span></p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
 
-            <div className="add-review mt-4">
-              <textarea
-                value={newReviewText}
-                onChange={(e) => setNewReviewText(e.target.value)}
-                placeholder="Write a review"
-                className="review-textarea"
-              />
-              <button onClick={handleReviewSubmit} className="submit-review-button">
-                Submit Review
-              </button>
+              <div className={`add-review mt-4 ${theme === 'dark' ? 'dark-add-review' : ''}`}>
+                <textarea
+                  value={newReviewText}
+                  onChange={(e) => setNewReviewText(e.target.value)}
+                  placeholder="Write a review"
+                  className={`review-textarea ${theme === 'dark' ? 'dark-review-textarea' : ''}`}
+                />
+                <button onClick={handleReviewSubmit} className={`submit-review-button ${theme === 'dark' ? 'dark-submit-review-button' : ''}`}>
+                  Submit Review
+                </button>
+              </div>
             </div>
           </div>
         </div>

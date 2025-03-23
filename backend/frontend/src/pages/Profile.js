@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
+import { ThemeContext } from '../ThemeContext';
 import Navigation from '../components/Navigation';
 import '../styles/Profile.css';
 import '../styles/Gamification.css';
@@ -8,6 +9,7 @@ import '../styles/Gamification.css';
 const Profile = () => {
   const navigate = useNavigate();
   const { user, handleLogin } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
   const [profile, setProfile] = useState({ 
     username: '', 
     email: '', 
@@ -438,16 +440,16 @@ const Profile = () => {
         return renderFollowing();
         case 'achievements':
           return (
-            <div className="bg-white shadow-md rounded-lg p-6">
+            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-6`}>
               <h2 className="text-2xl font-bold mb-6">Your Achievements</h2>
               {isLoadingGamification ? (
                 <div className="text-center py-8">Loading achievements...</div>
               ) : achievements && achievements.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {achievements.map((achievement) => (
-                    <div key={achievement.id} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 shadow">
+                    <div key={achievement.id} className={`${theme === 'dark' ? 'bg-gradient-to-r from-gray-700 to-gray-800' : 'bg-gradient-to-r from-blue-50 to-purple-50'} rounded-lg p-4 shadow`}>
                       <div className="flex items-center">
-                        <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full mr-4">
+                        <div className={`w-12 h-12 flex items-center justify-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-blue-100'} rounded-full mr-4`}>
                           {achievement.badge_image ? (
                             <img src={achievement.badge_image} alt={achievement.name} className="w-10 h-10" />
                           ) : (
@@ -456,21 +458,21 @@ const Profile = () => {
                         </div>
                         <div>
                           <h3 className="font-bold">{achievement.name}</h3>
-                          <p className="text-sm text-gray-600">{achievement.description}</p>
+                          <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{achievement.description}</p>
                         </div>
                       </div>
                       <div className="mt-2 flex justify-between items-center">
-                        <span className="text-xs text-gray-500">
+                        <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                           Earned: {new Date(achievement.date_earned).toLocaleDateString()}
                         </span>
-                        <span className="text-sm font-semibold text-blue-600">+{achievement.points} pts</span>
+                        <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>+{achievement.points} pts</span>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-center text-gray-500">You haven't earned any achievements yet. Keep reading and reviewing books to earn achievements!</p>
+                  <p className={`text-center ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>You haven't earned any achievements yet. Keep reading and reviewing books to earn achievements!</p>
                 </div>
               )}
             </div>
@@ -547,30 +549,30 @@ const Profile = () => {
         return (
           <div className="space-y-6">
             {/* Reading Stats Card */}
-            <div className="bg-white shadow-md rounded-lg p-6">
+            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-6`}>
               <h3 className="text-xl font-bold mb-4">Reading Stats</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-blue-600">{userPoints?.books_read || 0}</div>
-                  <div className="text-sm text-gray-600">Books Read</div>
+                <div className={`${theme === 'dark' ? 'bg-blue-900' : 'bg-blue-50'} rounded-lg p-4 text-center`}>
+                  <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`}>{userPoints?.books_read || 0}</div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Books Read</div>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-purple-600">{userPoints?.reviews_written || 0}</div>
-                  <div className="text-sm text-gray-600">Reviews</div>
+                <div className={`${theme === 'dark' ? 'bg-purple-900' : 'bg-purple-50'} rounded-lg p-4 text-center`}>
+                  <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}`}>{userPoints?.reviews_written || 0}</div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Reviews</div>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-green-600">{achievements.length}</div>
-                  <div className="text-sm text-gray-600">Achievements</div>
+                <div className={`${theme === 'dark' ? 'bg-green-900' : 'bg-green-50'} rounded-lg p-4 text-center`}>
+                  <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-green-300' : 'text-green-600'}`}>{achievements.length}</div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Achievements</div>
                 </div>
-                <div className="bg-orange-50 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-orange-600">{readingStreak?.current_streak || 0}</div>
-                  <div className="text-sm text-gray-600">Day Streak</div>
+                <div className={`${theme === 'dark' ? 'bg-orange-900' : 'bg-orange-50'} rounded-lg p-4 text-center`}>
+                  <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-orange-300' : 'text-orange-600'}`}>{readingStreak?.current_streak || 0}</div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Day Streak</div>
                 </div>
               </div>
             </div>
             
             {/* Recent Reviews */}
-            <div className="bg-white shadow-md rounded-lg p-6">
+            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-6`}>
               <h3 className="text-xl font-bold mb-4">Recent Reviews</h3>
               {recentReviews.length > 0 ? (
                 <div className="reviews-list">
@@ -595,7 +597,7 @@ const Profile = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-gray-500">No reviews yet. Start reviewing books!</p>
+                <p className={`text-center ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>No reviews yet. Start reviewing books!</p>
               )}
             </div>
           </div>
@@ -797,9 +799,9 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Navigation />
-      <div className="profile-container">
+      <div className={`profile-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
         {error && <div className="alert alert-error">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
         
@@ -850,11 +852,11 @@ const Profile = () => {
         </div>
         
         {/* Navigation Tabs */}
-        <div className="profile-tabs">
+        <div className={`profile-tabs ${theme === 'dark' ? 'dark-tabs' : ''}`}>
           {['profile', 'stats', 'achievements', 'challenges', 'followers', 'following'].map((tab) => (
             <button
               key={tab}
-              className={`tab-button ${activeTab === tab ? 'active' : ''}`}
+              className={`tab-button ${activeTab === tab ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
               onClick={() => setActiveTab(tab)}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}

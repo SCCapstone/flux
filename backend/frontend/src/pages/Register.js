@@ -38,34 +38,34 @@ const Register = () => {
     }
   };
 
-return (
-  <div className="register-container">
-    <h2>Create Account</h2>
-    {error && <p className="error-message">{error}</p>}
-    {message && <p className="success-message">{message}</p>}
-    <form className="register-form" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <button type="submit">Create Account</button>
-    </form>
-  </div>
-);
+  return (
+    <div className="register-container">
+      <h2>Create Account</h2>
+      {error && <p className="error-message">{error}</p>}
+      {message && <p className="success-message">{message}</p>}
+      <form className="register-form" onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button type="submit">Create Account</button>
+      </form>
+    </div>
+  );
 };
 
 export default Register;

@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { ThemeContext } from "../ThemeContext";
 import ReadlistPopup from "./ReadlistPopup";
 import "../styles/DisplayBooks.css";
 
 const DisplayBooks = ({ books, loading, error }) => {
   const navigate = useNavigate();
+  const { theme } = useContext(ThemeContext);
   const [selectedBook, setSelectedBook] = useState(null);
 
   if (loading) {
@@ -22,7 +24,7 @@ const DisplayBooks = ({ books, loading, error }) => {
   return (
     <div className="book-grid">
       {books.map((book, index) => (
-        <div key={index} className="book-card">
+        <div key={index} className={`book-card ${theme === 'dark' ? 'dark-card' : ''}`}>
           {book.image && (
             <img 
               src={book.image} 
@@ -36,7 +38,7 @@ const DisplayBooks = ({ books, loading, error }) => {
           )}
           <div className="book-info">
             <h3 
-              className="book-title" 
+              className={`book-title ${theme === 'dark' ? 'dark-title' : ''}`}
               onClick={() => {
                 console.log("Navigating to Book Details:", book);
                 navigate("/book-details", { state: { book } });
@@ -45,7 +47,7 @@ const DisplayBooks = ({ books, loading, error }) => {
               {book.title}
             </h3>
             <p 
-              className="book-author" 
+              className={`book-author ${theme === 'dark' ? 'dark-author' : ''}`}
               onClick={() => {
                 console.log("Navigating to Author Details:", book);
                 navigate("/author-details", { state: { book } });
@@ -53,13 +55,13 @@ const DisplayBooks = ({ books, loading, error }) => {
             >
               {book.author}
             </p>
-            <p className="book-genre"><strong>Genre:</strong> {book.genre}</p>
-            <p className="book-year"><strong>Year:</strong> {book.year}</p>
-            <p className="book-description">{book.description}</p>
+            <p className={`book-genre ${theme === 'dark' ? 'dark-text' : ''}`}><strong>Genre:</strong> {book.genre}</p>
+            <p className={`book-year ${theme === 'dark' ? 'dark-text' : ''}`}><strong>Year:</strong> {book.year}</p>
+            <p className={`book-description ${theme === 'dark' ? 'dark-text' : ''}`}>{book.description}</p>
             
             {/* New Button: Opens Readlist Popup */}
             <button
-              className="nav-button"
+              className={`nav-button ${theme === 'dark' ? 'dark-button' : ''}`}
               onClick={() => {
                 console.log("Opening ReadlistPopup for book:", book);
                 setSelectedBook(book);
