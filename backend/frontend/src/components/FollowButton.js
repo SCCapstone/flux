@@ -3,7 +3,7 @@ import axios from 'axios';
 import { AuthContext } from '../AuthContext';
 import '../styles/FollowButton.css';
 
-const FollowButton = ({ username, onFollowChange }) => {
+const FollowButton = ({ username, onFollowChange, theme }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -91,11 +91,11 @@ const FollowButton = ({ username, onFollowChange }) => {
       <button
         onClick={handleFollowToggle}
         disabled={isLoading}
-        className={`follow-button ${isFollowing ? 'following' : ''} ${isLoading ? 'loading' : ''}`}
+        className={`follow-button ${isFollowing ? 'following' : ''} ${isLoading ? 'loading' : ''} ${theme === 'dark' ? 'dark-follow-button' : ''}`}
       >
         {isLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
       </button>
-      {error && <div className="follow-error">{error}</div>}
+      {error && <div className={`follow-error ${theme === 'dark' ? 'dark-error' : ''}`}>{error}</div>}
     </div>
   );
 };

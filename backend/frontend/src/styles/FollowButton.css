@@ -22,12 +22,25 @@
   font-family: 'Inter', sans-serif;
 }
 
+.follow-button.dark-follow-button {
+  background-color: #4299e1;
+}
+
 .follow-button:hover {
   background-color: #1d4ed8;
 }
 
+.follow-button.dark-follow-button:hover {
+  background-color: #3182ce;
+}
+
 .follow-button:focus {
   outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.follow-button.dark-follow-button:focus {
+  outline: 2px solid #4299e1;
   outline-offset: 2px;
 }
 
@@ -42,16 +55,28 @@
   border: 1px solid #d1d5db;
 }
 
+.follow-button.following.dark-follow-button {
+  background-color: transparent;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+}
+
 .follow-button.following:hover {
   background-color: #fee2e2;
   color: #b91c1c;
   border-color: #fca5a5;
 }
 
+.follow-button.following.dark-follow-button:hover {
+  background-color: #553c3c;
+  color: #fc8181;
+  border-color: #742a2a;
+}
+
 /* Loading state */
 .follow-button.loading {
-  opacity: 0.7;
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* Error message */
@@ -59,6 +84,10 @@
   color: #dc2626;
   font-size: 0.8rem;
   text-align: center;
+}
+
+.follow-error.dark-error {
+  color: #fc8181;
 }
 
 /* Responsive design */

@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import { AuthContext } from '../AuthContext';
+import { ThemeContext } from '../ThemeContext';
 import Navigation from './Navigation';
 import '../styles/Achievements.css';
 
 const Achievements = () => {
   const { user, userPoints, userLevel, refreshGamificationData } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
   const [achievements, setAchievements] = useState([]);
   const [allAchievements, setAllAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showLoader, setShowLoader] = useState(false);
   const [activeTab, setActiveTab] = useState('earned');
   const [favoriteBooks, setFavoriteBooks] = useState([]);
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
@@ -16,6 +19,13 @@ const Achievements = () => {
     if (!user?.token) return;
     
     setLoading(true);
+    
+    const loaderTimer = setTimeout(() => {
+      if (loading) {
+        setShowLoader(true);
+      }
+    }, 500);
+    
     try {
       const headers = {
         'Authorization': `Bearer ${user.token}`,
@@ -38,7 +48,9 @@ const Achievements = () => {
     } catch (error) {
       console.error('Error fetching achievements:', error);
     } finally {
+      clearTimeout(loaderTimer);
       setLoading(false);
+      setShowLoader(false);
     }
   }, [user]);
 
@@ -83,31 +95,31 @@ const Achievements = () => {
     ];
     
     return (
-      <div className="collection-achievements">
-        <h2 className="category-title">Collection Achievements</h2>
+      <div className={`collection-achievements ${theme === 'dark' ? 'dark-collection' : ''}`}>
+        <h2 className={`category-title ${theme === 'dark' ? 'dark-title' : ''}`}>Collection Achievements</h2>
         
         {bookCount === 0 ? (
-          <p className="empty-state">Start adding books to your favorites to earn collection achievements!</p>
+          <p className={`empty-state ${theme === 'dark' ? 'dark-empty' : ''}`}>Start adding books to your favorites to earn collection achievements!</p>
         ) : (
           <div>
             {collectionDefinitions.map((achievement) => (
-              <div key={achievement.id} className="collection-achievement">
-                <div className="collection-title">
-                  <span className="collection-title-icon">🔶</span>
-                  <span className="collection-title-text">{achievement.name}</span>
+              <div key={achievement.id} className={`collection-achievement ${theme === 'dark' ? 'dark-collection-achievement' : ''}`}>
+                <div className={`collection-title ${theme === 'dark' ? 'dark-collection-title' : ''}`}>
+                  <span className={`collection-title-icon ${theme === 'dark' ? 'dark-collection-icon' : ''}`}>🔶</span>
+                  <span className={`collection-title-text ${theme === 'dark' ? 'dark-collection-text' : ''}`}>{achievement.name}</span>
                 </div>
-                <div className="collection-progress">
+                <div className={`collection-progress ${theme === 'dark' ? 'dark-collection-progress' : ''}`}>
                   {achievement.progress} / {achievement.target} books
                 </div>
-                <div className="collection-description">
+                <div className={`collection-description ${theme === 'dark' ? 'dark-collection-description' : ''}`}>
                   {achievement.description}
                 </div>
                 
                 {/* Progress bar */}
-                <div className="progress-container">
+                <div className={`progress-container ${theme === 'dark' ? 'dark-progress-container' : ''}`}>
                   <div className="progress-bar">
                     <div 
-                      className="progress-fill progress-fill-blue" 
+                      className={`progress-fill progress-fill-blue ${theme === 'dark' ? 'dark-progress-fill' : ''}`} 
                       style={{ width: `${(achievement.progress / achievement.target) * 100}%` }}
                     ></div>
                   </div>
@@ -153,16 +165,16 @@ const Achievements = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
       <Navigation />
-      <div className="achievements-container">
+      <div className={`achievements-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
         <div className="achievements-header">
-          <h1 className="achievements-title">Achievements</h1>
+          <h1 className={`achievements-title ${theme === 'dark' ? 'dark-title' : ''}`}>Achievements</h1>
         </div>
         
         {/* Level and Points Display */}
         <div className="level-badge-container">
-          <div className="level-badge">
+          <div className={`level-badge ${theme === 'dark' ? 'dark-level-badge' : ''}`}>
             <span className="level-label">Level</span>
             <span className="level-value">{userLevel || 1}</span>
             <span className="points-value">{userPoints || 0} PTS</span>
@@ -170,23 +182,23 @@ const Achievements = () => {
         </div>
         
         {/* Tabs */}
-        <div className="tab-buttons">
+        <div className={`tab-buttons ${theme === 'dark' ? 'dark-tabs' : ''}`}>
           <button
             onClick={() => setActiveTab('earned')}
-            className={`tab-button ${activeTab === 'earned' ? 'active' : ''}`}
+            className={`tab-button ${activeTab === 'earned' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
           >
             Earned ({achievements.length})
           </button>
           <button
             onClick={() => setActiveTab('all')}
-            className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
+            className={`tab-button ${activeTab === 'all' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
           >
             All Achievements
           </button>
         </div>
         
-        {loading ? (
-          <div className="loading-state">
+        {loading && showLoader ? (
+          <div className={`loading-state ${theme === 'dark' ? 'dark-loading' : ''}`}>
             <p>Loading achievements...</p>
           </div>
         ) : (
@@ -194,17 +206,17 @@ const Achievements = () => {
             {activeTab === 'earned' && renderSimpleCollectionAchievements()}
             
             {Object.entries(groupedAchievements()).map(([category, categoryAchievements]) => (
-              <div key={category} className="achievement-category">
-                <h2 className="category-title">{category} Achievements</h2>
+              <div key={category} className={`achievement-category ${theme === 'dark' ? 'dark-category' : ''}`}>
+                <h2 className={`category-title ${theme === 'dark' ? 'dark-title' : ''}`}>{category} Achievements</h2>
                 <div className="badges-container">
                   {categoryAchievements.map((achievement) => {
                     const earned = isAchievementEarned(achievement.id);
                     return (
                       <div 
                         key={achievement.id} 
-                        className={`badge-item ${earned ? '' : 'badge-locked'}`}
+                        className={`badge-item ${earned ? '' : 'badge-locked'} ${theme === 'dark' ? 'dark-badge' : ''}`}
                       >
-                        <div className="badge-icon">
+                        <div className={`badge-icon ${earned ? '' : 'badge-locked'} ${theme === 'dark' ? 'dark-badge-icon' : ''}`}>
                           {achievement.badge_image ? (
                             <img 
                               src={achievement.badge_image} 
@@ -217,11 +229,11 @@ const Achievements = () => {
                             <span>🔒</span>
                           )}
                         </div>
-                        <div className="badge-name">
+                        <div className={`badge-name ${theme === 'dark' ? 'dark-badge-name' : ''}`}>
                           {achievement.name}
                         </div>
                         {earned && (
-                          <div className="achievement-points">
+                          <div className={`achievement-points ${theme === 'dark' ? 'dark-points' : ''}`}>
                             +{achievement.points}
                           </div>
                         )}
@@ -237,9 +249,9 @@ const Achievements = () => {
                     return (
                       <div 
                         key={`list-${achievement.id}`} 
-                        className="achievement-item"
+                        className={`achievement-item ${theme === 'dark' ? 'dark-item' : ''}`}
                       >
-                        <div className={`badge-icon ${earned ? '' : 'badge-locked'}`}>
+                        <div className={`badge-icon ${earned ? '' : 'badge-locked'} ${theme === 'dark' ? 'dark-badge-icon' : ''}`}>
                           {achievement.badge_image ? (
                             <img 
                               src={achievement.badge_image} 
@@ -254,19 +266,19 @@ const Achievements = () => {
                         </div>
                         
                         <div className="achievement-info">
-                          <h3 className="achievement-name">{achievement.name}</h3>
-                          <p className="achievement-description">{achievement.description}</p>
+                          <h3 className={`achievement-name ${theme === 'dark' ? 'dark-name' : ''}`}>{achievement.name}</h3>
+                          <p className={`achievement-description ${theme === 'dark' ? 'dark-description' : ''}`}>{achievement.description}</p>
                           <div className="achievement-status">
-                            <span className={earned ? 'earned-status' : 'locked-status'}>
+                            <span className={earned ? `earned-status ${theme === 'dark' ? 'dark-earned' : ''}` : `locked-status ${theme === 'dark' ? 'dark-locked' : ''}`}>
                               {earned ? 'Earned' : 'Locked'}
                             </span>
-                            <span className="status-separator">•</span>
-                            <span className="achievement-points">
+                            <span className={`status-separator ${theme === 'dark' ? 'dark-separator' : ''}`}>•</span>
+                            <span className={`achievement-points ${theme === 'dark' ? 'dark-points' : ''}`}>
                               +{achievement.points} pts
                             </span>
                           </div>
                           {earned && achievement.date_earned && (
-                            <p className="earned-date">
+                            <p className={`earned-date ${theme === 'dark' ? 'dark-date' : ''}`}>
                               Earned on {new Date(achievement.date_earned).toLocaleDateString()}
                             </p>
                           )}
