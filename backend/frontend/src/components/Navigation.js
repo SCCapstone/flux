@@ -1,11 +1,13 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, User, Heart, LogOut, TrendingUp, Award, Users, Trophy, List, Search, Menu, X } from 'lucide-react';
+import { Home, User, Heart, LogOut, TrendingUp, Award, Users, Trophy, List, Search, Menu, X, Sun, Moon } from 'lucide-react';
 import { AuthContext } from '../AuthContext';
+import { ThemeContext } from '../ThemeContext';
 import '../styles/Navigation.css';
 
 const Navigation = () => {
   const { handleLogout } = useContext(AuthContext);
+  const { theme, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -47,9 +49,19 @@ const Navigation = () => {
             <h1>Flux</h1>
           </div>
 
-          <button className="mobile-menu-toggle" onClick={toggleMenu}>
-            {isMenuOpen ? <X className="icon" /> : <Menu className="icon" />}
-          </button>
+          <div className="navbar-actions">
+            <button 
+              className="theme-toggle" 
+              onClick={toggleTheme} 
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun className="icon" /> : <Moon className="icon" />}
+            </button>
+            
+            <button className="mobile-menu-toggle" onClick={toggleMenu}>
+              {isMenuOpen ? <X className="icon" /> : <Menu className="icon" />}
+            </button>
+          </div>
 
           <div className={`nav-links ${isMenuOpen ? 'nav-active' : ''}`}>
             <button onClick={() => handleNavClick('/')} className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>

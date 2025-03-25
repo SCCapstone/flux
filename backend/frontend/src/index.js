@@ -1,9 +1,10 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
+import './styles/Theme.css';
+import './styles/Gamification.css';
 import App from './App';
 import axios from 'axios';
 import AuthProvider from './AuthContext';
-import './styles/Gamification.css';
 
 axios.interceptors.response.use(
   response => response,
@@ -20,11 +21,11 @@ axios.interceptors.response.use(
 axios.defaults.xsrfCookieName = 'csrftoken';
 axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 
-ReactDOM.render(
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
   <React.StrictMode>
     <AuthProvider>
       <App />
     </AuthProvider>
-  </React.StrictMode>,
-  document.getElementById('root')
+  </React.StrictMode>
 );

@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
+import { ThemeContext } from '../ThemeContext';
 import Navigation from '../components/Navigation';
 import DisplayBooks from "../components/DisplayBooks";
 import '../styles/Home.css';
@@ -8,8 +9,8 @@ import '../styles/Gamification.css';
 
 const Home = () => {
   const navigate = useNavigate();
-  // Remove userPoints from destructuring since it's not being used
   const { user, readingStreak, refreshGamificationData } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -229,12 +230,12 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`home-page min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Navigation />
       
       {/* Gamification Notification */}
       {notification.show && (
-        <div className="fixed top-20 right-4 max-w-xs bg-white rounded-lg shadow-lg p-4 border-l-4 border-green-500 z-50 animate-fade-in">
+        <div className={`fixed top-20 right-4 max-w-xs ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg p-4 border-l-4 border-green-500 z-50 animate-fade-in`}>
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -242,9 +243,9 @@ const Home = () => {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{notification.message}</p>
+              <p className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>{notification.message}</p>
               {notification.points > 0 && (
-                <p className="text-sm text-gray-600 font-bold">+{notification.points} points earned!</p>
+                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} font-bold`}>+{notification.points} points earned!</p>
               )}
             </div>
           </div>
@@ -275,22 +276,22 @@ const Home = () => {
       {/* Active Challenges */}
       {showChallenges && challenges.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 mb-6 mt-4">
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-bold mb-3">Active Reading Challenges</h3>
+          <div className={`rounded-lg shadow p-4 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+            <h3 className={`text-lg font-bold mb-3 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>Active Reading Challenges</h3>
             <div className="space-y-4">
               {challenges.map(challenge => (
-                <div key={challenge.id} className="border rounded-lg p-3">
+                <div key={challenge.id} className={`border rounded-lg p-3 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-medium">{challenge.name}</h4>
-                    <span className="text-sm bg-blue-100 text-blue-800 py-1 px-2 rounded">
+                    <h4 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>{challenge.name}</h4>
+                    <span className={`text-sm py-1 px-2 rounded ${theme === 'dark' ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}>
                       {challenge.days_remaining} days left
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm mb-1">
+                  <div className={`flex justify-between text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                     <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
                     <span>{challenge.progress_percentage}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className={`w-full rounded-full h-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <div 
                       className="bg-blue-600 h-2 rounded-full" 
                       style={{ width: `${challenge.progress_percentage}%` }}

@@ -8,11 +8,19 @@
   background-color: #f9fafb;
 }
 
+.bg-gray-900 {
+  background-color: #1a202c;
+}
+
 .user-search-container {
   max-width: 1024px;
   margin: 2rem auto;
   padding: 0 1rem;
   font-family: 'Inter', sans-serif;
+}
+
+.user-search-container.dark-mode {
+  color: #e2e8f0;
 }
 
 .search-title {
@@ -21,6 +29,10 @@
   color: #111827;
   margin-bottom: 1.5rem;
   text-align: center;
+}
+
+.text-gray-100 {
+  color: #f7fafc;
 }
 
 .search-form {
@@ -42,10 +54,21 @@
   font-family: 'Inter', sans-serif;
 }
 
+.search-input.dark-input {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
 .search-input:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-input.dark-input:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
 }
 
 .search-button {
@@ -61,8 +84,16 @@
   font-family: 'Inter', sans-serif;
 }
 
+.search-button.dark-button {
+  background-color: #4299e1;
+}
+
 .search-button:hover {
   background-color: #1d4ed8;
+}
+
+.search-button.dark-button:hover {
+  background-color: #3182ce;
 }
 
 .search-results {
@@ -81,11 +112,21 @@
   margin-bottom: 1.5rem;
 }
 
+.error-message.dark-error {
+  background-color: #3b3f54;
+  border-color: #52575c;
+  color: #e2e8f0;
+}
+
 .loading-message {
   text-align: center;
   color: #6b7280;
   font-size: 1.1rem;
   padding: 2rem 0;
+}
+
+.text-gray-300 {
+  color: #cbd5e0;
 }
 
 .no-results {
@@ -95,11 +136,19 @@
   padding: 2rem 0;
 }
 
+.no-results.dark-no-results {
+  color: #e2e8f0;
+}
+
 /* User cards from UserProfile.css, with a few tweaks */
 .users-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
+}
+
+.users-grid.dark-users {
+  color: #e2e8f0;
 }
 
 .user-card {
@@ -114,8 +163,19 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
+.user-card.dark-user-card {
+  border-color: #4a5568;
+  background-color: #2d3748;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 .user-card:hover {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.user-card.dark-user-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
   transform: translateY(-2px);
 }
 
@@ -134,6 +194,10 @@
   border: 2px solid #2563eb;
 }
 
+.user-avatar.dark-avatar {
+  border-color: #4299e1;
+}
+
 .user-details {
   flex-grow: 1;
 }
@@ -145,6 +209,10 @@
   color: #111827;
 }
 
+.user-name.dark-name {
+  color: #e2e8f0;
+}
+
 .user-bio {
   margin: 0;
   font-size: 0.9rem;
@@ -154,6 +222,10 @@
   -webkit-box-orient: vertical;
   line-clamp: 2;
   overflow: hidden;
+}
+
+.user-bio.dark-bio {
+  color: #cbd5e0;
 }
 
 /* Responsive design */

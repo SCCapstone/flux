@@ -83,3 +83,69 @@
   margin-bottom: 5px;
   width: 80%;
 }
+
+/* Dark Mode Styles */
+.readlist-popup.dark-mode {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode h2 {
+  color: #e2e8f0;
+}
+
+.dark-mode p, 
+.dark-mode label {
+  color: #cbd5e0;
+}
+
+.dark-create {
+  background-color: #2d3748;
+}
+
+.dark-input {
+  background-color: #1a202c;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+}
+
+.dark-input::placeholder {
+  color: #a0aec0;
+}
+
+.dark-create-btn {
+  background-color: #4299e1 !important;
+  color: white;
+}
+
+.dark-create-btn:hover {
+  background-color: #3182ce !important;
+}
+
+.dark-cancel-btn {
+  background-color: #4a5568 !important;
+  color: #e2e8f0 !important;
+}
+
+.dark-cancel-btn:hover {
+  background-color: #718096 !important;
+}
+
+.dark-apply-btn {
+  background-color: #4299e1 !important;
+  color: white;
+}
+
+.dark-apply-btn:hover {
+  background-color: #3182ce !important;
+}
+
+.dark-add-btn {
+  background-color: #38a169 !important;
+  color: white;
+}
+
+.dark-add-btn:hover {
+  background-color: #2f855a !important;
+}
