@@ -58,18 +58,18 @@ const DisplayBooks = ({ books, loading, error }) => {
             <p className={`book-genre ${theme === 'dark' ? 'dark-text' : ''}`}><strong>Genre:</strong> {book.genre}</p>
             <p className={`book-year ${theme === 'dark' ? 'dark-text' : ''}`}><strong>Year:</strong> {book.year}</p>
             <p className={`book-description ${theme === 'dark' ? 'dark-text' : ''}`}>{book.description}</p>
-            
-            {/* New Button: Opens Readlist Popup */}
-            <button
-              className={`nav-button ${theme === 'dark' ? 'dark-button' : ''}`}
-              onClick={() => {
-                console.log("Opening ReadlistPopup for book:", book);
-                setSelectedBook(book);
-              }}
-            >
-              Manage Readlists
-            </button>
           </div>
+          
+          {/* New Button: Opens Readlist Popup */}
+          <button
+            className={`nav-button ${theme === 'dark' ? 'dark-button' : ''}`}
+            onClick={() => {
+              console.log("Opening ReadlistPopup for book:", book);
+              setSelectedBook(book);
+            }}
+          >
+            Manage Readlists
+          </button>
         </div>
       ))}
 

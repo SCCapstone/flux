@@ -11,10 +11,7 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-<<<<<<< Updated upstream
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
-=======
->>>>>>> Stashed changes
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -22,11 +19,7 @@ const Navigation = () => {
 
   const handleLogoutClick = async () => {
     try {
-<<<<<<< Updated upstream
       const response = await fetch(`${apiBaseUrl}/logout/`, {
-=======
-      const response = await fetch('http://127.0.0.1:8000/api/logout/', {
->>>>>>> Stashed changes
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

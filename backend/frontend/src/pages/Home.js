@@ -230,7 +230,7 @@ const Home = () => {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`home-page min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Navigation />
       
       {/* Gamification Notification */}

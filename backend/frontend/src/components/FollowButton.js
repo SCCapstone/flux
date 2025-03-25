@@ -48,7 +48,7 @@ const FollowButton = ({ username, onFollowChange }) => {
     setError(null);
     
     try {
-      const endpoint = isFollowing ? '/api/users/unfollow/' : '/api/users/follow/';
+      const endpoint = isFollowing ? '/users/unfollow/' : '/users/follow/';
       const response = await axios.post(
         `${apiBaseUrl}${endpoint}`,
         { username },

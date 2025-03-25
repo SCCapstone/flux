@@ -679,6 +679,42 @@
   color: var(--text-muted);
 }
 
+.dark-mode .user-card {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border-color: #4a5568;
+}
+
+.dark-mode .user-card:hover {
+  background-color: #4a5568;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .user-name {
+  color: #e2e8f0;
+}
+
+.dark-mode .user-meta {
+  color: #a0aec0;
+}
+
+.dark-mode .section-title {
+  color: #e2e8f0;
+}
+
+.dark-mode .empty-state {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+.dark-mode .empty-state p {
+  color: #a0aec0;
+}
+
+.dark-mode .loading-message {
+  color: #a0aec0;
+}
+
 .loading-message {
   text-align: center;
   padding: 2rem 0;

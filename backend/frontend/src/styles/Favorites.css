@@ -38,82 +38,12 @@
   margin-right: 5px;
 }
 
-.favorites-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 15px;
-}
-
-.favorite-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 10px;
+.no-favorites-message {
   text-align: center;
-  cursor: pointer;
+  font-size: 1.2rem;
+  color: #555;
 }
 
-.favorite-cover {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.favorite-info {
-  margin-top: 10px;
-}
-
-.favorite-title {
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* Grid layout for books */
-.favorites-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 20px;
-}
-
-/* Style for individual book cards */
-.favorite-card {
-  background: white;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition: transform 0.2s;
-  cursor: pointer;
-}
-
-.favorite-card:hover {
-  transform: translateY(-5px);
-}
-
-/* Book cover images */
-.favorite-cover {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-/* Book title */
-.favorite-title {
-  font-size: 1rem;
-  font-weight: bold;
-  margin-top: 10px;
-  color: #333;
-  cursor: pointer;
-}
-
-.favorite-title:hover {
-  color: #2563eb;
-}
-
-/* Remove button */
 .remove-button {
   background: #e3342f;
   color: white;
@@ -129,10 +59,92 @@
   background: #cc1f1a;
 }
 
-/* No favorites message */
-.no-favorites-message {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #555;
+.gamification-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-width: 300px;
+  animation: slide-in 0.3s ease-out;
 }
 
+.gamification-notification.success {
+  border-left: 4px solid #10b981;
+}
+
+.gamification-notification.info {
+  border-left: 4px solid #3b82f6;
+}
+
+.gamification-notification.warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.achievement-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+}
+
+.achievement-popup-content {
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.achievement-title {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: #1f2937;
+}
+
+.achievement-name {
+  font-size: 1.1rem;
+  color: #4b5563;
+  margin-bottom: 10px;
+}
+
+.achievement-button {
+  margin-top: 15px;
+  padding: 8px 20px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.achievement-button:hover {
+  background-color: #4338ca;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: slide-in 0.3s ease-out forwards;
+}

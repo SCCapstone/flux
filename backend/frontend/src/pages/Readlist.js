@@ -1,27 +1,29 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
+import { ThemeContext } from "../ThemeContext";
 import Navigation from "../components/Navigation";
 import "../styles/Readlist.css";
 
 // Share Readlist Modal Component
-const ShareReadlistModal = ({ isOpen, onClose, onShare }) => {
+const ShareReadlistModal = ({ isOpen, onClose, onShare, theme }) => {
   const [username, setUsername] = useState("");
 
   if (!isOpen) return null;
 
   return (
     <div className="modal">
-      <div className="modal-content">
-        <h3>Share Readlist</h3>
+      <div className={`modal-content ${theme === 'dark' ? 'dark-mode' : ''}`}>
+        <h3 className={theme === 'dark' ? 'text-gray-200' : ''}>Share Readlist</h3>
         <input
           type="text"
           placeholder="Enter username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          className={theme === 'dark' ? 'dark-input' : ''}
         />
-        <button onClick={() => onShare(username)}>Share</button>
-        <button onClick={onClose}>Cancel</button>
+        <button onClick={() => onShare(username)} className={theme === 'dark' ? 'dark-share-btn' : ''}>Share</button>
+        <button onClick={onClose} className={theme === 'dark' ? 'dark-cancel-btn' : ''}>Cancel</button>
       </div>
     </div>
   );
@@ -31,6 +33,7 @@ const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 const Readlist = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
   const [readlists, setReadlists] = useState([]);
   const [sharedReadlists, setSharedReadlists] = useState([]);
   const [selectedReadlistId, setSelectedReadlistId] = useState(null);
@@ -137,10 +140,10 @@ const Readlist = () => {
   return (
     <>
       <Navigation />
-      <div className="page-container">
+      <div className={`page-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
         <header className="readlist-header">
-          <h1 className="readlist-title">My Readlists</h1>
-          <button className="add-readlist-button" onClick={handleCreateReadlist}>
+          <h1 className={`readlist-title ${theme === 'dark' ? 'dark-title' : ''}`}>My Readlists</h1>
+          <button className={`add-readlist-button ${theme === 'dark' ? 'dark-add-btn' : ''}`} onClick={handleCreateReadlist}>
             + Add Readlist
           </button>
         </header>
@@ -148,16 +151,16 @@ const Readlist = () => {
         {/* User's Readlists */}
         <div className="readlist-grid">
           {readlists.map((list) => (
-            <div key={list.id} className="readlist-card" onClick={() => navigate(`/readlist/${list.id}`)}>
+            <div key={list.id} className={`readlist-card ${theme === 'dark' ? 'dark-card' : ''}`} onClick={() => navigate(`/readlist/${list.id}`)}>
               {list.books.length > 0 ? (
                 <img src={list.books[0].image} alt={list.name} className="readlist-cover" />
               ) : (
-                <div className="empty-cover">No Books</div>
+                <div className={`empty-cover ${theme === 'dark' ? 'dark-empty-cover' : ''}`}>No Books</div>
               )}
-              <h3 className="readlist-card-title">{list.name}</h3>
+              <h3 className={`readlist-card-title ${theme === 'dark' ? 'dark-card-title' : ''}`}>{list.name}</h3>
               <div className="readlist-actions">
                 <button
-                  className="share-button"
+                  className={`share-button ${theme === 'dark' ? 'dark-share-btn' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedReadlistId(list.id);
@@ -167,7 +170,7 @@ const Readlist = () => {
                   Share
                 </button>
                 <button
-                  className="delete-button"
+                  className={`delete-button ${theme === 'dark' ? 'dark-delete-btn' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteReadlist(list.id);
@@ -181,15 +184,15 @@ const Readlist = () => {
         </div>
 
         {/* Readlists Shared with User */}
-        <h2>Shared With Me</h2>
+        <h2 className={theme === 'dark' ? 'dark-subtitle' : ''}>Shared With Me</h2>
         <div className="readlist-grid">
           {sharedReadlists.map((list) => (
-            <div key={list.id} className="readlist-card" onClick={() => navigate(`/readlist/${list.id}`)}>
-              <h3>{list.name} (by {list.owner})</h3>
+            <div key={list.id} className={`readlist-card ${theme === 'dark' ? 'dark-card' : ''}`} onClick={() => navigate(`/readlist/${list.id}`)}>
+              <h3 className={`readlist-card-title ${theme === 'dark' ? 'dark-card-title' : ''}`}>{list.name} (by {list.owner})</h3>
               {list.books.length > 0 ? (
                 <img src={list.books[0].image} alt={list.name} className="readlist-cover" />
               ) : (
-                <div className="empty-cover">No Books</div>
+                <div className={`empty-cover ${theme === 'dark' ? 'dark-empty-cover' : ''}`}>No Books</div>
               )}
             </div>
           ))}
@@ -201,6 +204,7 @@ const Readlist = () => {
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         onShare={handleShareReadlist}
+        theme={theme}
       />
     </>
   );
