@@ -28,7 +28,7 @@ from .models import (
 )
 from .serializers import ReadlistSerializer
 
-GOOGLE_BOOKS_API_KEY = 'AIzaSyBjiBQrzkmRzpoE0CsiqBYAkEIQMKc-q1I'
+GOOGLE_BOOKS_API_KEY = 'AIzaSyAOo9-IH2Ox7xDLtPt58X-I7J6_174tA5s'
 
 @api_view(['POST'])
 def register_user(request):
@@ -593,21 +593,51 @@ def get_bestsellers(request):
             books = []
             
             for book in data['results']['books']:
-                # Get additional details from Google Books API for each book
-                google_query = f"{book['title']} {book['author']}"
-                google_url = f"https://www.googleapis.com/books/v1/volumes?q={google_query}&key={GOOGLE_BOOKS_API_KEY}"
-                google_response = requests.get(google_url)
-                google_data = google_response.json()
-                
+                # First try using primary_isbn13 or primary_isbn10 for a precise match
+                isbn = book.get('primary_isbn13') or book.get('primary_isbn10')
                 google_book_info = {}
-                if google_response.status_code == 200 and google_data.get('items'):
-                    volume_info = google_data['items'][0]['volumeInfo']
-                    google_book_info = {
-                        'google_books_id': google_data['items'][0]['id'],
-                        'description': volume_info.get('description', ''),
-                        'categories': volume_info.get('categories', []),
-                        'image': volume_info.get('imageLinks', {}).get('thumbnail', '')
-                    }
+                
+                if isbn:
+                    google_url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key={GOOGLE_BOOKS_API_KEY}"
+                    google_response = requests.get(google_url)
+                    google_data = google_response.json()
+                    
+                    if google_response.status_code == 200 and google_data.get('items'):
+                        volume_info = google_data['items'][0]['volumeInfo']
+                        google_book_info = {
+                            'google_books_id': google_data['items'][0]['id'],
+                            'description': volume_info.get('description', ''),
+                            'categories': volume_info.get('categories', []),
+                            'image': volume_info.get('imageLinks', {}).get('thumbnail', '')
+                        }
+                
+                # Fallback to title+author search only if ISBN search failed or no ISBN
+                if not google_book_info:
+                    google_query = f"{book['title']} {book['author']}"
+                    google_url = f"https://www.googleapis.com/books/v1/volumes?q={google_query}&key={GOOGLE_BOOKS_API_KEY}"
+                    google_response = requests.get(google_url)
+                    google_data = google_response.json()
+                    
+                    if google_response.status_code == 200 and google_data.get('items'):
+                        volume_info = google_data['items'][0]['volumeInfo']
+                        google_book_info = {
+                            'google_books_id': google_data['items'][0]['id'],
+                            'description': volume_info.get('description', ''),
+                            'categories': volume_info.get('categories', []),
+                            'image': volume_info.get('imageLinks', {}).get('thumbnail', '')
+                        }
+
+                # Use NYT image if Google Books doesn't have one or has an invalid one
+                book_image = book['book_image']
+                if google_book_info.get('image'):
+                    # Validate Google image URL before using it
+                    google_image = google_book_info['image']
+                    if google_image and len(google_image) > 10:  # Basic validation
+                        book_image = google_image
+
+                # Ensure all image URLs use https
+                if book_image and book_image.startswith('http:'):
+                    book_image = book_image.replace('http:', 'https:')
 
                 books.append({
                     'rank': book['rank'],
@@ -616,7 +646,7 @@ def get_bestsellers(request):
                     'description': google_book_info.get('description', book['description']),
                     'google_books_id': google_book_info.get('google_books_id', ''),
                     'genre': ', '.join(google_book_info.get('categories', [])),
-                    'image': google_book_info.get('image', book['book_image']),
+                    'image': book_image,
                     'amazon_link': book['amazon_product_url'],
                     'weeks_on_list': book['weeks_on_list']
                 })

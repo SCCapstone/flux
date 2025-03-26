@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
+import { ThemeContext } from '../ThemeContext';
 import Navigation from '../components/Navigation';
 import FollowButton from '../components/FollowButton';
 import '../styles/UserProfile.css';
@@ -10,6 +11,7 @@ const UserProfile = () => {
   const { username } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -133,26 +135,26 @@ const UserProfile = () => {
 
   const renderReviews = () => {
     if (!profile?.recent_reviews?.length) {
-      return <p className="no-content-message">No reviews yet.</p>;
+      return <p className={`no-content-message ${theme === 'dark' ? 'text-gray-300' : ''}`}>No reviews yet.</p>;
     }
 
     return (
-      <div className="reviews-container">
+      <div className={`reviews-container ${theme === 'dark' ? 'dark-reviews' : ''}`}>
         {profile.recent_reviews.map(review => (
-          <div key={review.id} className="review-card">
+          <div key={review.id} className={`review-card ${theme === 'dark' ? 'dark-review' : ''}`}>
             <div className="review-header">
               <div className="review-book-info">
                 <h3 
-                  className="review-book-title"
+                  className={`review-book-title ${theme === 'dark' ? 'text-gray-100' : ''}`}
                   onClick={() => handleBookClick(review.book)}
                 >
                   {review.book.title}
                 </h3>
-                <p className="review-book-author">{review.book.author}</p>
+                <p className={`review-book-author ${theme === 'dark' ? 'text-gray-300' : ''}`}>{review.book.author}</p>
               </div>
             </div>
-            <p className="review-text">{review.review_text}</p>
-            <p className="review-date">
+            <p className={`review-text ${theme === 'dark' ? 'text-gray-300' : ''}`}>{review.review_text}</p>
+            <p className={`review-date ${theme === 'dark' ? 'text-gray-400' : ''}`}>
               {new Date(review.added_date).toLocaleDateString()}
             </p>
           </div>
@@ -163,17 +165,17 @@ const UserProfile = () => {
 
   const renderFollowers = () => {
     if (loadingFollowers) {
-      return <p className="loading-message">Loading followers...</p>;
+      return <p className={`loading-message ${theme === 'dark' ? 'text-gray-300' : ''}`}>Loading followers...</p>;
     }
 
     if (!followers.length) {
-      return <p className="no-content-message">No followers yet.</p>;
+      return <p className={`no-content-message ${theme === 'dark' ? 'text-gray-300' : ''}`}>No followers yet.</p>;
     }
 
     return (
-      <div className="users-grid">
+      <div className={`users-grid ${theme === 'dark' ? 'dark-users' : ''}`}>
         {followers.map(follower => (
-          <div key={follower.username} className="user-card">
+          <div key={follower.username} className={`user-card ${theme === 'dark' ? 'dark-user' : ''}`}>
             <div 
               className="user-card-info"
               onClick={() => handleUserClick(follower.username)}
@@ -184,8 +186,8 @@ const UserProfile = () => {
                 className="user-avatar"
               />
               <div className="user-details">
-                <h3 className="user-name">{follower.username}</h3>
-                <p className="follow-date">
+                <h3 className={`user-name ${theme === 'dark' ? 'text-gray-100' : ''}`}>{follower.username}</h3>
+                <p className={`follow-date ${theme === 'dark' ? 'text-gray-400' : ''}`}>
                   Following since {new Date(follower.follow_date).toLocaleDateString()}
                 </p>
               </div>
@@ -193,6 +195,7 @@ const UserProfile = () => {
             <FollowButton 
               username={follower.username} 
               onFollowChange={() => fetchFollowers()}
+              theme={theme}
             />
           </div>
         ))}
@@ -202,17 +205,17 @@ const UserProfile = () => {
 
   const renderFollowing = () => {
     if (loadingFollowing) {
-      return <p className="loading-message">Loading following...</p>;
+      return <p className={`loading-message ${theme === 'dark' ? 'text-gray-300' : ''}`}>Loading following...</p>;
     }
 
     if (!following.length) {
-      return <p className="no-content-message">Not following anyone yet.</p>;
+      return <p className={`no-content-message ${theme === 'dark' ? 'text-gray-300' : ''}`}>Not following anyone yet.</p>;
     }
 
     return (
-      <div className="users-grid">
+      <div className={`users-grid ${theme === 'dark' ? 'dark-users' : ''}`}>
         {following.map(user => (
-          <div key={user.username} className="user-card">
+          <div key={user.username} className={`user-card ${theme === 'dark' ? 'dark-user' : ''}`}>
             <div 
               className="user-card-info"
               onClick={() => handleUserClick(user.username)}
@@ -223,8 +226,8 @@ const UserProfile = () => {
                 className="user-avatar"
               />
               <div className="user-details">
-                <h3 className="user-name">{user.username}</h3>
-                <p className="follow-date">
+                <h3 className={`user-name ${theme === 'dark' ? 'text-gray-100' : ''}`}>{user.username}</h3>
+                <p className={`follow-date ${theme === 'dark' ? 'text-gray-400' : ''}`}>
                   Following since {new Date(user.follow_date).toLocaleDateString()}
                 </p>
               </div>
@@ -232,6 +235,7 @@ const UserProfile = () => {
             <FollowButton 
               username={user.username}
               onFollowChange={() => fetchFollowing()}
+              theme={theme}
             />
           </div>
         ))}
@@ -254,10 +258,10 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <Navigation />
-        <div className="profile-container">
-          <p className="loading-message">Loading profile...</p>
+        <div className={`profile-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
+          <p className={`loading-message ${theme === 'dark' ? 'text-gray-300' : ''}`}>Loading profile...</p>
         </div>
       </div>
     );
@@ -265,14 +269,14 @@ const UserProfile = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <Navigation />
-        <div className="profile-container">
-          <div className="error-container">
+        <div className={`profile-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
+          <div className={`error-container ${theme === 'dark' ? 'dark-error' : ''}`}>
             <p className="error-message">{error}</p>
             <button 
               onClick={() => navigate('/')}
-              className="go-back-button"
+              className={`go-back-button ${theme === 'dark' ? 'dark-button' : ''}`}
             >
               Go Back
             </button>
@@ -283,12 +287,12 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Navigation />
-      <div className="profile-container">
+      <div className={`profile-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
         {profile && (
           <>
-            <div className="profile-header">
+            <div className={`profile-header ${theme === 'dark' ? 'dark-header' : ''}`}>
               <div className="profile-avatar-container">
                 <img
                   src={profile.profile_image || '/default-profile.png'}
@@ -298,55 +302,56 @@ const UserProfile = () => {
               </div>
               
               <div className="profile-info">
-                <h1 className="profile-username">{profile.username}</h1>
-                <p className="profile-bio">{profile.bio || 'No bio available'}</p>
+                <h1 className={`profile-username ${theme === 'dark' ? 'text-gray-100' : ''}`}>{profile.username}</h1>
+                <p className={`profile-bio ${theme === 'dark' ? 'text-gray-300' : ''}`}>{profile.bio || 'No bio available'}</p>
                 
                 <div className="profile-stats">
                   <button 
                     onClick={() => setActiveTab('followers')}
-                    className="stat-item"
+                    className={`stat-item ${theme === 'dark' ? 'dark-stat' : ''}`}
                   >
-                    <span className="stat-count">{profile.followers_count}</span>
-                    <span className="stat-label">Followers</span>
+                    <span className={`stat-count ${theme === 'dark' ? 'text-gray-100' : ''}`}>{profile.followers_count}</span>
+                    <span className={`stat-label ${theme === 'dark' ? 'text-gray-400' : ''}`}>Followers</span>
                   </button>
                   <button 
                     onClick={() => setActiveTab('following')}
-                    className="stat-item"
+                    className={`stat-item ${theme === 'dark' ? 'dark-stat' : ''}`}
                   >
-                    <span className="stat-count">{profile.following_count}</span>
-                    <span className="stat-label">Following</span>
+                    <span className={`stat-count ${theme === 'dark' ? 'text-gray-100' : ''}`}>{profile.following_count}</span>
+                    <span className={`stat-label ${theme === 'dark' ? 'text-gray-400' : ''}`}>Following</span>
                   </button>
                 </div>
                 
                 <FollowButton 
                   username={profile.username}
                   onFollowChange={handleFollowChange}
+                  theme={theme}
                 />
               </div>
             </div>
             
-            <div className="profile-tabs">
+            <div className={`profile-tabs ${theme === 'dark' ? 'dark-tabs' : ''}`}>
               <button
                 onClick={() => setActiveTab('reviews')}
-                className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
+                className={`tab-button ${activeTab === 'reviews' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
               >
                 Reviews
               </button>
               <button
                 onClick={() => setActiveTab('followers')}
-                className={`tab-button ${activeTab === 'followers' ? 'active' : ''}`}
+                className={`tab-button ${activeTab === 'followers' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
               >
                 Followers
               </button>
               <button
                 onClick={() => setActiveTab('following')}
-                className={`tab-button ${activeTab === 'following' ? 'active' : ''}`}
+                className={`tab-button ${activeTab === 'following' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
               >
                 Following
               </button>
             </div>
             
-            <div className="profile-content">
+            <div className={`profile-content ${theme === 'dark' ? 'dark-content' : ''}`}>
               {renderTabContent()}
             </div>
           </>

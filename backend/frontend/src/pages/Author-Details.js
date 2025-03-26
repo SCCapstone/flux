@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import { FetchBooks } from '../components/FetchBooks';
 import DisplayBooks from "../components/DisplayBooks.js";
+import { ThemeContext } from '../ThemeContext';
 import '../styles/AuthorDetails.css';
 
 const AuthorDetails = () => {
   const locationRouter = useLocation();
+  const { theme } = useContext(ThemeContext);
   const [books, setBooks] = useState([]);
   const [query, setQuery] = useState('');
   const [favorites, setFavorites] = useState(() => {
@@ -110,11 +112,11 @@ const AuthorDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="loading-container">
-            <p className="loading-message">Loading author details...</p>
+          <div className={`loading-container ${theme === 'dark' ? 'dark-loading-container' : ''}`}>
+            <p className={`loading-message ${theme === 'dark' ? 'dark-text' : ''}`}>Loading author details...</p>
           </div>
         </div>
       </div>
@@ -123,11 +125,11 @@ const AuthorDetails = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="error-container">
-            <p className="error-message">{error}</p>
+          <div className={`error-container ${theme === 'dark' ? 'dark-error-container' : ''}`}>
+            <p className={`error-message ${theme === 'dark' ? 'dark-text' : ''}`}>{error}</p>
           </div>
         </div>
       </div>
@@ -135,32 +137,34 @@ const AuthorDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Navigation />
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="author-header">
-          <h1 className="author-name">{author}</h1>
-          <div className="author-stats">
+      <div className={`max-w-7xl mx-auto px-4 py-6 ${theme === 'dark' ? 'text-gray-300' : ''}`}>
+        <div className={`author-header ${theme === 'dark' ? 'dark-author-header' : ''}`}>
+          <h1 className={`author-name ${theme === 'dark' ? 'dark-author-name' : ''}`}>{author}</h1>
+          <div className={`author-stats ${theme === 'dark' ? 'dark-author-stats' : ''}`}>
             <div className="stat-item">
-              <span className="stat-label">Total Books</span>
-              <span className="stat-value">{authorStats.totalBooks}</span>
+              <span className={`stat-label ${theme === 'dark' ? 'dark-stat-label' : ''}`}>Total Books</span>
+              <span className={`stat-value ${theme === 'dark' ? 'dark-stat-value' : ''}`}>{authorStats.totalBooks}</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Average Rating</span>
-              <span className="stat-value">
+              <span className={`stat-label ${theme === 'dark' ? 'dark-stat-label' : ''}`}>Average Rating</span>
+              <span className={`stat-value ${theme === 'dark' ? 'dark-stat-value' : ''}`}>
                 {authorStats.averageRating ? authorStats.averageRating.toFixed(1) : 'N/A'}
               </span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Genres</span>
-              <span className="stat-value">{authorStats.genres.length}</span>
+              <span className={`stat-label ${theme === 'dark' ? 'dark-stat-label' : ''}`}>Genres</span>
+              <span className={`stat-value ${theme === 'dark' ? 'dark-stat-value' : ''}`}>
+                {authorStats.genres.length > 0 ? authorStats.genres.join(', ') : 'Unknown'}
+              </span>
             </div>
           </div>
           {authorStats.genres.length > 0 && (
-            <div className="genres-list">
-              <span className="stat-label">Writing in: </span>
+            <div className={`genres-list ${theme === 'dark' ? 'dark-genres-list' : ''}`}>
+              <span className={`stat-label ${theme === 'dark' ? 'dark-stat-label' : ''}`}>Writing in: </span>
               {authorStats.genres.map((genre, index) => (
-                <span key={genre} className="genre-tag">
+                <span key={genre} className={`genre-tag ${theme === 'dark' ? 'dark-genre-tag' : ''}`}>
                   {genre}
                   {index < authorStats.genres.length - 1 ? ', ' : ''}
                 </span>
@@ -170,7 +174,7 @@ const AuthorDetails = () => {
         </div>
 
         <div className="books-section">
-          <h2 className="section-title">Books by {author}</h2>
+          <h2 className={`section-title ${theme === 'dark' ? 'dark-section-title' : ''}`}>Books by {author}</h2>
           <DisplayBooks
             books={books}
             favorites={favorites}
@@ -178,24 +182,27 @@ const AuthorDetails = () => {
             loading={loading}
             error={error}
           />
-        </div>
-
-        <div className="pagination-container">
-          <button 
-            onClick={handlePreviousPage} 
-            disabled={page === 1}
-            className="pagination-button"
-          >
-            Previous
-          </button>
-          <span className="page-number">Page {page}</span>
-          <button 
-            onClick={handleNextPage}
-            className="pagination-button"
-            disabled={books.length === 0}
-          >
-            Next
-          </button>
+          <div className={`pagination-container ${theme === 'dark' ? 'dark-pagination-container' : ''}`}>
+            <button 
+              onClick={handlePreviousPage} 
+              disabled={page <= 1}
+              className={`pagination-button ${page <= 1 ? 'disabled' : ''} ${
+                theme === 'dark' ? 'dark-pagination-button' : ''
+              }`}
+            >
+              Previous
+            </button>
+            <span className={`page-indicator ${theme === 'dark' ? 'dark-page-indicator' : ''}`}>Page {page}</span>
+            <button 
+              onClick={handleNextPage}
+              disabled={books.length === 0}
+              className={`pagination-button ${books.length === 0 ? 'disabled' : ''} ${
+                theme === 'dark' ? 'dark-pagination-button' : ''
+              }`}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>

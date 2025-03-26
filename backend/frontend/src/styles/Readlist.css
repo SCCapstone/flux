@@ -4,7 +4,7 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  min-height: calc(100vh - 4.5rem); /* Adjust for navbar height */
+  min-height: calc(100vh - 4.5rem);
   background-color: #ffffff;
   font-family: 'Inter', sans-serif;
 }
@@ -102,6 +102,105 @@
 
 .delete-button:hover {
   background-color: #b91c1c;
+}
+
+.readlist-container {
+  padding: 1rem;
+  background-color: #ffffff;
+}
+
+.readlist-container.dark-mode {
+  background-color: #1a202c;
+  color: #e2e8f0;
+}
+
+/* Dark Mode Styles */
+.dark-mode.page-container {
+  background-color: #1a202c;
+  color: #e2e8f0;
+}
+
+.dark-title {
+  color: #e2e8f0 !important;
+}
+
+.dark-subtitle {
+  color: #e2e8f0;
+}
+
+.dark-add-btn {
+  background-color: #4299e1;
+}
+
+.dark-add-btn:hover {
+  background-color: #3182ce;
+}
+
+.dark-card {
+  background-color: #2d3748;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid #4a5568;
+}
+
+.dark-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-card-title {
+  color: #e2e8f0;
+}
+
+.dark-empty-cover {
+  background-color: #2d3748;
+  color: #a0aec0;
+  border: 1px solid #4a5568;
+}
+
+.dark-share-btn {
+  background-color: #4299e1;
+  color: white;
+}
+
+.dark-share-btn:hover {
+  background-color: #3182ce;
+}
+
+.dark-delete-btn {
+  background-color: #f56565;
+}
+
+.dark-delete-btn:hover {
+  background-color: #e53e3e;
+}
+
+/* Dark Mode Modal */
+.modal-content.dark-mode {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border-color: #4a5568;
+}
+
+.dark-mode h3 {
+  color: #e2e8f0;
+}
+
+.dark-input {
+  background-color: #1a202c;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+}
+
+.dark-input::placeholder {
+  color: #a0aec0;
+}
+
+.dark-cancel-btn {
+  background-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.dark-cancel-btn:hover {
+  background-color: #718096;
 }
 
 @media (max-width: 768px) {

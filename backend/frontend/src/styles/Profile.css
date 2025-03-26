@@ -8,9 +8,9 @@
 }
 
 .profile-content {
-  background-color: white;
+  background-color: var(--card-background);
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--shadow-color);
   padding: 2rem;
   margin: 0 auto;
   font-family: 'Inter', sans-serif;
@@ -19,9 +19,9 @@
 
 /* Summary Section */
 .profile-summary {
-  background-color: white;
+  background-color: var(--card-background);
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--shadow-color);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   display: flex;
@@ -48,7 +48,7 @@
   height: 5rem;
   border-radius: 50%;
   overflow: hidden;
-  border: 4px solid #2563eb;
+  border: 4px solid var(--primary-color);
 }
 
 .summary-avatar-img {
@@ -61,7 +61,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .badge-container {
@@ -78,18 +78,18 @@
 }
 
 .level-badge {
-  background-color: #e0f2fe;
-  color: #0369a1;
+  background-color: var(--background-secondary);
+  color: var(--primary-color);
 }
 
 .points-badge {
-  background-color: #f3e8ff;
-  color: #7e22ce;
+  background-color: var(--background-secondary);
+  color: var(--primary-color);
 }
 
 .streak-badge {
-  background-color: #ffedd5;
-  color: #c2410c;
+  background-color: var(--background-secondary);
+  color: var(--primary-color);
 }
 
 .level-progress {
@@ -107,14 +107,14 @@
 .progress-bar-bg {
   width: 100%;
   height: 0.5rem;
-  background-color: #e5e7eb;
+  background-color: var(--progress-background);
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background-color: #2563eb;
+  background-color: var(--primary-color);
   border-radius: 9999px;
   transition: width 0.5s ease-in-out;
 }
@@ -123,13 +123,13 @@
   font-size: 0.75rem;
   text-align: center;
   margin-top: 0.25rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 /* Navigation Tabs */
 .profile-tabs {
   display: flex;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 1.5rem;
   overflow-x: auto;
   scrollbar-width: none;
@@ -146,19 +146,86 @@
   background: none;
   font-size: 1rem;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .tab-button:hover {
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .tab-button.active {
-  color: #2563eb;
-  border-bottom: 2px solid #2563eb;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.dark-mode .profile-tabs {
+  background-color: var(--card-background);
+  border-bottom-color: var(--border-color);
+}
+
+.dark-mode .tab-button {
+  background-color: var(--card-background);
+  color: var(--text-muted);
+}
+
+.dark-mode .tab-button:hover {
+  color: var(--text-primary);
+}
+
+.dark-mode .tab-button.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  background-color: var(--card-background);
+}
+
+.dark-mode .profile-content {
+  background-color: var(--card-background);
+  color: var(--text-primary);
+}
+
+.dark-mode .summary-username,
+.dark-mode h1, 
+.dark-mode h2, 
+.dark-mode h3, 
+.dark-mode h4,
+.dark-mode .profile-info strong,
+.dark-mode .level-labels span,
+.dark-mode .review-book-title {
+  color: var(--text-primary);
+}
+
+.dark-mode p,
+.dark-mode .profile-info p,
+.dark-mode .review-text,
+.dark-mode .review-book-author,
+.dark-mode .review-date {
+  color: var(--text-secondary);
+}
+
+.dark-mode .text-center {
+  color: var(--text-secondary);
+}
+
+.dark-tabs {
+  border-bottom-color: var(--border-color);
+  background-color: var(--card-background);
+  border-radius: 8px 8px 0 0;
+}
+
+.tab-button.dark-tab {
+  color: var(--text-muted);
+}
+
+.tab-button.dark-tab:hover {
+  color: var(--text-primary);
+}
+
+.tab-button.dark-tab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
 }
 
 /* Profile Form */
@@ -173,7 +240,7 @@
   height: 200px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #2563eb;
+  border: 4px solid var(--primary-color);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
@@ -185,18 +252,18 @@
 
 .profile-info p {
   font-size: 1.1rem;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 .profile-info strong {
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 600;
   margin-right: 0.5rem;
 }
 
 .bio-section {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
   padding-top: 1.5rem;
   margin-top: 1rem;
 }
@@ -204,7 +271,7 @@
 .bio-section h3 {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
@@ -223,38 +290,42 @@
 .form-group label {
   font-size: 1.1rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .form-group input[type="text"],
 .form-group input[type="email"],
 .form-group input[type="password"] {
   padding: 0.75rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   border-radius: 0.375rem;
   font-size: 1.1rem;
   transition: border-color 0.2s ease;
+  background-color: var(--input-background);
+  color: var(--text-primary);
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .bio-input {
   padding: 0.75rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   border-radius: 0.375rem;
   font-size: 1.1rem;
   min-height: 120px;
   resize: vertical;
   transition: border-color 0.2s ease;
+  background-color: var(--input-background);
+  color: var(--text-primary);
 }
 
 .bio-input:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -279,23 +350,23 @@
 }
 
 .btn-primary {
-  background-color: #2563eb;
+  background-color: var(--primary-color);
   color: white;
   border: none;
 }
 
 .btn-primary:hover {
-  background-color: #1d4ed8;
+  background-color: var(--primary-color-dark);
 }
 
 .btn-secondary {
-  background-color: #e5e7eb;
-  color: #4b5563;
+  background-color: var(--background-secondary);
+  color: var(--text-secondary);
   border: none;
 }
 
 .btn-secondary:hover {
-  background-color: #d1d5db;
+  background-color: var(--border-color);
 }
 
 .alert {
@@ -306,15 +377,15 @@
 }
 
 .alert-error {
-  background-color: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error-color);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .alert-success {
-  background-color: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 @media (max-width: 768px) {
@@ -536,7 +607,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .user-grid {
@@ -561,16 +632,17 @@
   display: flex;
   align-items: center;
   padding: 1rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  background-color: var(--card-background);
 }
 
 .user-card:hover {
-  background-color: #f9fafb;
+  background-color: var(--hover-background);
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px var(--shadow-color);
 }
 
 .user-avatar-container {
@@ -598,32 +670,68 @@
 
 .user-name {
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
 .user-meta {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-muted);
+}
+
+.dark-mode .user-card {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border-color: #4a5568;
+}
+
+.dark-mode .user-card:hover {
+  background-color: #4a5568;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .user-name {
+  color: #e2e8f0;
+}
+
+.dark-mode .user-meta {
+  color: #a0aec0;
+}
+
+.dark-mode .section-title {
+  color: #e2e8f0;
+}
+
+.dark-mode .empty-state {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+.dark-mode .empty-state p {
+  color: #a0aec0;
+}
+
+.dark-mode .loading-message {
+  color: #a0aec0;
 }
 
 .loading-message {
   text-align: center;
   padding: 2rem 0;
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 1.1rem;
 }
 
 .empty-state {
   text-align: center;
   padding: 2rem;
-  background-color: white;
+  background-color: var(--card-background);
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 .empty-state p {
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 1.1rem;
 }
 
@@ -634,17 +742,18 @@
 }
 
 .review-card {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   padding: 1.25rem;
   transition: all 0.2s ease;
   cursor: pointer;
+  background-color: var(--card-background);
 }
 
 .review-card:hover {
-  background-color: #f9fafb;
+  background-color: var(--hover-background);
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px var(--shadow-color);
 }
 
 .review-header {
@@ -658,7 +767,7 @@
   height: 6rem;
   object-fit: cover;
   border-radius: 0.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--shadow-color);
   margin-right: 1rem;
 }
 
@@ -669,26 +778,26 @@
 .review-book-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
 .review-book-author {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
 }
 
 .review-text {
   font-size: 1rem;
   line-height: 1.5;
-  color: #4b5563;
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
 .review-date {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-muted);
   text-align: right;
 }
 
@@ -696,12 +805,12 @@
   width: 4rem;
   height: 6rem;
   border-radius: 0.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--shadow-color);
   margin-right: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f0f0f0;
+  background-color: var(--background-secondary);
   overflow: hidden;
 }
 
@@ -720,29 +829,29 @@
 }
 
 .challenge-item {
-  background-color: white;
-  border: 1px solid #e5e7eb;
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   padding: 1.5rem;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 .challenge-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px var(--shadow-color);
 }
 
 .challenge-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .challenge-description {
   font-size: 1rem;
-  color: #4b5563;
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
@@ -756,18 +865,19 @@
   justify-content: space-between;
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
+  color: var(--text-secondary);
 }
 
 .challenge-progress-bar {
   height: 0.5rem;
-  background-color: #e5e7eb;
+  background-color: var(--progress-background);
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .challenge-progress-fill {
   height: 100%;
-  background-color: #2563eb;
+  background-color: var(--primary-color);
   border-radius: 9999px;
   transition: width 0.3s ease;
 }
@@ -778,7 +888,7 @@
   align-items: center;
   margin-top: 1rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .challenge-dates {
@@ -793,8 +903,8 @@
 }
 
 .challenge-days {
-  background-color: #e0f2fe;
-  color: #0369a1;
+  background-color: var(--background-secondary);
+  color: var(--primary-color);
   font-weight: 500;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
@@ -808,8 +918,8 @@
 
 .quit-challenge-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid #ef4444;
-  color: #ef4444;
+  border: 1px solid var(--error-color);
+  color: var(--error-color);
   background-color: transparent;
   border-radius: 0.375rem;
   font-size: 0.875rem;
@@ -819,16 +929,16 @@
 }
 
 .quit-challenge-btn:hover {
-  background-color: #fef2f2;
+  background-color: rgba(239, 68, 68, 0.1);
 }
 
 /* Empty state for challenges */
 .challenges-empty {
   text-align: center;
   padding: 3rem 2rem;
-  background-color: #f9fafb;
+  background-color: var(--background-secondary);
   border-radius: 0.5rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .challenges-empty p {
@@ -838,7 +948,7 @@
 
 .join-challenge-btn {
   padding: 0.75rem 1.5rem;
-  background-color: #2563eb;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -849,7 +959,7 @@
 }
 
 .join-challenge-btn:hover {
-  background-color: #1d4ed8;
+  background-color: var(--primary-color-dark);
 }
 
 @keyframes fadeIn {
@@ -858,7 +968,7 @@
 }
 
 .btn:focus {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
 

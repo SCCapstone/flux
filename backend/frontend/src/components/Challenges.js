@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../AuthContext';
+import { ThemeContext } from '../ThemeContext';
 import Navigation from './Navigation';
 import '../styles/Challenges.css';
 
 const Challenges = () => {
   const { user } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
   const [activeTab, setActiveTab] = useState('available');
   const [loading, setLoading] = useState(false);
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
@@ -305,12 +307,12 @@ const Challenges = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
       <Navigation />
       
       {/* Gamification Notification */}
       {notification.show && (
-        <div className={`gamification-notification ${notification.show ? 'animate-in' : 'animate-out'}`}>
+        <div className={`gamification-notification ${notification.show ? 'animate-in' : 'animate-out'} ${theme === 'dark' ? 'dark-notification' : ''}`}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ flexShrink: 0 }}>
               <svg className={`h-5 w-5`} 
@@ -326,45 +328,45 @@ const Challenges = () => {
               </svg>
             </div>
             <div style={{ marginLeft: '0.75rem' }}>
-              <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827' }}>{notification.message}</p>
+              <p style={{ fontSize: '0.875rem', fontWeight: 500, color: theme === 'dark' ? '#e2e8f0' : '#111827' }}>{notification.message}</p>
             </div>
           </div>
         </div>
       )}
       
-      <div className="challenges-container">
-        <h1 className="challenges-title">Reading Challenges</h1>
+      <div className={`challenges-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
+        <h1 className={`challenges-title ${theme === 'dark' ? 'dark-title' : ''}`}>Reading Challenges</h1>
         
         <div className="level-badge-container">
-          <div className="level-badge">
+          <div className={`level-badge ${theme === 'dark' ? 'dark-level-badge' : ''}`}>
             <span className="level-label">Level</span>
             <span className="level-value">1</span>
             <span className="points-value">0 PTS</span>
           </div>
         </div>
         
-        <div className="tab-buttons">
+        <div className={`tab-buttons ${theme === 'dark' ? 'dark-tabs' : ''}`}>
           <button
             onClick={() => setActiveTab('active')}
-            className={`tab-button ${activeTab === 'active' ? 'active' : ''}`}
+            className={`tab-button ${activeTab === 'active' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
           >
             Active Challenges
           </button>
           <button
             onClick={() => setActiveTab('completed')}
-            className={`tab-button ${activeTab === 'completed' ? 'active' : ''}`}
+            className={`tab-button ${activeTab === 'completed' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
           >
             Completed
           </button>
           <button
             onClick={() => setActiveTab('expired')}
-            className={`tab-button ${activeTab === 'expired' ? 'active' : ''}`}
+            className={`tab-button ${activeTab === 'expired' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
           >
             Expired
           </button>
           <button
             onClick={() => setActiveTab('available')}
-            className={`tab-button ${activeTab === 'available' ? 'active' : ''}`}
+            className={`tab-button ${activeTab === 'available' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
           >
             Available Challenges
           </button>
@@ -373,39 +375,39 @@ const Challenges = () => {
         <div>
           <button
             onClick={handleCreateChallenge}
-            className="create-challenge-btn"
+            className={`create-challenge-btn ${theme === 'dark' ? 'dark-button' : ''}`}
           >
             Create New Challenge
           </button>
         </div>
         
         {loading ? (
-          <div className="loading-state">
+          <div className={`loading-state ${theme === 'dark' ? 'dark-text' : ''}`}>
             <p>Loading challenges...</p>
           </div>
         ) : (
           <div>
             {getFilteredChallenges().length > 0 ? (
               getFilteredChallenges().map(challenge => (
-                <div key={challenge.id} className="challenge-card">
-                  <h2 className="challenge-title">{challenge.name}</h2>
-                  <p className="challenge-description">{challenge.description}</p>
+                <div key={challenge.id} className={`challenge-card ${theme === 'dark' ? 'dark-card' : ''}`}>
+                  <h2 className={`challenge-title ${theme === 'dark' ? 'dark-title' : ''}`}>{challenge.name}</h2>
+                  <p className={`challenge-description ${theme === 'dark' ? 'dark-description' : ''}`}>{challenge.description}</p>
                   
                   <div className="challenge-stats">
                     <div className="challenge-stat">
-                      <span className="stat-label">Goal</span>
-                      <span className="stat-value">Read {challenge.target_books} books</span>
+                      <span className={`stat-label ${theme === 'dark' ? 'dark-label' : ''}`}>Goal</span>
+                      <span className={`stat-value ${theme === 'dark' ? 'dark-value' : ''}`}>Read {challenge.target_books} books</span>
                     </div>
                     
                     {activeTab === 'active' && (
                       <div className="progress-container">
-                        <div className="progress-labels">
+                        <div className={`progress-labels ${theme === 'dark' ? 'dark-progress-labels' : ''}`}>
                           <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
                           <span>{challenge.progress_percentage}%</span>
                         </div>
-                        <div className="progress-bar">
+                        <div className={`progress-bar ${theme === 'dark' ? 'dark-progress-bar' : ''}`}>
                           <div 
-                            className="progress-fill progress-fill-blue" 
+                            className={`progress-fill progress-fill-blue ${theme === 'dark' ? 'dark-progress-fill' : ''}`}
                             style={{ width: `${challenge.progress_percentage}%` }}
                           ></div>
                         </div>
@@ -413,14 +415,14 @@ const Challenges = () => {
                     )}
                   </div>
                   
-                  <div className="challenge-dates">
+                  <div className={`challenge-dates ${theme === 'dark' ? 'dark-dates' : ''}`}>
                     <div>
-                      <span className="date-label">Starts:</span> {challenge.start_date}
+                      <span className={`date-label ${theme === 'dark' ? 'dark-label' : ''}`}>Starts:</span> {challenge.start_date}
                     </div>
                     <div>
-                      <span className="date-label">Ends:</span> {challenge.end_date}
+                      <span className={`date-label ${theme === 'dark' ? 'dark-label' : ''}`}>Ends:</span> {challenge.end_date}
                     </div>
-                    <div className="days-remaining">
+                    <div className={`days-remaining ${theme === 'dark' ? 'dark-days-remaining' : ''}`}>
                       {challenge.days_remaining} days remaining
                     </div>
                   </div>
@@ -429,7 +431,7 @@ const Challenges = () => {
                     {activeTab === 'available' && (
                       <button 
                         onClick={() => handleJoinChallenge(challenge.id)}
-                        className="join-button"
+                        className={`join-button ${theme === 'dark' ? 'dark-join-button' : ''}`}
                       >
                         Join Challenge
                       </button>
@@ -438,7 +440,7 @@ const Challenges = () => {
                     {activeTab === 'active' && (
                       <button 
                         onClick={() => handleQuitChallenge(challenge.id)}
-                        className="quit-button"
+                        className={`quit-button ${theme === 'dark' ? 'dark-quit-button' : ''}`}
                       >
                         Quit Challenge
                       </button>
@@ -447,7 +449,7 @@ const Challenges = () => {
                 </div>
               ))
             ) : (
-              <div className="empty-state">
+              <div className={`empty-state ${theme === 'dark' ? 'dark-empty-state' : ''}`}>
                 <p>
                   {activeTab === 'active' && "You're not participating in any active challenges."}
                   {activeTab === 'completed' && "You haven't completed any challenges yet."}

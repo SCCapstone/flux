@@ -4,8 +4,17 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  min-height: calc(100vh - 4.5rem); /* Adjust for navbar height */
+  min-height: calc(100vh - 4.5rem);
   font-family: 'Inter', sans-serif;
+}
+
+.achievements-container.dark-mode {
+  color: #e2e8f0;
+  background-color: #1a202c;
+}
+
+.bg-gray-900 {
+  background-color: #1a202c;
 }
 
 .achievements-header {
@@ -17,6 +26,10 @@
   font-weight: 700;
   color: #1e3a8a;
   margin-bottom: 1rem;
+}
+
+.achievements-title.dark-title {
+  color: #90cdf4;
 }
 
 .level-badge-container {
@@ -35,6 +48,10 @@
   border-radius: 0.5rem;
   min-width: 120px;
   padding: 0.5rem 0.75rem;
+}
+
+.level-badge.dark-level-badge {
+  background: linear-gradient(to right, #2c5282, #6b46c1);
 }
 
 .level-label, .points-value {
@@ -57,6 +74,10 @@
   scrollbar-width: none;
 }
 
+.tab-buttons.dark-tabs {
+  border-bottom-color: #4a5568;
+}
+
 .tab-buttons::-webkit-scrollbar {
   display: none;
 }
@@ -75,8 +96,16 @@
   font-family: 'Inter', sans-serif;
 }
 
+.tab-button.dark-tab {
+  color: #a0aec0;
+}
+
 .tab-button:hover {
   color: #111827;
+}
+
+.tab-button.dark-tab:hover {
+  color: #e2e8f0;
 }
 
 .tab-button.active {
@@ -85,8 +114,17 @@
   font-weight: 600;
 }
 
+.tab-button.active.dark-tab {
+  color: #4299e1;
+  border-bottom-color: #4299e1;
+}
+
 .achievement-category {
   margin-bottom: 3rem;
+}
+
+.achievement-category.dark-category {
+  border-color: #4a5568;
 }
 
 .category-title {
@@ -94,6 +132,10 @@
   font-weight: 700;
   color: #111827;
   margin-bottom: 1.5rem;
+}
+
+.category-title.dark-title {
+  color: #e2e8f0;
 }
 
 .badges-container {
@@ -110,6 +152,10 @@
   width: 5rem;
 }
 
+.badge-item.dark-badge {
+  color: #cbd5e0;
+}
+
 .badge-icon {
   width: 3rem;
   height: 3rem;
@@ -122,11 +168,19 @@
   font-size: 1.5rem;
 }
 
+.badge-icon.dark-badge-icon {
+  background-color: #4a5568;
+}
+
 .badge-name {
   font-size: 0.75rem;
   font-weight: 500;
   text-align: center;
   color: #374151;
+}
+
+.badge-name.dark-badge-name {
+  color: #cbd5e0;
 }
 
 .badge-locked {
@@ -138,6 +192,11 @@
   color: #9ca3af;
 }
 
+.badge-locked.dark-badge-icon {
+  background-color: #2d3748;
+  color: #718096;
+}
+
 .achievement-points {
   display: inline-block;
   background-color: #dbeafe;
@@ -147,6 +206,11 @@
   border-radius: 9999px;
   font-size: 0.75rem;
   margin-top: 0.25rem;
+}
+
+.achievement-points.dark-points {
+  background-color: #2c5282;
+  color: #90cdf4;
 }
 
 .achievements-list {
@@ -163,6 +227,10 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+.achievement-item.dark-item {
+  border-bottom-color: #4a5568;
+}
+
 .achievement-info {
   margin-left: 1rem;
   flex: 1;
@@ -175,11 +243,19 @@
   margin-bottom: 0.25rem;
 }
 
+.achievement-name.dark-name {
+  color: #e2e8f0;
+}
+
 .achievement-description {
   font-size: 0.9rem;
   color: #4b5563;
   margin-bottom: 0.5rem;
   line-height: 1.4;
+}
+
+.achievement-description.dark-description {
+  color: #a0aec0;
 }
 
 .achievement-status {
@@ -193,14 +269,26 @@
   font-weight: 500;
 }
 
+.earned-status.dark-earned {
+  color: #68d391;
+}
+
 .locked-status {
   color: #6b7280;
   font-weight: 500;
 }
 
+.locked-status.dark-locked {
+  color: #a0aec0;
+}
+
 .status-separator {
   margin: 0 0.5rem;
   color: #9ca3af;
+}
+
+.status-separator.dark-separator {
+  color: #718096;
 }
 
 .earned-date {
@@ -209,12 +297,24 @@
   margin-top: 0.25rem;
 }
 
+.earned-date.dark-date {
+  color: #a0aec0;
+}
+
 .collection-achievements {
   margin-bottom: 2.5rem;
 }
 
+.collection-achievements.dark-collection {
+  border-color: #4a5568;
+}
+
 .collection-achievement {
   margin-bottom: 1.5rem;
+}
+
+.collection-achievement.dark-collection-achievement {
+  border-color: #4a5568;
 }
 
 .collection-title {
@@ -233,6 +333,10 @@
   color: #111827;
 }
 
+.collection-title-text.dark-collection-text {
+  color: #e2e8f0;
+}
+
 .collection-progress {
   padding-left: 1.5rem;
   color: #4b5563;
@@ -240,11 +344,19 @@
   margin-bottom: 0.25rem;
 }
 
+.collection-progress.dark-collection-progress {
+  color: #a0aec0;
+}
+
 .collection-description {
   padding-left: 1.5rem;
   color: #6b7280;
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
+}
+
+.collection-description.dark-collection-description {
+  color: #a0aec0;
 }
 
 .progress-container {
@@ -261,6 +373,10 @@
   overflow: hidden;
 }
 
+.progress-bar.dark-progress-bar {
+  background-color: #4a5568;
+}
+
 .progress-fill {
   height: 100%;
   border-radius: 9999px;
@@ -271,6 +387,10 @@
   background-color: #2563eb;
 }
 
+.progress-fill-blue.dark-progress-fill {
+  background-color: #4299e1;
+}
+
 .empty-state {
   text-align: center;
   padding: 2rem 0;
@@ -278,11 +398,19 @@
   font-size: 1.1rem;
 }
 
+.empty-state.dark-empty {
+  color: #a0aec0;
+}
+
 .loading-state {
   text-align: center;
   padding: 3rem 0;
   color: #6b7280;
   font-size: 1.1rem;
+}
+
+.loading-state.dark-loading {
+  color: #a0aec0;
 }
 
 @keyframes fadeIn {

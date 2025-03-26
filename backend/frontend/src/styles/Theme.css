@@ -1,0 +1,69 @@
+/* Theme.css - CSS variables for light and dark mode */
+
+:root {
+  /* Light mode (default) */
+  --background-primary: #ffffff;
+  --background-secondary: #f9f9f9;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-tertiary: #4b5563;
+  --text-muted: #6b7280;
+  --primary-color: #2563eb;
+  --primary-color-dark: #1e3a8a;
+  --secondary-color: #8b5cf6;
+  --accent-color: #dc2626;
+  --card-background: #ffffff;
+  --border-color: #e5e7eb;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --hover-background: #f8fafc;
+  --active-background: #eff6ff;
+  --input-background: #ffffff;
+  --input-border: #ddd;
+  --success-color: #16a34a;
+  --warning-color: #f59e0b;
+  --error-color: #dc2626;
+  --progress-background: #e5e7eb;
+}
+
+/* Dark mode */
+[data-theme="dark"] {
+  --background-primary: #121212;
+  --background-secondary: #1a1a1a;
+  --text-primary: #f9fafb;
+  --text-secondary: #e5e7eb;
+  --text-tertiary: #d1d5db;
+  --text-muted: #9ca3af;
+  --primary-color: #3b82f6;
+  --primary-color-dark: #60a5fa;
+  --secondary-color: #a78bfa;
+  --accent-color: #ef4444;
+  --card-background: #1f2937;
+  --border-color: #374151;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --hover-background: #2d3748;
+  --active-background: #2c5282;
+  --input-background: #2d3748;
+  --input-border: #4b5563;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --progress-background: #374151;
+}
+
+/* Apply background color to the entire page */
+html, body {
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+/* Transition for smooth theme switching */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
