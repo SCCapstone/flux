@@ -37,6 +37,7 @@ const Profile = () => {
   const [pointsHistory, setPointsHistory] = useState([]);
   const [recentReviews, setRecentReviews] = useState([]);
   const [isLoadingGamification, setIsLoadingGamification] = useState(true);
+  const [favoriteBooks, setFavoriteBooks] = useState([]);
   
   // User following states
   const [followers, setFollowers] = useState([]);
@@ -44,6 +45,62 @@ const Profile = () => {
   const [loadingFollowers, setLoadingFollowers] = useState(false);
   const [loadingFollowing, setLoadingFollowing] = useState(false);
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+
+  // Function to render collection achievements
+  const renderCollectionAchievements = () => {
+    const bookCount = favoriteBooks.length;
+    
+    // Collection achievement definitions
+    const collectionDefinitions = [
+      { 
+        id: 'collector', 
+        name: 'Collector', 
+        target: 5, 
+        progress: Math.min(bookCount, 5),
+        description: `Add 5 books to favorites`
+      },
+      { 
+        id: 'enthusiast', 
+        name: 'Enthusiast', 
+        target: 25, 
+        progress: Math.min(bookCount, 25),
+        description: `Add 25 books to favorites`
+      },
+      { 
+        id: 'booklover', 
+        name: 'Book Lover', 
+        target: 50, 
+        progress: Math.min(bookCount, 50),
+        description: `Add 50 books to favorites`
+      }
+    ];
+    
+    return collectionDefinitions.map((achievement) => ({
+      id: achievement.id,
+      name: achievement.name,
+      description: achievement.description,
+      target: achievement.target,
+      progress: achievement.progress,
+      points: 10,
+      date_earned: new Date().toISOString()
+    }));
+  };
+
+  useEffect(() => {
+    // Immediately load challenges from localStorage
+    const storedChallenges = localStorage.getItem('userChallenges');
+    if (storedChallenges) {
+      try {
+        const parsedChallenges = JSON.parse(storedChallenges);
+        if (parsedChallenges && parsedChallenges.length > 0) {
+          console.log('Loading challenges directly from localStorage on mount');
+          setChallenges(parsedChallenges);
+        }
+      } catch (e) {
+        console.error('Error parsing challenges from localStorage:', e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (user?.token) {
@@ -95,88 +152,106 @@ const Profile = () => {
     if (!user?.token) return;
     
     setIsLoadingGamification(true);
+    
     try {
       const headers = {
         'Authorization': `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       };
       
-    // Fetch user points
-    try {
-      const pointsResponse = await fetch(`${apiBaseUrl}/user/points/`, { headers });
-      const pointsData = await pointsResponse.json();
-      setUserPoints(pointsData);
-    } catch (error) {
-      console.error('Error fetching user points:', error);
-    }
-    
-    // Fetch achievements with localStorage fallback
-    try {
-      // First check localStorage for achievements
-      const localAchievements = localStorage.getItem('userAchievements');
-      if (localAchievements) {
-        try {
-          const parsedAchievements = JSON.parse(localAchievements);
-          setAchievements(parsedAchievements);
-          console.log('Loaded achievements from localStorage');
-        } catch (e) {
-          console.warn('Could not parse achievements from localStorage');
-        }
+      // Fetch user points
+      try {
+        const pointsResponse = await fetch(`${apiBaseUrl}/user/points/`, { headers });
+        const pointsData = await pointsResponse.json();
+        setUserPoints(pointsData);
+        console.log('Loaded user points:', pointsData);
+      } catch (error) {
+        console.error('Error fetching user points:', error);
       }
       
-      // Try to fetch from backend
-      const achievementsResponse = await fetch(`${apiBaseUrl}/user/achievements/`, { headers });
-      if (achievementsResponse.ok) {
-        const achievementsData = await achievementsResponse.json();
-        setAchievements(achievementsData);
-        // Save to localStorage for future use
-        localStorage.setItem('userAchievements', JSON.stringify(achievementsData));
-        console.log('Loaded achievements from backend and saved to localStorage');
+      // Fetch favorites first
+      try {
+        const favoritesResponse = await fetch(`${apiBaseUrl}/favorites/`, { headers });
+        const favoritesData = await favoritesResponse.json();
+        setFavoriteBooks(favoritesData);
+        console.log('Loaded favorites:', favoritesData);
+      } catch (error) {
+        console.error('Error fetching favorites:', error);
       }
-    } catch (error) {
-      console.error('Error fetching achievements:', error);
-      // If we already loaded from localStorage, we'll keep that data
-    }
-
-      // Fetch points and stats
-      const pointsResponse = await fetch(`${apiBaseUrl}/user/points/`, { headers });
-      const pointsData = await pointsResponse.json();
-      setUserPoints(pointsData);
       
       // Fetch achievements
-      const achievementsResponse = await fetch(`${apiBaseUrl}/user/achievements/`, { headers });
-      const achievementsData = await achievementsResponse.json();
-      setAchievements(achievementsData);
+      try {
+        const achievementsResponse = await fetch(`${apiBaseUrl}/user/achievements/`, { headers });
+        if (achievementsResponse.ok) {
+          let achievementsData = await achievementsResponse.json();
+          
+          // Ensure we have an array
+          if (!Array.isArray(achievementsData)) {
+            console.log("Received non-array data:", achievementsData);
+            if (achievementsData && achievementsData.data && Array.isArray(achievementsData.data)) {
+              achievementsData = achievementsData.data;
+            } else {
+              achievementsData = Object.values(achievementsData).filter(item => 
+                item && typeof item === 'object' && 'id' in item
+              );
+            }
+          }
+          
+          console.log("Processed achievements data:", achievementsData);
+          
+          // Generate collection achievements
+          const collectionAchievements = renderCollectionAchievements();
+          console.log('Generated collection achievements:', collectionAchievements);
+          
+          // Combine API achievements with collection achievements
+          const existingIds = achievementsData.map(a => a.id);
+          const newCollectionAchievements = collectionAchievements.filter(a => !existingIds.includes(a.id));
+          const combinedAchievements = [...achievementsData, ...newCollectionAchievements];
+          
+          setAchievements(combinedAchievements);
+          localStorage.setItem('userAchievements', JSON.stringify(combinedAchievements));
+        } else {
+          console.warn('API responded with error, falling back to localStorage');
+          const localAchievements = localStorage.getItem('userAchievements');
+          if (localAchievements) {
+            try {
+              const parsedAchievements = JSON.parse(localAchievements);
+              setAchievements(parsedAchievements);
+              console.log('Loaded achievements from localStorage after API error');
+            } catch (e) {
+              console.warn('Could not parse achievements from localStorage');
+              // Fall back to generated collection achievements
+              setAchievements(renderCollectionAchievements());
+            }
+          } else {
+            // No localStorage data, use generated collection achievements
+            setAchievements(renderCollectionAchievements());
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching achievements:', error);
+        // Try localStorage as fallback
+        const localAchievements = localStorage.getItem('userAchievements');
+        if (localAchievements) {
+          try {
+            const parsedAchievements = JSON.parse(localAchievements);
+            setAchievements(parsedAchievements);
+            console.log('Loaded achievements from localStorage after fetch error');
+          } catch (e) {
+            console.warn('Could not parse achievements from localStorage');
+            // Fall back to generated collection achievements
+            setAchievements(renderCollectionAchievements());
+          }
+        } else {
+          // No localStorage data, use generated collection achievements
+          setAchievements(renderCollectionAchievements());
+        }
+      }
       
       // Fetch reading streak
       const streakResponse = await fetch(`${apiBaseUrl}/user/streak/`, { headers });
       const streakData = await streakResponse.json();
       setReadingStreak(streakData);
-      
-      // Fetch challenges from localStorage first
-      const localUserChallenges = localStorage.getItem('userChallenges');
-      if (localUserChallenges) {
-        try {
-          const parsedChallenges = JSON.parse(localUserChallenges);
-          setChallenges(parsedChallenges);
-          console.log('Loaded challenges from localStorage:', parsedChallenges);
-        } catch (e) {
-          console.warn('Could not parse user challenges from localStorage');
-        }
-      }
-      
-      // Then try fetching challenges from backend
-      try {
-        const challengesResponse = await fetch(`${apiBaseUrl}/user/challenges/`, { headers });
-        if (challengesResponse.ok) {
-          const challengesData = await challengesResponse.json();
-          setChallenges(challengesData);
-          console.log('Loaded challenges from backend:', challengesData);
-        }
-      } catch (error) {
-        console.error('Error fetching challenges from backend:', error);
-        // If we already loaded from localStorage, we'll keep that data
-      }
       
       // Fetch points history
       const historyResponse = await fetch(`${apiBaseUrl}/user/points/history/`, { headers });
@@ -189,6 +264,14 @@ const Profile = () => {
       setIsLoadingGamification(false);
     }
   };
+
+  useEffect(() => {
+    if (activeTab === 'achievements' && user?.token) {
+      // Re-fetch achievements data when the achievements tab is selected
+      console.log("Achievements tab selected, refreshing data");
+      fetchGamificationData();
+    }
+  }, [activeTab, user?.token]);
 
   useEffect(() => {
     if (activeTab === 'challenges' && user?.token) {
@@ -216,6 +299,88 @@ const Profile = () => {
       console.error('Error fetching user challenges:', error);
     }
   };
+
+  useEffect(() => {
+    if (user?.token) {
+      // Force refresh localStorage data
+      const storedChallenges = localStorage.getItem('userChallenges');
+      if (storedChallenges) {
+        try {
+          setChallenges(JSON.parse(storedChallenges));
+        } catch (e) {
+          console.error("Error parsing stored challenges:", e);
+        }
+      }
+    }
+  }, [user?.token]);
+
+  useEffect(() => {
+    // Listen for storage events from other components
+    const handleStorageChange = () => {
+      console.log("Storage event detected, refreshing challenges");
+      const stored = localStorage.getItem('userChallenges');
+      if (stored) {
+        try {
+          setChallenges(JSON.parse(stored));
+        } catch (e) {
+          console.error("Error parsing from storage event:", e);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const initialLoadDone = React.useRef(false);
+
+  useEffect(() => {
+    if (!initialLoadDone.current && user?.token) {
+      // Try localStorage first
+      const storedChallenges = localStorage.getItem('userChallenges');
+      if (storedChallenges) {
+        try {
+          setChallenges(JSON.parse(storedChallenges));
+          console.log('Set challenges from localStorage on initial load');
+        } catch (e) {
+          console.error('Error parsing challenges on initial load:', e);
+        }
+      }
+      
+      // Mark initial load as complete
+      initialLoadDone.current = true;
+      
+      // Then fetch from API
+      fetchGamificationData();
+    }
+  }, [user?.token]);
+
+  useEffect(() => {
+    // Function to handle storage changes from other tabs
+    const handleStorageChange = (e) => {
+      if (e.key === 'userChallenges') {
+        console.log('Storage changed, refreshing challenges');
+        if (e.newValue) {
+          try {
+            setChallenges(JSON.parse(e.newValue));
+          } catch (error) {
+            console.error('Error parsing challenges from storage event:', error);
+          }
+        }
+      }
+    };
+    
+    // Add listener for storage events
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const handleQuitChallenge = (challengeId) => {
     // Find the challenge to remove
@@ -438,112 +603,209 @@ const Profile = () => {
       
       case 'following':
         return renderFollowing();
-        case 'achievements':
-          return (
-            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-6`}>
-              <h2 className="text-2xl font-bold mb-6">Your Achievements</h2>
-              {isLoadingGamification ? (
-                <div className="text-center py-8">Loading achievements...</div>
-              ) : achievements && achievements.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {achievements.map((achievement) => (
-                    <div key={achievement.id} className={`${theme === 'dark' ? 'bg-gradient-to-r from-gray-700 to-gray-800' : 'bg-gradient-to-r from-blue-50 to-purple-50'} rounded-lg p-4 shadow`}>
-                      <div className="flex items-center">
-                        <div className={`w-12 h-12 flex items-center justify-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-blue-100'} rounded-full mr-4`}>
-                          {achievement.badge_image ? (
-                            <img src={achievement.badge_image} alt={achievement.name} className="w-10 h-10" />
-                          ) : (
-                            <span className="text-2xl">🏆</span>
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="font-bold">{achievement.name}</h3>
-                          <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{achievement.description}</p>
-                        </div>
-                      </div>
-                      <div className="mt-2 flex justify-between items-center">
-                        <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Earned: {new Date(achievement.date_earned).toLocaleDateString()}
-                        </span>
-                        <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>+{achievement.points} pts</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className={`text-center ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>You haven't earned any achievements yet. Keep reading and reviewing books to earn achievements!</p>
-                </div>
-              )}
-            </div>
-          );
         
-        case 'challenges':
-          return (
-            <div className="challenges-section">
-              <h2 className="text-2xl font-bold mb-4">Reading Challenges</h2>
+        case 'achievements':
+  return (
+    <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-6`}>
+      <h2 className="text-2xl font-bold mb-6">Your Achievements</h2>
+      
+      <div style={{marginBottom: '20px'}}>
+        <button 
+          onClick={fetchGamificationData} 
+          className="join-challenge-btn"
+        >
+          Refresh Achievements
+        </button>
+      </div>
+      
+      {isLoadingGamification ? (
+        <div className="text-center py-8">Loading achievements...</div>
+      ) : (
+        <>
+          {/* Collection Achievements Section */}
+          <div className="mb-6">
+            <h3 className="text-xl font-bold mb-4">Collection Achievements</h3>
+            {renderCollectionAchievements().map((achievement) => {
+              const bookCount = favoriteBooks.length;
+              const progress = Math.min(bookCount, achievement.target);
+              const progressPercentage = (progress / achievement.target) * 100;
               
-              {isLoadingGamification ? (
-                <div className="loading-state">
-                  <p>Loading challenges...</p>
-                </div>
-              ) : challenges.length > 0 ? (
-                challenges.map((challenge) => (
-                  <div key={challenge.id} className="challenge-item">
-                    <h3 className="challenge-title">{challenge.name}</h3>
-                    <p className="challenge-description">{challenge.description}</p>
+              return (
+                <div key={achievement.id} className="mb-7" style={{ position: 'relative' }}>
+                  {/* Diamond positioned absolutely */}
+                  <div style={{ 
+                    position: 'absolute', 
+                    left: '0', 
+                    top: '0', 
+                    color: '#f97316', 
+                    fontSize: '20px' 
+                  }}>◆</div>
+                  
+                  {/* Title with padding for diamond */}
+                  <div style={{ paddingLeft: '30px' }}>
+                    <h4 className="font-bold text-lg">{achievement.name}</h4>
+                  </div>
+                  
+                  {/* Content with same padding */}
+                  <div style={{ paddingLeft: '30px' }}>
+                    <p className="my-1">{progress} / {achievement.target} books</p>
+                    <p className="text-gray-600 mb-3">Add {achievement.target} books to favorites</p>
                     
-                    <div className="challenge-progress">
-                      <div className="challenge-progress-text">
-                        <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
-                        <span>{challenge.progress_percentage || 0}%</span>
-                      </div>
-                      <div className="challenge-progress-bar">
-                        <div 
-                          className="challenge-progress-fill" 
-                          style={{ width: `${challenge.progress_percentage || 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    <div className="challenge-meta">
-                      <div className="challenge-dates">
-                        <div className="challenge-date-item">
-                          <span>Starts:</span> {challenge.start_date}
-                        </div>
-                        <div className="challenge-date-item">
-                          <span>Ends:</span> {challenge.end_date}
-                        </div>
-                      </div>
-                      
-                      <div className="challenge-days">
-                        {challenge.days_remaining || 0} days remaining
-                      </div>
-                    </div>
-                    
-                    <div className="challenge-action">
-                      <button 
-                        onClick={() => handleQuitChallenge(challenge.id)}
-                        className="quit-challenge-btn"
-                      >
-                        Quit Challenge
-                      </button>
+                    {/* Progress bar */}
+                    <div style={{
+                      width: '85%', 
+                      height: '8px', 
+                      backgroundColor: '#e5e7eb', 
+                      borderRadius: '9999px',
+                      overflow: 'hidden',
+                      marginBottom: '15px'
+                    }}>
+                      <div 
+                        style={{
+                          height: '85%', 
+                          backgroundColor: '#3b82f6', 
+                          borderRadius: '9999px',
+                          width: `${progressPercentage}%`
+                        }}
+                      ></div>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="challenges-empty">
-                  <p>You're not participating in any reading challenges yet.</p>
-                  <button 
-                    className="join-challenge-btn"
-                    onClick={() => window.location.href = '/challenges'}
-                  >
-                    Join a Challenge
-                  </button>
                 </div>
-              )}
+              );
+            })}
+          </div>
+          
+          {/* Other Achievements Section */}
+          {achievements.length > 0 && 
+            achievements.filter(a => !['collector', 'enthusiast', 'booklover'].includes(a.id)).length > 0 ? (
+            <>
+              <h3 className="text-xl font-bold mb-4">Other Achievements</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {achievements
+                  .filter(a => !['collector', 'enthusiast', 'booklover'].includes(a.id))
+                  .map((achievement) => (
+                  <div key={achievement.id} className={`${theme === 'dark' ? 'bg-gradient-to-r from-gray-700 to-gray-800' : 'bg-gradient-to-r from-blue-50 to-purple-50'} rounded-lg p-4 shadow`}>
+                    <div className="flex items-center">
+                      <div className={`w-12 h-12 flex items-center justify-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-blue-100'} rounded-full mr-4`}>
+                        {achievement.badge_image ? (
+                          <img src={achievement.badge_image} alt={achievement.name} className="w-10 h-10" />
+                        ) : (
+                          <span className="text-2xl">🏆</span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-bold">{achievement.name}</h3>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{achievement.description}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex justify-between items-center">
+                      <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Earned: {new Date(achievement.date_earned).toLocaleDateString()}
+                      </span>
+                      <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>+{achievement.points} pts</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+          
+          {/* Display message only if no achievements from any source */}
+          {achievements.length === 0 && renderCollectionAchievements().every(a => a.progress === 0) && (
+            <div className="text-center py-8">
+              <p className={`text-center ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>You haven't earned any achievements yet. Keep reading and reviewing books to earn achievements!</p>
             </div>
-          );
+          )}
+        </>
+      )}
+    </div>
+  );
+        
+      case 'challenges':
+        return (
+          <div className="challenges-section">
+            <h2 className="text-2xl font-bold mb-4">Reading Challenges</h2>
+            
+            <div style={{marginBottom: '10px'}}>
+              <button 
+                onClick={() => {
+                  const stored = localStorage.getItem('userChallenges');
+                  if (stored) {
+                    try {
+                      setChallenges(JSON.parse(stored));
+                      console.log("Manually refreshed from localStorage");
+                    } catch (e) {
+                      console.error("Manual refresh error:", e);
+                    }
+                  }
+                }} 
+                className="join-challenge-btn"
+              >
+                Refresh Challenges
+              </button>
+            </div>
+            
+            {isLoadingGamification ? (
+              <div className="loading-state">
+                <p>Loading challenges...</p>
+              </div>
+            ) : challenges && challenges.length > 0 ? (
+              challenges.map((challenge) => (
+                <div key={challenge.id} className="challenge-item">
+                  <h3 className="challenge-title">{challenge.name}</h3>
+                  <p className="challenge-description">{challenge.description}</p>
+                  
+                  <div className="challenge-progress">
+                    <div className="challenge-progress-text">
+                      <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
+                      <span>{challenge.progress_percentage || 0}%</span>
+                    </div>
+                    <div className="challenge-progress-bar">
+                      <div 
+                        className="challenge-progress-fill" 
+                        style={{ width: `${challenge.progress_percentage || 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div className="challenge-meta">
+                    <div className="challenge-dates">
+                      <div className="challenge-date-item">
+                        <span>Starts:</span> {challenge.start_date}
+                      </div>
+                      <div className="challenge-date-item">
+                        <span>Ends:</span> {challenge.end_date}
+                      </div>
+                    </div>
+                    
+                    <div className="challenge-days">
+                      {challenge.days_remaining || 0} days remaining
+                    </div>
+                  </div>
+                  
+                  <div className="challenge-action">
+                    <button 
+                      onClick={() => handleQuitChallenge(challenge.id)}
+                      className="quit-challenge-btn"
+                    >
+                      Quit Challenge
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="challenges-empty">
+                <p>You're not participating in any reading challenges yet.</p>
+                <button 
+                  className="join-challenge-btn"
+                  onClick={() => window.location.href = '/challenges'}
+                >
+                  Join a Challenge
+                </button>
+              </div>
+            )}
+          </div>
+        );
         
       case 'stats':
         return (

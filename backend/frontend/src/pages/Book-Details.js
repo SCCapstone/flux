@@ -297,44 +297,119 @@ function BookDetails() {
   };
 
   // Handle updating book reading status
-  const handleUpdateBookStatus = async (status) => {
-    if (!user?.token || !book) return;
+const handleUpdateBookStatus = async (status) => {
+  if (!user?.token || !book) return;
 
-    try {
-      const response = await axios.post(
-        `${apiBaseUrl}/books/${book.google_books_id}/update-status/`,
-        { status },
-        { headers: { Authorization: `Bearer ${user.token}` } }
-      );
+  try {
+    const response = await axios.post(
+      `${apiBaseUrl}/books/${book.google_books_id}/update-status/`,
+      { status },
+      { headers: { Authorization: `Bearer ${user.token}` } }
+    );
 
-      setBookStatus(status);
+    setBookStatus(status);
 
-      // Show gamification notification if points were earned
-      if (status === 'FINISHED' && response.data.gamification) {
-        setNotification({
-          show: true,
-          message: 'Book finished! Great job!',
-          type: 'success',
-          points: response.data.gamification.points_earned
-        });
-
-        // If there's a new achievement
-        if (response.data.gamification.achievement) {
-          setAchievementPopup({
-            show: true,
-            achievement: response.data.gamification.achievement
-          });
+    // If book is marked as FINISHED, update our custom localStorage tracker
+    if (status === 'FINISHED') {
+      try {
+        // Get current finished books from localStorage
+        let finishedBooks = [];
+        const storedFinishedBooks = localStorage.getItem('fluxFinishedBooks');
+        if (storedFinishedBooks) {
+          finishedBooks = JSON.parse(storedFinishedBooks);
         }
-
-        // Hide notification after 3 seconds
-        setTimeout(() => {
-          setNotification(prev => ({...prev, show: false}));
-        }, 3000);
+        
+        // Check if this book is already in the list
+        const bookExists = finishedBooks.some(b => b.id === book.google_books_id);
+        
+        // If not, add it
+        if (!bookExists) {
+          finishedBooks.push({
+            id: book.google_books_id,
+            title: book.title,
+            author: book.authors ? book.authors.join(', ') : '',
+            date_finished: new Date().toISOString()
+          });
+          
+          // Save back to localStorage
+          localStorage.setItem('fluxFinishedBooks', JSON.stringify(finishedBooks));
+          console.log('Added book to finished books:', book.title);
+          
+          // Dispatch a custom event for other components
+          window.dispatchEvent(new CustomEvent('finishedBookAdded', { 
+            detail: { book: book.google_books_id } 
+          }));
+          
+          // Also update any active challenges directly
+          try {
+            const storedChallenges = localStorage.getItem('userChallenges');
+            if (storedChallenges) {
+              const challenges = JSON.parse(storedChallenges);
+              if (challenges && challenges.length > 0) {
+                // Update each challenge's progress
+                const updatedChallenges = challenges.map(challenge => {
+                  // Calculate new book count and progress
+                  const booksRead = (challenge.books_read || 0) + 1;
+                  const progress_percentage = Math.min(
+                    Math.round((booksRead / challenge.target_books) * 100),
+                    100
+                  );
+                  
+                  // Add this book to the challenge's read books
+                  const readBooks = challenge.readBooks || [];
+                  if (!readBooks.includes(book.google_books_id)) {
+                    readBooks.push(book.google_books_id);
+                  }
+                  
+                  // Return updated challenge
+                  return {
+                    ...challenge,
+                    books_read: booksRead,
+                    progress_percentage,
+                    readBooks
+                  };
+                });
+                
+                // Save back to localStorage
+                localStorage.setItem('userChallenges', JSON.stringify(updatedChallenges));
+                console.log('Updated challenges progress for new finished book');
+              }
+            }
+          } catch (e) {
+            console.error('Error updating challenges in localStorage:', e);
+          }
+        }
+      } catch (e) {
+        console.error('Error updating finished books in localStorage:', e);
       }
-    } catch (error) {
-      console.error('Error updating book status:', error);
     }
-  };
+
+    // Show gamification notification if points were earned
+    if (status === 'FINISHED' && response.data.gamification) {
+      setNotification({
+        show: true,
+        message: 'Book finished! Great job!',
+        type: 'success',
+        points: response.data.gamification.points_earned
+      });
+
+      // If there's a new achievement
+      if (response.data.gamification.achievement) {
+        setAchievementPopup({
+          show: true,
+          achievement: response.data.gamification.achievement
+        });
+      }
+
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        setNotification(prev => ({...prev, show: false}));
+      }, 3000);
+    }
+  } catch (error) {
+    console.error('Error updating book status:', error);
+  }
+};
 
   // Close achievement popup
   const closeAchievementPopup = () => {
