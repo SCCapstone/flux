@@ -50,6 +50,7 @@ const Challenges = () => {
 
   const [userChallenges, setUserChallenges] = useState([]);
   const [availableChallenges, setAvailableChallenges] = useState(sampleAvailableChallenges);
+  const [completedChallenges, setCompletedChallenges] = useState([]);
   
   // Notification state
   const [notification, setNotification] = useState({
@@ -93,6 +94,73 @@ const Challenges = () => {
       // Set user challenges from localStorage immediately for responsiveness
       setUserChallenges(localUserChallenges);
       
+      // Get completed challenges if they exist
+      let completedChallenges = [];
+      try {
+        const storedCompletedChallenges = localStorage.getItem('completedChallenges');
+        if (storedCompletedChallenges) {
+          completedChallenges = JSON.parse(storedCompletedChallenges);
+          setCompletedChallenges(completedChallenges);
+        }
+      } catch (e) {
+        console.warn('Error loading completed challenges:', e);
+      }
+      
+      // Get book count directly from favorites - THIS IS THE KEY CHANGE
+      let bookCount = 0;
+      try {
+        // Same approach as in the Achievements component
+        const favorites = localStorage.getItem('favorites');
+        if (favorites) {
+          const favoritesData = JSON.parse(favorites);
+          bookCount = favoritesData.length;
+        }
+        console.log('Book count from favorites:', bookCount);
+      } catch (e) {
+        console.warn('Error getting book count from favorites:', e);
+      }
+      
+      // Use the book count for challenges
+      if (localUserChallenges.length > 0) {
+        console.log('Updating challenge progress with book count:', bookCount);
+        
+        // Process active vs. completed challenges
+        const active = [];
+        const completed = [];
+        
+        localUserChallenges.forEach(challenge => {
+          // Only count up to the target for each challenge
+          const booksRead = Math.min(bookCount, challenge.target_books);
+          const progress_percentage = Math.round((booksRead / challenge.target_books) * 100);
+          
+          const updatedChallenge = {
+            ...challenge,
+            books_read: booksRead,
+            progress_percentage
+          };
+          
+          // Move to completed if 100%
+          if (progress_percentage === 100) {
+            completed.push(updatedChallenge);
+          } else {
+            active.push(updatedChallenge);
+          }
+        });
+        
+        // Combine with existing completed challenges
+        const existingCompletedIds = completedChallenges.map(c => c.id);
+        const newCompleted = completed.filter(c => !existingCompletedIds.includes(c.id));
+        const allCompleted = [...completedChallenges, ...newCompleted];
+        
+        // Update state
+        setUserChallenges(active);
+        setCompletedChallenges(allCompleted);
+        
+        // Save to localStorage
+        localStorage.setItem('userChallenges', JSON.stringify(active));
+        localStorage.setItem('completedChallenges', JSON.stringify(allCompleted));
+      }
+      
       // Define a function to remove duplicates by name
       const removeDuplicates = (challenges) => {
         const seen = new Set();
@@ -128,9 +196,13 @@ const Challenges = () => {
       }
       
       // Filter out challenges that the user is already participating in
-      const userChallengeNames = new Set(localUserChallenges.map(c => c.name));
+      const activeAndCompletedNames = new Set([
+        ...localUserChallenges.map(c => c.name),
+        ...completedChallenges.map(c => c.name)
+      ]);
+      
       const filteredAvailableChallenges = availableChallengesData.filter(
-        challenge => !userChallengeNames.has(challenge.name)
+        challenge => !activeAndCompletedNames.has(challenge.name)
       );
       
       console.log('Filtered available challenges:', filteredAvailableChallenges);
@@ -179,51 +251,95 @@ const Challenges = () => {
       // Fallback to sample data if no user is logged in
       setAvailableChallenges(sampleAvailableChallenges);
     }
-  }, [user?.token]); // Removed fetchChallenges from dependencies to avoid circular reference
+  }, [user?.token]); 
 
-  const handleJoinChallenge = async (challengeId) => {
+  useEffect(() => {
+    const handleFinishedBookAdded = () => {
+      console.log('Finished book added, refreshing challenges');
+      fetchChallenges();
+    };
+    
+    window.addEventListener('finishedBookAdded', handleFinishedBookAdded);
+    
+    return () => {
+      window.removeEventListener('finishedBookAdded', handleFinishedBookAdded);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      console.log('Storage changed, refreshing challenges');
+      fetchChallenges();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('finishedBookAdded', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('finishedBookAdded', handleStorageChange);
+    };
+  }, []);
+
+  const handleJoinChallenge = (challengeId) => {
+    console.log('Join challenge called with ID:', challengeId);
+    console.log('Available challenges:', availableChallenges);
+    
     setLoading(true);
     
-    // Find the challenge in available challenges
-    const challenge = availableChallenges.find(c => c.id === challengeId);
+    // More careful check
+    if (!availableChallenges || !Array.isArray(availableChallenges)) {
+      console.error('Available challenges not loaded yet');
+      setLoading(false);
+      return;
+    }
     
-    if (challenge) {
-      try {
-        console.log('Attempting to join challenge with ID:', challengeId);
-        
-        // Check if already joined to prevent duplicates
-        const isAlreadyJoined = userChallenges.some(c => c.name === challenge.name);
-        
-        if (isAlreadyJoined) {
-          console.warn('Already joined this challenge:', challenge.name);
-          showNotification(`You're already participating in "${challenge.name}"`, false);
-          setLoading(false);
-          return;
-        }
-        
-        // Update local state first
-        const updatedUserChallenges = [...userChallenges, challenge];
-        setUserChallenges(updatedUserChallenges);
-        
-        // Filter this challenge from available challenges
-        const updatedAvailableChallenges = availableChallenges.filter(c => c.id !== challengeId);
-        setAvailableChallenges(updatedAvailableChallenges);
-        
-        // Save to localStorage
-        localStorage.setItem('userChallenges', JSON.stringify(updatedUserChallenges));
-        localStorage.setItem('availableChallenges', JSON.stringify(updatedAvailableChallenges));
-        
-        // Show notification
-        showNotification(`Joined the "${challenge.name}" challenge!`, true);
-        
-        // Switch to active tab to show the joined challenge
-        setActiveTab('active');
-      } catch (error) {
-        console.error('Error joining challenge:', error);
-        showNotification('Error joining challenge. Please try again.', false);
-      } finally {
-        setLoading(false);
-      }
+    // Find the challenge in available challenges
+    const challengeToJoin = availableChallenges.find(c => c.id === challengeId);
+    
+    if (!challengeToJoin) {
+      console.error(`Challenge with ID ${challengeId} not found in available challenges`);
+      setLoading(false);
+      return;
+    }
+    
+    console.log('Found challenge to join:', challengeToJoin);
+    
+    try {
+      // Update local state immediately for responsiveness
+      const updatedUserChallenges = [...userChallenges, challengeToJoin];
+      setUserChallenges(updatedUserChallenges);
+      
+      // Remove from available challenges
+      const updatedAvailableChallenges = availableChallenges.filter(c => c.id !== challengeId);
+      setAvailableChallenges(updatedAvailableChallenges);
+      
+      // Save to localStorage for persistence
+      localStorage.setItem('userChallenges', JSON.stringify(updatedUserChallenges));
+      
+      // Try to save to backend (can ignore failures)
+      fetch('http://127.0.0.1:8000/api/challenges/join/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ challenge_id: challengeId }),
+      }).catch(err => console.warn('Backend sync failed, but local changes saved:', err));
+      
+      // Show notification
+      showNotification(`Joined the "${challengeToJoin.name}" challenge!`, true);
+      
+      // Switch to active tab to show the joined challenge
+      setActiveTab('active');
+      
+      // Dispatch storage event for other components
+      window.dispatchEvent(new Event('storage'));
+    } catch (error) {
+      console.error('Error in join challenge process:', error);
+      showNotification('Error joining challenge. Please try again.', false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -265,7 +381,6 @@ const Challenges = () => {
         setTimeout(() => {
           showNotification("No active challenges. Check available challenges to join new ones!", true);
         }, 2000);
-        
       }
     } catch (error) {
       console.error('Error in quit challenge:', error);
@@ -297,14 +412,16 @@ const Challenges = () => {
   };
 
   const getFilteredChallenges = () => {
-    if (activeTab === 'active') {
-      return userChallenges;
-    } else if (activeTab === 'available') {
-      return availableChallenges;
-    } else {
-      return []; // Completed and expired are empty for now
-    }
-  };
+  if (activeTab === 'active') {
+    return userChallenges;
+  } else if (activeTab === 'completed') {
+    return completedChallenges;
+  } else if (activeTab === 'available') {
+    return availableChallenges;
+  } else {
+    return []; // 'expired' tab
+  }
+};
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
