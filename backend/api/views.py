@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.db import models
 import json
+from django.db.models import Q
 
 import requests
 import base64
@@ -1486,7 +1487,14 @@ def update_readlist_books(request):
 def get_readlist_books(request, readlist_id):
     """Retrieve books from a specific readlist"""
     try:
-        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
+        readlist = Readlist.objects.filter(
+            Q(user=request.user) | Q(shared_with=request.user),
+            id=readlist_id
+        ).first()
+
+        if not readlist:
+            return Response({"error": "Readlist not found or access denied"}, status=status.HTTP_404_NOT_FOUND)
+
         books = readlist.books.all()  
 
         book_data = [
@@ -1502,7 +1510,7 @@ def get_readlist_books(request, readlist_id):
             for book in books
         ]
 
-        return Response({"name": readlist.name, "books": book_data}, status=status.HTTP_200_OK)
+        return Response({"name": readlist.name,"owner": readlist.user.username, "books": book_data}, status=status.HTTP_200_OK)
 
     except Readlist.DoesNotExist:
         return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)

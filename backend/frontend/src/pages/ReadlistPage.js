@@ -43,6 +43,7 @@ const ReadlistPage = () => {
             apiEndpoint={`${apiBaseUrl}/readlists/${readlistId}/`} 
             title={readlistName} 
             allowRemove={true} 
+            readlistId={readlistId}
             theme={theme}
           />
         </div>
