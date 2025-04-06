@@ -47,8 +47,7 @@ urlpatterns = [
     # Readlists
     path("readlists/", views.get_readlists, name="get_readlists"),
     path("readlists/create/", views.create_readlist, name="create_readlist"),
-    path("readlists/<int:readlist_id>/", views.get_readlist_books, name="get_readlist_books"),  
-    path("readlists/delete/<int:readlist_id>/", views.delete_readlist, name="delete_readlist"),
+    path("readlists/<int:readlist_id>/", views.readlist_detail, name="readlist_detail"),
     path("readlists/update/", views.update_readlist_books, name="update_readlist_books"),
 
     # Gamification routes
@@ -66,4 +65,5 @@ urlpatterns = [
     path('readlists/share/', views.share_readlist, name='share_readlist'),
     path('readlists/shared/', views.get_shared_readlists, name='get_shared_readlists'),
 
+    path('readlists/rename/', views.rename_readlist, name='rename_readlist'),
 ]
