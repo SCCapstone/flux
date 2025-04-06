@@ -10,7 +10,7 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
   const { theme } = useContext(ThemeContext);
 
-  useEffect(() => {
+  useEffect(() => { 
     // Fetch user's readlists
     const fetchReadlists = async () => {
       try {
@@ -55,6 +55,55 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
 
     if (book) fetchReadlists();
   }, [book]);
+
+  const handleRenameReadlist = async (id, oldName) => {
+    const newName = prompt("Enter new name for the readlist:", oldName);
+    if (!newName || newName.trim() === "") return;
+  
+    try {
+      const response = await fetch(`${apiBaseUrl}/readlists/rename/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ readlist_id: id, new_name: newName }),
+      });
+  
+      if (response.ok) {
+        const updated = await response.json();
+        setReadlists((prev) =>
+          prev.map((r) => (r.id === id ? { ...r, name: updated.name } : r))
+        );
+      }
+    } catch (error) {
+      console.error("Rename error:", error);
+    }
+  };
+  
+  const handleDeleteReadlist = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this readlist?")) return;
+  
+    try {
+      const response = await fetch(`${apiBaseUrl}/readlists/${id}/`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+  
+      if (response.ok) {
+        setReadlists((prev) => prev.filter((r) => r.id !== id));
+        setSelectedReadlists((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
+  };
 
   // Toggle readlist selection
   const handleToggleReadlist = (readlistId) => {
@@ -165,6 +214,8 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
                 />
                 {readlist.name}
               </label>
+              <button onClick={() => handleRenameReadlist(readlist.id, readlist.name)}>Rename</button>
+              <button onClick={() => handleDeleteReadlist(readlist.id)}>Delete</button>
             </li>
           ))}
         </ul>

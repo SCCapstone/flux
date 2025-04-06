@@ -1672,3 +1672,61 @@ def unshare_readlist(request):
         return Response({'error': 'Readlist not found or you do not have permission to unshare it.'}, status=status.HTTP_404_NOT_FOUND)
     except User.DoesNotExist:
         return Response({'error': 'Target user not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rename_readlist(request):
+    readlist_id = request.data.get('readlist_id')
+    new_name = request.data.get('new_name', '').strip()
+
+    if not readlist_id or not new_name:
+        return Response({'error': 'Readlist ID and new name required'}, status=400)
+
+    try:
+        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
+        readlist.name = new_name
+        readlist.save()
+        return Response({'message': 'Readlist renamed', 'name': readlist.name})
+    except Readlist.DoesNotExist:
+        return Response({'error': 'Readlist not found'}, status=404)
+
+@api_view(['GET', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def readlist_detail(request, readlist_id):
+    user = request.user
+
+    try:
+        readlist = Readlist.objects.filter(
+            Q(user=user) | Q(shared_with=user),
+            id=readlist_id
+        ).first()
+
+        if not readlist:
+            return Response({"error": "Readlist not found or access denied"}, status=404)
+
+        if request.method == 'GET':
+            books = readlist.books.all()
+            book_data = [
+                {
+                    "id": book.id,
+                    "google_books_id": book.google_books_id,
+                    "title": book.title,
+                    "author": book.author,
+                    "genre": book.genre,
+                    "year": book.year,
+                    "image": book.image,
+                }
+                for book in books
+            ]
+            return Response({"name": readlist.name, "owner": readlist.user.username, "books": book_data})
+
+        elif request.method == 'DELETE':
+            if readlist.is_favorites:
+                return Response({"error": "Favorites readlist cannot be deleted."}, status=403)
+
+            readlist.delete()
+            return Response({"message": "Readlist deleted"}, status=204)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
