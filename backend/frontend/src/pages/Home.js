@@ -86,7 +86,7 @@ const Home = () => {
       });
 
       const response = await fetch(
-        `http://localhost:8000/api/search/?${queryParams.toString()}`
+        `${apiBaseUrl}/search/?${queryParams.toString()}`
       );
 
       if (!response.ok) {
