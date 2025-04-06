@@ -101,7 +101,7 @@ const Readlist = () => {
   // Function to delete a readlist
   const handleDeleteReadlist = async (id) => {
     try {
-      const response = await fetch(`${apiBaseUrl}/readlists/delete/${id}/`, {
+      const response = await fetch(`${apiBaseUrl}/readlists/${id}/`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${user.token}` },
       });
