@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.db import models
+from django.shortcuts import get_object_or_404
 import json
 from django.db.models import Q
 
@@ -1770,4 +1771,19 @@ def readlist_detail(request, readlist_id):
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reorder_books_in_readlist(request):
+    readlist_id = request.data.get('readlist_id')
+    ordered_ids = request.data.get('ordered_book_ids')
+
+    readlist = get_object_or_404(Readlist, id=readlist_id, user=request.user)
+    for idx, book_id in enumerate(ordered_ids):
+        ReadlistBook.objects.filter(
+            readlist=readlist, book__google_books_id=book_id
+        ).update(order=idx)
+
+    return Response({"message": "Order updated."})
+
 

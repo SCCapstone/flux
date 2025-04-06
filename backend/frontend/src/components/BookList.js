@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import "../styles/BookList.css";  
@@ -103,6 +104,34 @@ const BookList = ({ apiEndpoint, title, allowRemove = false, handleRemove, handl
     });
   }, [books, activeFilters]);
 
+  const handleDragEnd = async (result) => {
+    const { source, destination } = result;
+    if (!destination) return;
+  
+    const reordered = Array.from(books);
+    const [moved] = reordered.splice(source.index, 1);
+    reordered.splice(destination.index, 0, moved);
+    setBooks(reordered);
+
+    if (readlistId) {
+      try {
+        await fetch(`${apiBaseUrl}/readlists/reorder-books/`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            readlist_id: readlistId,
+            ordered_book_ids: reordered.map((book) => book.google_books_id),
+          }),
+        });
+      } catch (error) {
+        console.error("Error saving new book order:", error);
+      }
+    }
+  };
+
   return (
     <div className={`booklist-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
       {title && (
@@ -141,58 +170,81 @@ const BookList = ({ apiEndpoint, title, allowRemove = false, handleRemove, handl
         </div>
       </div>
 
-      <div className="booklist-grid">
-        {filteredBooks.length > 0 ? (
-          filteredBooks.map((book, index) => (
-            <div key={index} className={`booklist-card ${theme === 'dark' ? 'dark-card' : ''}`}>
-              {book.image && (
-                <img
-                  src={book.image}
-                  alt={book.title}
-                  className="booklist-cover"
-                  onClick={() => handleBookDetails(book)}
-                />
-              )}
-              <div className={`booklist-info ${theme === 'dark' ? 'dark-info' : ''}`}>
-                <h3 
-                  className={`booklist-title ${theme === 'dark' ? 'text-gray-200' : ''}`} 
-                  onClick={() => handleBookDetails(book)}
-                >
-                  {book.title}
-                </h3>
-                <p className={`booklist-author ${theme === 'dark' ? 'text-gray-300' : ''}`}>
-                  <strong className={theme === 'dark' ? 'text-gray-300' : ''}>Author:</strong> {book.author}
-                </p>
-                <p className={`booklist-genre ${theme === 'dark' ? 'text-gray-300' : ''}`}>
-                  <strong className={theme === 'dark' ? 'text-gray-300' : ''}>Genre:</strong> {book.genre}
-                </p>
-                <p className={`booklist-year ${theme === 'dark' ? 'text-gray-300' : ''}`}>
-                  <strong className={theme === 'dark' ? 'text-gray-300' : ''}>Year:</strong> {book.year}
-                </p>
-
-                <button
-                className={`nav-button ${theme === 'dark' ? 'dark-button' : ''}`}
-                onClick={() => {
-               console.log("Opening ReadlistPopup for book:", book);
-                setSelectedBook(book);
-                }}
-                >
-                Manage Readlists
-                </button>
-
-
-                {allowRemove && (
-                  <button className="remove-button" onClick={() => handleRemoveBook(book)}>
-                    Remove
-                  </button>
+      <DragDropContext onDragEnd={handleDragEnd}>
+  <Droppable droppableId="booklist-droppable" direction="horizontal">
+    {(provided) => (
+      <div
+        className="booklist-grid"
+        ref={provided.innerRef}
+        {...provided.droppableProps}
+      >
+        {filteredBooks.map((book, index) => (
+          <Draggable
+            key={book.google_books_id}
+            draggableId={book.google_books_id}
+            index={index}
+          >
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.draggableProps}
+                {...provided.dragHandleProps}
+                className={`booklist-card ${theme === 'dark' ? 'dark-card' : ''} ${snapshot.isDragging ? 'dragging' : ''}`}
+              >
+                {book.image && (
+                  <img
+                    src={book.image}
+                    alt={book.title}
+                    className="booklist-cover"
+                    onClick={() => handleBookDetails(book)}
+                  />
                 )}
+                <div className={`booklist-info ${theme === 'dark' ? 'dark-info' : ''}`}>
+                  <h3
+                    className={`booklist-title ${theme === 'dark' ? 'text-gray-200' : ''}`}
+                    onClick={() => handleBookDetails(book)}
+                  >
+                    {book.title}
+                  </h3>
+                  <p className={`booklist-author ${theme === 'dark' ? 'text-gray-300' : ''}`}>
+                    <strong>Author:</strong> {book.author}
+                  </p>
+                  <p className={`booklist-genre ${theme === 'dark' ? 'text-gray-300' : ''}`}>
+                    <strong>Genre:</strong> {book.genre}
+                  </p>
+                  <p className={`booklist-year ${theme === 'dark' ? 'text-gray-300' : ''}`}>
+                    <strong>Year:</strong> {book.year}
+                  </p>
+                  <button
+                    className={`nav-button ${theme === 'dark' ? 'dark-button' : ''}`}
+                    onClick={() => setSelectedBook(book)}
+                  >
+                    Manage Readlists
+                  </button>
+                  {allowRemove && (
+                    <button className="remove-button" onClick={() => handleRemoveBook(book)}>
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
-        ) : (
+            )}
+          </Draggable>
+        ))}
+        
+        {/* Always include the placeholder, even if no books */}
+        {provided.placeholder}
+
+        {/* Optional message (outside of conditional rendering) */}
+        {filteredBooks.length === 0 && (
           <p className={`no-results ${theme === 'dark' ? 'text-gray-300' : ''}`}>No books found.</p>
         )}
       </div>
+    )}
+  </Droppable>
+</DragDropContext>
+
+
 
       {/* Readlist Popup: Opens when a book is selected */}
       {selectedBook && (
