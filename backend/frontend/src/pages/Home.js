@@ -86,7 +86,7 @@ const Home = () => {
       });
 
       const response = await fetch(
-        `http://localhost:8000/api/search/?${queryParams.toString()}`
+        `${apiBaseUrl}/search/?${queryParams.toString()}`
       );
 
       if (!response.ok) {
@@ -162,9 +162,9 @@ const Home = () => {
         if (!isFavorite && data.gamification) {
           setNotification({
             show: true,
-            message: 'Added to favorites!',
-            type: 'success',
-            points: data.gamification.points_earned
+            message: data.gamification.notification?.message || 'Added to favorites!',
+            type: data.gamification.notification?.type || 'success',
+            points: data.gamification.notification?.points  || 0
           });
           
           // Refresh gamification data

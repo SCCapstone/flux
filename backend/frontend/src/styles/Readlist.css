@@ -113,8 +113,69 @@
   background-color: #1a202c;
   color: #e2e8f0;
 }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.5); /* backdrop */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
 /* Dark Mode Styles */
+
+.modal-content.dark-mode {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+}
+
+.modal-content.dark-mode input {
+  background-color: #1a202c;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+}
+
+.modal-content.dark-mode input::placeholder {
+  color: #a0aec0;
+}
+
+.modal-content.dark-mode .dark-share-btn {
+  background-color: #4299e1;
+  color: white;
+}
+
+.modal-content.dark-mode .dark-share-btn:hover {
+  background-color: #3182ce;
+}
+
+.modal-content.dark-mode .dark-cancel-btn {
+  background-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.modal-content.dark-mode .dark-cancel-btn:hover {
+  background-color: #718096;
+}
+
 .dark-mode.page-container {
   background-color: #1a202c;
   color: #e2e8f0;
@@ -171,36 +232,6 @@
 
 .dark-delete-btn:hover {
   background-color: #e53e3e;
-}
-
-/* Dark Mode Modal */
-.modal-content.dark-mode {
-  background-color: #2d3748;
-  color: #e2e8f0;
-  border-color: #4a5568;
-}
-
-.dark-mode h3 {
-  color: #e2e8f0;
-}
-
-.dark-input {
-  background-color: #1a202c;
-  color: #e2e8f0;
-  border: 1px solid #4a5568;
-}
-
-.dark-input::placeholder {
-  color: #a0aec0;
-}
-
-.dark-cancel-btn {
-  background-color: #4a5568;
-  color: #e2e8f0;
-}
-
-.dark-cancel-btn:hover {
-  background-color: #718096;
 }
 
 @media (max-width: 768px) {

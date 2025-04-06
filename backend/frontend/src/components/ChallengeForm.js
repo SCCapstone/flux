@@ -1,0 +1,260 @@
+import React, { useState, useContext, useEffect } from 'react';
+import { ThemeContext } from '../ThemeContext';
+import '../styles/ChallengeForm.css';
+
+const ChallengeForm = ({ 
+  challenge = null, 
+  onSave, 
+  onCancel,
+  isEditing = false
+}) => {
+  const { theme } = useContext(ThemeContext);
+  const today = new Date().toISOString().split('T')[0];
+  const sixMonthsLater = new Date();
+  sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+  const sixMonthsLaterFormatted = sixMonthsLater.toISOString().split('T')[0];
+
+  const defaultChallenge = {
+    id: `challenge-${Date.now()}`,
+    name: '',
+    description: '',
+    target_books: 5,
+    books_read: 0,
+    start_date: today,
+    end_date: sixMonthsLaterFormatted,
+    days_remaining: 180,
+    progress_percentage: 0,
+    is_genre_specific: false,
+    genre: ''
+  };
+
+  // Initialize with either provided challenge or default values
+  const [formData, setFormData] = useState(challenge || defaultChallenge);
+  const [errors, setErrors] = useState({});
+
+  // Calculate days remaining whenever start/end dates change
+  useEffect(() => {
+    const start = new Date(formData.start_date);
+    const end = new Date(formData.end_date);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    setFormData(prev => ({
+      ...prev, 
+      days_remaining: diffDays
+    }));
+  }, [formData.start_date, formData.end_date]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    let parsedValue = value;
+    
+    // Convert numeric fields to numbers
+    if (name === 'target_books') {
+      parsedValue = parseInt(value, 10) || 1;
+    }
+    
+    setFormData({
+      ...formData,
+      [name]: parsedValue
+    });
+    
+    // Clear any error for this field
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: null
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Challenge name is required';
+    }
+    
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required';
+    }
+    
+    if (formData.target_books < 1) {
+      newErrors.target_books = 'Target must be at least 1 book';
+    }
+    
+    const startDate = new Date(formData.start_date);
+    const endDate = new Date(formData.end_date);
+    
+    if (endDate <= startDate) {
+      newErrors.end_date = 'End date must be after start date';
+    }
+    
+    // Validate genre if genre-specific challenge is selected
+    if (formData.is_genre_specific && !formData.genre) {
+      newErrors.genre = 'Please select a genre for your challenge';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      onSave(formData);
+    }
+  };
+
+  return (
+    <div className={`challenge-form-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
+      <h2 className="form-title">
+        {isEditing ? 'Edit Challenge' : 'Create New Challenge'}
+      </h2>
+      
+      <form onSubmit={handleSubmit} className="challenge-form" style={{ paddingBottom: '60px' }}>
+        <div className="form-group">
+          <label htmlFor="name">Challenge Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="e.g., Summer Reading Challenge"
+            className={errors.name ? 'input-error' : ''}
+          />
+          {errors.name && <div className="error-message">{errors.name}</div>}
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="description">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Describe your reading challenge"
+            rows="3"
+            className={errors.description ? 'input-error' : ''}
+          />
+          {errors.description && <div className="error-message">{errors.description}</div>}
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="target_books">Book Target</label>
+          <input
+            type="number"
+            id="target_books"
+            name="target_books"
+            value={formData.target_books}
+            onChange={handleChange}
+            min="1"
+            max="100"
+            className={errors.target_books ? 'input-error' : ''}
+          />
+          {errors.target_books && <div className="error-message">{errors.target_books}</div>}
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="start_date">Start Date</label>
+          <input
+            type="date"
+            id="start_date"
+            name="start_date"
+            value={formData.start_date}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="end_date">End Date</label>
+          <input
+            type="date"
+            id="end_date"
+            name="end_date"
+            value={formData.end_date}
+            onChange={handleChange}
+            className={errors.end_date ? 'input-error' : ''}
+          />
+          {errors.end_date && <div className="error-message">{errors.end_date}</div>}
+        </div>
+        
+        <div className="form-group checkbox-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="is_genre_specific"
+              checked={formData.is_genre_specific}
+              onChange={(e) => setFormData({
+                ...formData,
+                is_genre_specific: e.target.checked,
+                genre: e.target.checked ? formData.genre : ''
+              })}
+            />
+            <span>Genre-specific challenge</span>
+          </label>
+          <div className="checkbox-help">
+            If checked, books must match the selected genre to count toward the challenge
+          </div>
+        </div>
+        
+        {formData.is_genre_specific && (
+          <div className="form-group">
+            <label htmlFor="genre">Select Genre</label>
+            <select
+              id="genre"
+              name="genre"
+              value={formData.genre}
+              onChange={handleChange}
+              className={errors.genre ? 'input-error' : ''}
+            >
+              <option value="">Select a genre...</option>
+              <option value="fiction">Fiction</option>
+              <option value="non-fiction">Non-Fiction</option>
+              <option value="science-fiction">Science Fiction</option>
+              <option value="fantasy">Fantasy</option>
+              <option value="mystery">Mystery</option>
+              <option value="thriller">Thriller</option>
+              <option value="romance">Romance</option>
+              <option value="horror">Horror</option>
+              <option value="historical-fiction">Historical Fiction</option>
+              <option value="biography">Biography</option>
+              <option value="classics">Classics</option>
+              <option value="young-adult">Young Adult</option>
+              <option value="childrens">Children's Books</option>
+              <option value="poetry">Poetry</option>
+              <option value="self-help">Self-Help</option>
+              <option value="business">Business & Economics</option>
+              <option value="science">Science</option>
+            </select>
+            {errors.genre && <div className="error-message">{errors.genre}</div>}
+          </div>
+        )}
+        
+        <div className="form-info">
+          <p>Duration: {formData.days_remaining} days</p>
+        </div>
+        
+        <div className="form-actions">
+          <button 
+            type="button" 
+            onClick={onCancel}
+            className={`cancel-button ${theme === 'dark' ? 'dark-button' : ''}`}
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit"
+            className={`save-button ${theme === 'dark' ? 'dark-button' : ''}`}
+          >
+            {isEditing ? 'Update Challenge' : 'Create Challenge'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default ChallengeForm;

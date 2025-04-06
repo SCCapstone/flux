@@ -69,15 +69,32 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
     });
   };
 
-  // Create & Update readlist associations
   const handleSave = async () => {
-    if (!book || (!book.id && !book.google_books_id)) {
-      return;
-    }
-
-    // Build the request payload with all fields:
+    if (!book || (!book.id && !book.google_books_id)) return;
+  
+    const token = localStorage.getItem("token");
+  
+    // STEP 1: Make sure the book exists on the backend
+    await fetch(`${apiBaseUrl}/books/create-or-get/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        google_books_id: book.google_books_id,
+        title: book.title,
+        author: book.author,
+        description: book.description,
+        genre: book.genre,
+        image: book.image,
+        year: book.year,
+      }),
+    });
+  
+    // STEP 2: Update the readlist associations
     const payload = {
-      book_id: book.id || book.google_books_id,
+      book_id: book.google_books_id,
       title: book.title || "",
       author: book.author || "",
       description: book.description || "",
@@ -86,25 +103,23 @@ const ReadlistPopup = ({ book, onClose, onSave }) => {
       year: book.year || "",
       readlist_ids: Array.from(selectedReadlists),
     };
-
-    try {
-      const response = await fetch(`${apiBaseUrl}/readlists/update/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        onSave();
-      }
-    } catch (error) {
-      console.error("Error updating readlists:", error);
+  
+    const response = await fetch(`${apiBaseUrl}/readlists/update/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  
+    if (response.ok) {
+      onSave(); // Triggers reload in BookList
+    } else {
+      console.error("Failed to update readlists");
     }
   };
-
+  
   // Create a new readlist
   const handleCreateReadlist = async () => {
     if (!newReadlistName.trim()) return;

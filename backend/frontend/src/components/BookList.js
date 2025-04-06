@@ -2,8 +2,10 @@ import React, { useState, useContext, useEffect, useCallback, useMemo } from "re
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import "../styles/BookList.css";  
+import ReadlistPopup from './ReadlistPopup';
 
-const BookList = ({ apiEndpoint, title, allowRemove = false, handleRemove, handleAdd, theme = 'light' }) => {
+const BookList = ({ apiEndpoint, title, allowRemove = false, handleRemove, handleAdd, theme = 'light', readlistId }) => {
+  const [selectedBook, setSelectedBook] = useState(null);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
@@ -53,26 +55,28 @@ const BookList = ({ apiEndpoint, title, allowRemove = false, handleRemove, handl
       return;
     }
 
-    try {
-      const response = await fetch(`${apiBaseUrl}/readlists/update/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          book_id: book.google_books_id,
-          readlist_ids: [],
-        }),
-      });
-
-      if (response.ok) {
-        fetchBooks();
-      } else {
-        console.error("Error removing book:", await response.json());
+    if (readlistId) {
+      try {
+        const response = await fetch(`${apiBaseUrl}/readlists/update/`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            book_id: book.google_books_id,
+            readlist_ids: [], // remove from this readlist
+          }),
+        });
+  
+        if (response.ok) {
+          fetchBooks(); // Refresh list
+        } else {
+          console.error("Error removing book from readlist:", await response.json());
+        }
+      } catch (error) {
+        console.error("Error during removal:", error);
       }
-    } catch (error) {
-      console.error("Error removing book:", error);
     }
   };
 
@@ -166,6 +170,17 @@ const BookList = ({ apiEndpoint, title, allowRemove = false, handleRemove, handl
                   <strong className={theme === 'dark' ? 'text-gray-300' : ''}>Year:</strong> {book.year}
                 </p>
 
+                <button
+                className={`nav-button ${theme === 'dark' ? 'dark-button' : ''}`}
+                onClick={() => {
+               console.log("Opening ReadlistPopup for book:", book);
+                setSelectedBook(book);
+                }}
+                >
+                Manage Readlists
+                </button>
+
+
                 {allowRemove && (
                   <button className="remove-button" onClick={() => handleRemoveBook(book)}>
                     Remove
@@ -178,6 +193,20 @@ const BookList = ({ apiEndpoint, title, allowRemove = false, handleRemove, handl
           <p className={`no-results ${theme === 'dark' ? 'text-gray-300' : ''}`}>No books found.</p>
         )}
       </div>
+
+      {/* Readlist Popup: Opens when a book is selected */}
+      {selectedBook && (
+        <ReadlistPopup
+          book={selectedBook}
+          onClose={() => setSelectedBook(null)}
+          onSave={() => {
+            console.log("Closing ReadlistPopup after save");
+            setSelectedBook(null);
+            fetchBooks();
+          }}
+        />
+      )}
+
     </div>
   );
 };

@@ -24,6 +24,7 @@ function BookDetails() {
   
   const [reviews, setReviews] = useState([]); 
   const [newReviewText, setNewReviewText] = useState('');
+  const [selectedReview, setSelectedReview] = useState(null);
   const [bookStatus, setBookStatus] = useState('NOT_ADDED');
   const [isLoading, setIsLoading] = useState(true);
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
@@ -437,7 +438,11 @@ function BookDetails() {
     }
   };
 
-  
+  const handleReplyClick = (reviewId) => {
+    setSelectedReview(reviewId);
+  };
+
+  // Handle updating book reading status
   const handleUpdateBookStatus = async (status) => {
     if (!user?.token || !book) return;
 
@@ -449,6 +454,81 @@ function BookDetails() {
       );
 
       setBookStatus(status);
+
+      // If book is marked as FINISHED, update our custom localStorage tracker
+      if (status === 'FINISHED') {
+        try {
+          // Get current finished books from localStorage
+          let finishedBooks = [];
+          const storedFinishedBooks = localStorage.getItem('fluxFinishedBooks');
+          if (storedFinishedBooks) {
+            finishedBooks = JSON.parse(storedFinishedBooks);
+          }
+          
+          // Check if this book is already in the list
+          const bookExists = finishedBooks.some(b => b.id === book.google_books_id);
+          
+          // If not, add it
+          if (!bookExists) {
+            finishedBooks.push({
+              id: book.google_books_id,
+              title: book.title,
+              author: book.authors ? book.authors.join(', ') : '',
+              date_finished: new Date().toISOString()
+            });
+            
+            // Save back to localStorage
+            localStorage.setItem('fluxFinishedBooks', JSON.stringify(finishedBooks));
+            console.log('Added book to finished books:', book.title);
+            
+            // Dispatch a custom event for other components
+            window.dispatchEvent(new CustomEvent('finishedBookAdded', { 
+              detail: { book: book.google_books_id } 
+            }));
+            
+            // Also update any active challenges directly
+            try {
+              const storedChallenges = localStorage.getItem('userChallenges');
+              if (storedChallenges) {
+                const challenges = JSON.parse(storedChallenges);
+                if (challenges && challenges.length > 0) {
+                  // Update each challenge's progress
+                  const updatedChallenges = challenges.map(challenge => {
+                    // Calculate new book count and progress
+                    const booksRead = (challenge.books_read || 0) + 1;
+                    const progress_percentage = Math.min(
+                      Math.round((booksRead / challenge.target_books) * 100),
+                      100
+                    );
+                    
+                    // Add this book to the challenge's read books
+                    const readBooks = challenge.readBooks || [];
+                    if (!readBooks.includes(book.google_books_id)) {
+                      readBooks.push(book.google_books_id);
+                    }
+                    
+                    // Return updated challenge
+                    return {
+                      ...challenge,
+                      books_read: booksRead,
+                      progress_percentage,
+                      readBooks
+                    };
+                  });
+                  
+                  // Save back to localStorage
+                  localStorage.setItem('userChallenges', JSON.stringify(updatedChallenges));
+                  console.log('Updated challenges progress for new finished book');
+                }
+              }
+            } catch (e) {
+              console.error('Error updating challenges in localStorage:', e);
+            }
+          }
+        } catch (e) {
+          console.error('Error updating finished books in localStorage:', e);
+        }
+      }
 
       // Show gamification notification if points were earned
       if (status === 'FINISHED' && response.data.gamification) {
@@ -509,8 +589,9 @@ function BookDetails() {
       setIsEditing(false);
     };
     
-    // Check if this review belongs to the current user
-    const isUserReview = user && review.user && user.id === review.user.id;
+    const isUserReview = user && review.user && 
+      (user.id === review.user.id || 
+       (user.username && review.user.username && user.username === review.user.username));
   
     return (
       <div 
@@ -535,12 +616,14 @@ function BookDetails() {
                 <button 
                   onClick={() => setIsEditing(true)} 
                   className={`edit-button ${theme === 'dark' ? 'dark-edit-button' : ''}`}
+                  style={{ width: '65px', maxWidth: '65px' }}
                 >
                   Edit
                 </button>
                 <button 
                   onClick={() => handleReviewDelete(review.id)} 
                   className={`delete-button ${theme === 'dark' ? 'dark-delete-button' : ''}`}
+                  style={{ width: '65px', maxWidth: '65px' }}
                 >
                   Delete
                 </button>
@@ -573,7 +656,11 @@ function BookDetails() {
         )}
   
         {/* Toggle Reply Form */}
-        <button onClick={() => setIsReplying(!isReplying)} className={`reply-button ${theme === 'dark' ? 'dark-reply-button' : ''}`}>
+        <button 
+          onClick={() => setIsReplying(!isReplying)} 
+          className={`reply-button ${theme === 'dark' ? 'dark-reply-button' : ''}`}
+          style={{ width: '65px', maxWidth: '65px' }}
+        >
           {isReplying ? "Cancel" : "Reply"}
         </button>
   

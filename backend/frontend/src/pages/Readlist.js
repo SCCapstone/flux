@@ -12,7 +12,7 @@ const ShareReadlistModal = ({ isOpen, onClose, onShare, theme }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal">
+    <div className="modal-overlay">
       <div className={`modal-content ${theme === 'dark' ? 'dark-mode' : ''}`}>
         <h3 className={theme === 'dark' ? 'text-gray-200' : ''}>Share Readlist</h3>
         <input
@@ -22,8 +22,10 @@ const ShareReadlistModal = ({ isOpen, onClose, onShare, theme }) => {
           onChange={(e) => setUsername(e.target.value)}
           className={theme === 'dark' ? 'dark-input' : ''}
         />
+        <div className="modal-buttons">
         <button onClick={() => onShare(username)} className={theme === 'dark' ? 'dark-share-btn' : ''}>Share</button>
         <button onClick={onClose} className={theme === 'dark' ? 'dark-cancel-btn' : ''}>Cancel</button>
+        </div>
       </div>
     </div>
   );

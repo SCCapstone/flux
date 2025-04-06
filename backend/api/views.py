@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.db import models
 import json
+from django.db.models import Q
 
 import requests
 import base64
@@ -508,7 +509,7 @@ def get_favorites(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_favorite(request):
-    """Add a book to the 'Favorites' readlist and award points"""
+    """Add a book to the 'Favorites' readlist and award points + achievements inline"""
     book_data = request.data
     user = request.user
 
@@ -530,21 +531,53 @@ def add_favorite(request):
         _, added = ReadlistBook.objects.get_or_create(readlist=favorites_readlist, book=book)
 
         if added:
-            # Award points for adding a book to favorites
+            # Award 2 base points for adding a favorite
             award_points(user, 2, "Added a book to favorites")
-            
-            # Check for collection achievements
+
+            # Get current favorite count
             favorites_count = favorites_readlist.books.count()
             achievement_messages = []
 
-            if favorites_count == 5:
-                achievement_messages.append("🏆 Collector: Added 5 books to favorites!")
-            elif favorites_count == 25:
-                achievement_messages.append("🏆 Enthusiast: Added 25 books to favorites!")
-            elif favorites_count == 50:
-                achievement_messages.append("🏆 Book Lover: Added 50 books to favorites!")
+            # Check each threshold
+            if favorites_count >= 5:
+                achievement, _ = Achievement.objects.get_or_create(
+                    name="Collector",
+                    defaults={
+                        "description": "Added 5 books to favorites",
+                        "points": 10
+                    }
+                )
+                user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+                if created:
+                    award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                    achievement_messages.append("🏆 Collector: Added 5 books to favorites!")
 
-            # Prepare gamification response
+            if favorites_count >= 25:
+                achievement, _ = Achievement.objects.get_or_create(
+                    name="Enthusiast",
+                    defaults={
+                        "description": "Added 25 books to favorites",
+                        "points": 25
+                    }
+                )
+                user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+                if created:
+                    award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                    achievement_messages.append("🏆 Enthusiast: Added 25 books to favorites!")
+
+            if favorites_count >= 50:
+                achievement, _ = Achievement.objects.get_or_create(
+                    name="Book Lover",
+                    defaults={
+                        "description": "Added 50 books to favorites",
+                        "points": 50
+                    }
+                )
+                user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+                if created:
+                    award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                    achievement_messages.append("🏆 Book Lover: Added 50 books to favorites!")
+
             gamification_data = {
                 "notification": {
                     "show": True,
@@ -564,6 +597,7 @@ def add_favorite(request):
 
     except Readlist.DoesNotExist:
         return Response({'error': 'Favorites readlist not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -1513,21 +1547,63 @@ def update_readlist_books(request):
 
     book.save()  
 
+    # Track if added to favorites
+    added_to_favorites = False
+    user = request.user
+
     # Handle ReadlistBook relationships
     for readlist in Readlist.objects.filter(user=request.user):
         if readlist.id in readlist_ids:
-            ReadlistBook.objects.get_or_create(readlist=readlist, book=book)
+            obj, created = ReadlistBook.objects.get_or_create(readlist=readlist, book=book)
+            if created and readlist.is_favorites:
+                added_to_favorites = True
         else:
             ReadlistBook.objects.filter(readlist=readlist, book=book).delete()
 
-    return Response({"message": "Book readlist associations updated"})
+    # Gamification logic if added to favorites
+    gamification_data = {}
+    if added_to_favorites:
+        award_points(user, 2, "Added a book to favorites")
+
+        favorites_readlist = Readlist.objects.get(user=user, is_favorites=True)
+        favorites_count = favorites_readlist.books.count()
+        achievement_messages = []
+
+        if favorites_count == 5:
+            achievement_messages.append("🏆 Collector: Added 5 books to favorites!")
+        elif favorites_count == 25:
+            achievement_messages.append("🏆 Enthusiast: Added 25 books to favorites!")
+        elif favorites_count == 50:
+            achievement_messages.append("🏆 Book Lover: Added 50 books to favorites!")
+
+        gamification_data = {
+            "notification": {
+                "show": True,
+                "message": "Book added to favorites!",
+                "points": 2,
+                "type": "success"
+            },
+            "achievements": achievement_messages
+        }
+
+    return Response({
+        "message": "Book readlist associations updated",
+        "gamification": gamification_data
+    }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_readlist_books(request, readlist_id):
     """Retrieve books from a specific readlist"""
     try:
-        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
+        readlist = Readlist.objects.filter(
+            Q(user=request.user) | Q(shared_with=request.user),
+            id=readlist_id
+        ).first()
+
+        if not readlist:
+            return Response({"error": "Readlist not found or access denied"}, status=status.HTTP_404_NOT_FOUND)
+
         books = readlist.books.all()  
 
         book_data = [
@@ -1543,7 +1619,7 @@ def get_readlist_books(request, readlist_id):
             for book in books
         ]
 
-        return Response({"name": readlist.name, "books": book_data}, status=status.HTTP_200_OK)
+        return Response({"name": readlist.name,"owner": readlist.user.username, "books": book_data}, status=status.HTTP_200_OK)
 
     except Readlist.DoesNotExist:
         return Response({"error": "Readlist not found"}, status=status.HTTP_404_NOT_FOUND)
