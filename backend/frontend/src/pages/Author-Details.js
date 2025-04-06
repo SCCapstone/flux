@@ -35,9 +35,32 @@ const AuthorDetails = () => {
           const fetchedBooks = await FetchBooks(data.author, 1, 'author');
           setBooks(fetchedBooks);
           
+          // Fetch individual book ratings from our backend
+          const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+          let totalRating = 0;
+          let ratedBookCount = 0;
+          
+          // For each book, try to get the ratings
+          for (const book of fetchedBooks) {
+            if (book.google_books_id) {
+              try {
+                const ratingResponse = await fetch(`${apiBaseUrl}/books/${book.google_books_id}/ratings/`);
+                if (ratingResponse.ok) {
+                  const ratingData = await ratingResponse.json();
+                  if (ratingData.average_rating > 0) {
+                    totalRating += ratingData.average_rating;
+                    ratedBookCount++;
+                  }
+                }
+              } catch (error) {
+                console.error("Error fetching book rating:", error);
+              }
+            }
+          }
+          
           const stats = {
             totalBooks: fetchedBooks.length,
-            averageRating: fetchedBooks.reduce((acc, book) => acc + (book.average_rating || 0), 0) / fetchedBooks.length,
+            averageRating: ratedBookCount > 0 ? totalRating / ratedBookCount : 0,
             genres: [...new Set(fetchedBooks.map(book => book.genre).filter(Boolean))]
           };
           setAuthorStats(stats);
@@ -63,9 +86,32 @@ const AuthorDetails = () => {
         setBooks(newBooks);
         setPage(prev => prev + 1);
         
+        // Fetch individual book ratings from our backend
+        const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+        let totalRating = 0;
+        let ratedBookCount = 0;
+        
+        // For each book, try to get the ratings
+        for (const book of newBooks) {
+          if (book.google_books_id) {
+            try {
+              const ratingResponse = await fetch(`${apiBaseUrl}/books/${book.google_books_id}/ratings/`);
+              if (ratingResponse.ok) {
+                const ratingData = await ratingResponse.json();
+                if (ratingData.average_rating > 0) {
+                  totalRating += ratingData.average_rating;
+                  ratedBookCount++;
+                }
+              }
+            } catch (error) {
+              console.error("Error fetching book rating:", error);
+            }
+          }
+        }
+        
         const stats = {
           totalBooks: newBooks.length,
-          averageRating: newBooks.reduce((acc, book) => acc + (book.average_rating || 0), 0) / newBooks.length,
+          averageRating: ratedBookCount > 0 ? totalRating / ratedBookCount : 0,
           genres: [...new Set(newBooks.map(book => book.genre).filter(Boolean))]
         };
         setAuthorStats(stats);
@@ -87,9 +133,32 @@ const AuthorDetails = () => {
         setBooks(newBooks);
         setPage(prev => prev - 1);
         
+        // Fetch individual book ratings from our backend
+        const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+        let totalRating = 0;
+        let ratedBookCount = 0;
+        
+        // For each book, try to get the ratings
+        for (const book of newBooks) {
+          if (book.google_books_id) {
+            try {
+              const ratingResponse = await fetch(`${apiBaseUrl}/books/${book.google_books_id}/ratings/`);
+              if (ratingResponse.ok) {
+                const ratingData = await ratingResponse.json();
+                if (ratingData.average_rating > 0) {
+                  totalRating += ratingData.average_rating;
+                  ratedBookCount++;
+                }
+              }
+            } catch (error) {
+              console.error("Error fetching book rating:", error);
+            }
+          }
+        }
+        
         const stats = {
           totalBooks: newBooks.length,
-          averageRating: newBooks.reduce((acc, book) => acc + (book.average_rating || 0), 0) / newBooks.length,
+          averageRating: ratedBookCount > 0 ? totalRating / ratedBookCount : 0,
           genres: [...new Set(newBooks.map(book => book.genre).filter(Boolean))]
         };
         setAuthorStats(stats);
