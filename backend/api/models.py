@@ -56,6 +56,38 @@ class Review(models.Model):
     def __str__(self):
         return f"{self.book.title} review by {self.user.username}"
 
+    def get_replies(self):
+        replies_data = []
+        for reply in self.replies.all():
+            reply_data = {
+                'id': reply.id,
+                'user': {
+                    'id': reply.user.id,
+                    'username': reply.user.username
+                },
+                'review_text': reply.review_text,
+                'added_date': reply.added_date,
+                'updated_at': reply.updated_at,
+                'parent': self.id,
+                'replies': reply.get_replies()
+            }
+            replies_data.append(reply_data)
+        return replies_data
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user': {
+                'id': self.user.id,
+                'username': self.user.username
+            },
+            'review_text': self.review_text,
+            'added_date': self.added_date,
+            'updated_at': self.updated_at,
+            'parent': self.parent.id if self.parent else None,
+            'replies': self.get_replies()
+        }
+
 class UserBookStatus(models.Model):
     STATUS_CHOICES = [
         ('WILL_READ', 'Will Read'),

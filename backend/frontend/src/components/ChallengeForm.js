@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { ThemeContext } from '../ThemeContext';
-import '../styles/ChallengeForm.css'; // You'll need to create this CSS file
+import '../styles/ChallengeForm.css';
 
 const ChallengeForm = ({ 
   challenge = null, 
@@ -14,7 +14,6 @@ const ChallengeForm = ({
   sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
   const sixMonthsLaterFormatted = sixMonthsLater.toISOString().split('T')[0];
 
-  // Default values for a new challenge
   const defaultChallenge = {
     id: `challenge-${Date.now()}`,
     name: '',
