@@ -1747,7 +1747,7 @@ def readlist_detail(request, readlist_id):
             return Response({"error": "Readlist not found or access denied"}, status=404)
 
         if request.method == 'GET':
-            books = readlist.books.all()
+            books = readlist.books.all().order_by('readlistbook__order')
             book_data = [
                 {
                     "id": book.id,

@@ -129,9 +129,11 @@ class Readlist(models.Model):
 class ReadlistBook(models.Model):
     readlist = models.ForeignKey(Readlist, on_delete=models.CASCADE, related_name="readlist_books") 
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    order = models.PositiveIntegerField(default=0)
 
     class Meta:
         unique_together = ('readlist', 'book')
+        ordering = ['order']
 
     def __str__(self):
         return f"{self.book.title} in {self.readlist.name}"
