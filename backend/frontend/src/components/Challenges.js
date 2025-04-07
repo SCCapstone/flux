@@ -7,7 +7,7 @@ import ChallengeForm from './ChallengeForm';
 import '../styles/Challenges.css';
 
 const Challenges = () => {
-  const { user } = useContext(AuthContext);
+  const { user, userPoints, userLevel } = useContext(AuthContext);
   const { theme } = useContext(ThemeContext);
   const [activeTab, setActiveTab] = useState('available');
   const [loading, setLoading] = useState(false);
@@ -1024,8 +1024,8 @@ const Challenges = () => {
         <div className="level-badge-container">
           <div className={`level-badge ${theme === 'dark' ? 'dark-level-badge' : ''}`}>
             <span className="level-label">Level</span>
-            <span className="level-value">1</span>
-            <span className="points-value">0 PTS</span>
+            <span className="level-value">{userLevel || 1}</span>
+            <span className="points-value">{userPoints || 0} PTS</span>
           </div>
         </div>
         

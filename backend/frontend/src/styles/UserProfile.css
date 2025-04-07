@@ -59,6 +59,13 @@
   gap: 1rem;
 }
 
+.profile-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
 .profile-username {
   font-size: 1.8rem;
   font-weight: 700;
@@ -508,6 +515,50 @@
   }
 }
 
+/* Level Badge Styling */
+.profile-level-badge-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.profile-level-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  color: white;
+  border-radius: 0.5rem;
+  min-width: 120px;
+  padding: 0.25rem 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-dark-level-badge {
+  background: linear-gradient(to right, #4299e1, #9f7aea);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.profile-level-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+  margin: 0 0.25rem;
+}
+
+.profile-level-value {
+  font-weight: bold;
+  font-size: 1.125rem;
+  margin: 0 0.25rem;
+}
+
+.profile-points-value {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin: 0 0.25rem;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -516,4 +567,16 @@
 
 .profile-container {
   animation: fadeIn 0.3s ease-out;
+}
+
+@media (max-width: 768px) {
+  .profile-header-top {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .profile-level-badge-container {
+    margin-top: 0.5rem;
+  }
 }

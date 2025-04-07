@@ -232,7 +232,46 @@ def rate_book(request):
         rating, created = Rating.objects.update_or_create(
             user=user, book=book, defaults={'rating': rating_value}
         )
-        return Response({'message': 'Rating submitted successfully.', 'rating': rating.rating})
+        
+        # Only award points if this is a new rating, not an update
+        gamification_data = {}
+        if created:
+            # Award 2 points for rating a book
+            award_points(user, 2, "Rated a book")
+            
+            # Get total ratings count
+            ratings_count = Rating.objects.filter(user=user).count()
+            achievement_messages = []
+            
+            # Check for milestones
+            if ratings_count == 10:
+                achievement, _ = Achievement.objects.get_or_create(
+                    name="Opinionated",
+                    defaults={
+                        "description": "Rated 10 books",
+                        "points": 15
+                    }
+                )
+                user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+                if created:
+                    award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                    achievement_messages.append("🏆 Opinionated: Rated 10 books!")
+            
+            gamification_data = {
+                "notification": {
+                    "show": True,
+                    "message": "Rating submitted! +2 points",
+                    "points": 2,
+                    "type": "success"
+                },
+                "achievements": achievement_messages
+            }
+        
+        return Response({
+            'message': 'Rating submitted successfully.', 
+            'rating': rating.rating,
+            'gamification': gamification_data
+        })
     except Book.DoesNotExist:
         return Response({'error': 'Book not found.'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -323,7 +362,65 @@ def create_book_review(request):
             review_text=review_text
         )
         
+        # Award 5 points for creating a review
+        user_points = award_points(request.user, 5, "Created a book review")
+        
+        # Check for review count achievements
+        reviews_count = Review.objects.filter(user=request.user, parent_review=None).count()
+        achievement_messages = []
+        
+        # 5 reviews achievement
+        if reviews_count == 5:
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Reviewer",
+                defaults={
+                    "description": "Wrote 5 book reviews",
+                    "points": 20
+                }
+            )
+            user_achievement, created = UserAchievement.objects.get_or_create(user=request.user, achievement=achievement)
+            if created:
+                award_points(request.user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append("🏆 Reviewer: Wrote 5 book reviews!")
+                
+        # 15 reviews achievement
+        if reviews_count == 15:
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Critic",
+                defaults={
+                    "description": "Wrote 15 book reviews",
+                    "points": 35
+                }
+            )
+            user_achievement, created = UserAchievement.objects.get_or_create(user=request.user, achievement=achievement)
+            if created:
+                award_points(request.user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append("🏆 Critic: Wrote 15 book reviews!")
+                
+        # 30 reviews achievement
+        if reviews_count == 30:
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Literary Voice",
+                defaults={
+                    "description": "Wrote 30 book reviews",
+                    "points": 50
+                }
+            )
+            user_achievement, created = UserAchievement.objects.get_or_create(user=request.user, achievement=achievement)
+            if created:
+                award_points(request.user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append("🏆 Literary Voice: Wrote 30 book reviews!")
+        
         response_data = review.to_dict()
+        response_data['gamification'] = {
+            "notification": {
+                "show": True,
+                "message": "Review posted! +5 points",
+                "points": 5,
+                "type": "success"
+            },
+            "achievements": achievement_messages
+        }
         
         return Response(response_data, status=status.HTTP_201_CREATED)
         
@@ -356,6 +453,9 @@ def create_reply(request, review_id):
             review_text=review_text,
             parent=parent_review
         )
+        
+        # Award 3 points for replying to a review
+        award_points(request.user, 3, "Replied to a review")
 
         response_data = {
             'id': reply.id,
@@ -368,6 +468,16 @@ def create_reply(request, review_id):
             'updated_at': reply.updated_at,
             'parent': parent_review.id,
             'replies': []
+        }
+        
+        # Add gamification data
+        response_data['gamification'] = {
+            "notification": {
+                "show": True,
+                "message": "Reply posted! +3 points",
+                "points": 3,
+                "type": "success"
+            }
         }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
@@ -803,6 +913,7 @@ def update_book_status(request, google_books_id):
         }
     )
 
+    previous_status = None
     user_book_status, created = UserBookStatus.objects.get_or_create(
         user=user,
         book=book,
@@ -810,12 +921,80 @@ def update_book_status(request, google_books_id):
     )
 
     if not created:
+        previous_status = user_book_status.status
         user_book_status.status = new_status
         user_book_status.save()
-
-    return Response({
+    
+    # Prepare response
+    response_data = {
         'status': user_book_status.status,
-    }, status=status.HTTP_200_OK)
+    }
+    
+    # Award points for finishing a book
+    gamification_data = {}
+    if new_status == 'FINISHED' and (created or previous_status != 'FINISHED'):
+        # Award 10 points for finishing a book
+        award_points(user, 10, f"Finished reading: {book.title}")
+        
+        # Check for achievements
+        finished_books_count = UserBookStatus.objects.filter(user=user, status='FINISHED').count()
+        achievement_messages = []
+        
+        # Beginner Reader (3 books)
+        if finished_books_count == 3:
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Beginner Reader",
+                defaults={
+                    "description": "Finished reading 3 books",
+                    "points": 15
+                }
+            )
+            user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            if created:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append("🏆 Beginner Reader: Finished reading 3 books!")
+        
+        # Avid Reader (10 books)
+        if finished_books_count == 10:
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Avid Reader",
+                defaults={
+                    "description": "Finished reading 10 books",
+                    "points": 30
+                }
+            )
+            user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            if created:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append("🏆 Avid Reader: Finished reading 10 books!")
+        
+        # Bookworm (25 books)
+        if finished_books_count == 25:
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Bookworm",
+                defaults={
+                    "description": "Finished reading 25 books",
+                    "points": 75
+                }
+            )
+            user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            if created:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append("🏆 Bookworm: Finished reading 25 books!")
+        
+        gamification_data = {
+            "notification": {
+                "show": True,
+                "message": f"Finished reading {book.title}! +10 points",
+                "points": 10,
+                "type": "success"
+            },
+            "achievements": achievement_messages
+        }
+        
+        response_data['gamification'] = gamification_data
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -1050,6 +1229,20 @@ def get_user_profile(request, username):
                 followed=user
             ).exists()
         
+        # Get user's level and points
+        try:
+            user_points = UserPoints.objects.get(user=user)
+            level = user_points.level
+            total_points = user_points.total_points
+        except UserPoints.DoesNotExist:
+            level = 1
+            total_points = 0
+            print(f"No points data found for user {username}, using defaults")
+        
+        # Get user statistics for the profile
+        books_read = UserBookStatus.objects.filter(user=user, status='FINISHED').count()
+        reviews_written = Review.objects.filter(user=user).count()
+            
         # Prepare response data
         response_data = {
             'username': user.username,
@@ -1059,7 +1252,11 @@ def get_user_profile(request, username):
             'followers_count': followers_count,
             'following_count': following_count,
             'is_following': is_following,
-            'recent_reviews': reviews_data
+            'recent_reviews': reviews_data,
+            'level': level,
+            'total_points': total_points,
+            'books_read': books_read,
+            'reviews_written': reviews_written
         }
         
         print(f"Successfully prepared profile data for {username}")
@@ -1548,40 +1745,110 @@ def update_readlist_books(request):
 
     book.save()  
 
-    # Track if added to favorites
+    # Track additions to readlists
     added_to_favorites = False
+    added_to_regular_readlist = False
     user = request.user
+    newly_added_readlists = []
 
     # Handle ReadlistBook relationships
     for readlist in Readlist.objects.filter(user=request.user):
         if readlist.id in readlist_ids:
             obj, created = ReadlistBook.objects.get_or_create(readlist=readlist, book=book)
-            if created and readlist.is_favorites:
-                added_to_favorites = True
+            if created:
+                newly_added_readlists.append(readlist.name)
+                if readlist.is_favorites:
+                    added_to_favorites = True
+                else:
+                    added_to_regular_readlist = True
         else:
             ReadlistBook.objects.filter(readlist=readlist, book=book).delete()
 
-    # Gamification logic if added to favorites
-    gamification_data = {}
+    # Handle gamification logic
+    achievement_messages = []
+    points_awarded = 0
+    notification_message = ""
+    
+    # Award points for regular readlists (1 point each)
+    if added_to_regular_readlist:
+        # Count the number of new regular readlists (non-favorites) the book was added to
+        regular_readlists_count = len([name for name in newly_added_readlists if name != "Favorites"])
+        if regular_readlists_count > 0:
+            readlists_points = regular_readlists_count
+            award_points(user, readlists_points, f"Added '{book.title}' to {regular_readlists_count} readlist(s)")
+            points_awarded += readlists_points
+            notification_message += f"Book added to {regular_readlists_count} readlist(s)! +{readlists_points} points. "
+            
+            # Achievement for adding books to multiple readlists
+            total_readlist_additions = ReadlistBook.objects.filter(readlist__user=user, readlist__is_favorites=False).count()
+            if total_readlist_additions == 20:
+                achievement, _ = Achievement.objects.get_or_create(
+                    name="Organized Reader",
+                    defaults={
+                        "description": "Added 20 books to readlists",
+                        "points": 25
+                    }
+                )
+                user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+                if created:
+                    award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                    achievement_messages.append("🏆 Organized Reader: Added 20 books to readlists!")
+    
+    # Award points for favorites (2 points each)
     if added_to_favorites:
         award_points(user, 2, "Added a book to favorites")
+        points_awarded += 2
+        notification_message += "Book added to favorites! +2 points"
 
+        # Check for favorites achievements
         favorites_readlist = Readlist.objects.get(user=user, is_favorites=True)
         favorites_count = favorites_readlist.books.count()
-        achievement_messages = []
 
         if favorites_count == 5:
-            achievement_messages.append("🏆 Collector: Added 5 books to favorites!")
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Collector",
+                defaults={
+                    "description": "Added 5 books to favorites",
+                    "points": 10
+                }
+            )
+            user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            if created:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append("🏆 Collector: Added 5 books to favorites!")
         elif favorites_count == 25:
-            achievement_messages.append("🏆 Enthusiast: Added 25 books to favorites!")
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Enthusiast",
+                defaults={
+                    "description": "Added 25 books to favorites",
+                    "points": 25
+                }
+            )
+            user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            if created:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append("🏆 Enthusiast: Added 25 books to favorites!")
         elif favorites_count == 50:
-            achievement_messages.append("🏆 Book Lover: Added 50 books to favorites!")
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Book Lover",
+                defaults={
+                    "description": "Added 50 books to favorites",
+                    "points": 50
+                }
+            )
+            user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            if created:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append("🏆 Book Lover: Added 50 books to favorites!")
 
+    # Prepare gamification data if any points were awarded
+    gamification_data = {}
+    if points_awarded > 0:
         gamification_data = {
             "notification": {
                 "show": True,
-                "message": "Book added to favorites!",
-                "points": 2,
+                "message": notification_message,
+                "points": points_awarded,
                 "type": "success"
             },
             "achievements": achievement_messages

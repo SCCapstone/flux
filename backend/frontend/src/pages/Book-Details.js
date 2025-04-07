@@ -45,6 +45,57 @@ function BookDetails() {
     show: false,
     achievement: null
   });
+  
+  // Utility function to handle different gamification data formats
+  const handleGamificationData = (data) => {
+    if (!data) return;
+    
+    // New format has gamification.notification structure
+    if (data.notification) {
+      const notificationData = data.notification;
+      setNotification({
+        show: notificationData.show,
+        message: notificationData.message,
+        type: notificationData.type || 'success',
+        points: notificationData.points || 0
+      });
+      
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        setNotification(prev => ({...prev, show: false}));
+      }, 3000);
+    } 
+    // Old format just had points_earned directly
+    else if (data.points_earned) {
+      setNotification({
+        show: true,
+        message: 'Action completed!',
+        type: 'success',
+        points: data.points_earned
+      });
+      
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        setNotification(prev => ({...prev, show: false}));
+      }, 3000);
+    }
+    
+    // Handle achievements
+    // New format has an array of achievements
+    if (data.achievements && data.achievements.length > 0) {
+      setAchievementPopup({
+        show: true,
+        achievement: data.achievements[0] // Show first achievement if multiple
+      });
+    } 
+    // Old format had a single achievement object
+    else if (data.achievement) {
+      setAchievementPopup({
+        show: true,
+        achievement: data.achievement
+      });
+    }
+  };
 
   // Modified to handle both state and URL parameter cases
   useEffect(() => {
@@ -215,25 +266,7 @@ function BookDetails() {
 
       // Show gamification notification if points were earned
       if (ratingResponse.data.gamification) {
-        setNotification({
-          show: true,
-          message: 'Rating submitted!',
-          type: 'success',
-          points: ratingResponse.data.gamification.points_earned || 0
-        });
-
-        // If there's a new achievement
-        if (ratingResponse.data.gamification.achievement) {
-          setAchievementPopup({
-            show: true,
-            achievement: ratingResponse.data.gamification.achievement
-          });
-        }
-
-        // Hide notification after 3 seconds
-        setTimeout(() => {
-          setNotification(prev => ({...prev, show: false}));
-        }, 3000);
+        handleGamificationData(ratingResponse.data.gamification);
       }
 
       // Refresh ratings
@@ -294,28 +327,49 @@ function BookDetails() {
 
       // Show gamification notification if points were earned
       if (response.data.gamification) {
-        setNotification({
-          show: true,
-          message: 'Review submitted!',
-          type: 'success',
-          points: response.data.gamification.points_earned || 0
-        });
-
-        // If there's a new achievement
-        if (response.data.gamification.achievement) {
-          setAchievementPopup({
-            show: true,
-            achievement: response.data.gamification.achievement
-          });
-        }
-
-        // Hide notification after 3 seconds
-        setTimeout(() => {
-          setNotification(prev => ({...prev, show: false}));
-        }, 3000);
+        handleGamificationData(response.data.gamification);
       }
     } catch (err) {
       console.error('Error submitting review:', err);
+
+      if (book && book.google_books_id) {
+        try {
+          console.log('Attempting to refresh reviews after error...');
+          const refreshResponse = await axios.get(`${apiBaseUrl}/books/${book.google_books_id}/reviews/`);
+          let refreshedReviews = [];
+          
+          if (Array.isArray(refreshResponse.data)) {
+            refreshedReviews = refreshResponse.data.map(normalizeReview);
+          } else if (refreshResponse.data.results && Array.isArray(refreshResponse.data.results)) {
+            refreshedReviews = refreshResponse.data.results.map(normalizeReview);
+          }
+          
+          if (refreshedReviews.length > reviews.length) {
+            setReviews(refreshedReviews);
+            setNewReviewText(''); // Clear the text area since the review was saved
+            console.log('Review was likely saved successfully despite the error');
+            
+            // Show a success notification instead
+            setNotification({
+              show: true,
+              message: 'Review submitted successfully!',
+              type: 'success',
+              points: 5 // Default points for a review
+            });
+            
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+              setNotification(prev => ({...prev, show: false}));
+            }, 3000);
+            
+            return; // Exit early, don't show the alert
+          }
+        } catch (refreshErr) {
+          console.error('Error refreshing reviews after submission error:', refreshErr);
+        }
+      }
+      
+      // Only show alert if the above retry approach didn't work
       alert('Failed to submit review. Please try again.');
     }
   };
@@ -329,7 +383,6 @@ function BookDetails() {
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
-      // Use a recursive function to filter out the deleted review from anywhere in the tree
       const filterDeletedReview = (reviewsList) => {
         return reviewsList.filter(review => {
           if (review.id === reviewId) {
@@ -432,6 +485,11 @@ function BookDetails() {
   
       // Update the state with new reply
       setReviews((prevReviews) => addReplyToTree(prevReviews));
+      
+      // Show gamification notification if points were earned
+      if (response.data.gamification) {
+        handleGamificationData(response.data.gamification);
+      }
     } catch (err) {
       console.error('Error submitting reply:', err);
       alert('Failed to submit reply. Please try again.');
@@ -531,26 +589,8 @@ function BookDetails() {
       }
 
       // Show gamification notification if points were earned
-      if (status === 'FINISHED' && response.data.gamification) {
-        setNotification({
-          show: true,
-          message: 'Book finished! Great job!',
-          type: 'success',
-          points: response.data.gamification.points_earned
-        });
-
-        // If there's a new achievement
-        if (response.data.gamification.achievement) {
-          setAchievementPopup({
-            show: true,
-            achievement: response.data.gamification.achievement
-          });
-        }
-
-        // Hide notification after 3 seconds
-        setTimeout(() => {
-          setNotification(prev => ({...prev, show: false}));
-        }, 3000);
+      if (response.data.gamification) {
+        handleGamificationData(response.data.gamification);
       }
     } catch (error) {
       console.error('Error updating book status:', error);
@@ -574,11 +614,11 @@ function BookDetails() {
     const [editText, setEditText] = useState(review.review_text || "");
   
     const handleLocalReplySubmit = () => {
-      if (!replyText.trim()) return; // Prevent empty replies
+      if (!replyText.trim()) return;
   
-      handleReplySubmit(review.id, replyText); // Use the parent component's handleReplySubmit
-      setReplyText(""); // Clear input
-      setIsReplying(false); // Hide reply box after submitting
+      handleReplySubmit(review.id, replyText);
+      setReplyText("");
+      setIsReplying(false);
     };
     
     // Handler for edit submit
@@ -725,51 +765,94 @@ function BookDetails() {
 
       {/* Gamification Notification */}
       {notification.show && (
-        <div className={`fixed top-20 right-4 max-w-xs ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg p-4 border-l-4 border-green-500 z-50 animate-fade-in`}>
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <svg className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>{notification.message}</p>
+        <div className="toast-notification">
+          <div className={theme === 'dark' ? 'toast-content-dark' : 'toast-content'}>
+            <div className="flex-1">
+              <div className="flex items-center">
+                <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <p className="text-sm font-medium">{notification.message}</p>
+              </div>
               {notification.points > 0 && (
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} font-bold`}>+{notification.points} points earned!</p>
+                <div className={theme === 'dark' ? 'points-badge-dark' : 'points-badge'}>
+                  <span className="points-icon">⭐</span>
+                  <span>+{notification.points} points</span>
+                </div>
               )}
             </div>
+            <button 
+              onClick={() => setNotification(prev => ({...prev, show: false}))}
+              className={`ml-2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+              aria-label="Close notification"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
       )}
 
       {/* Achievement Popup */}
       {achievementPopup.show && achievementPopup.achievement && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className={`bg-white ${theme === 'dark' ? 'bg-gray-800' : ''} rounded-lg shadow-xl p-6 m-4 max-w-sm w-full`}>
-            <div className="flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-yellow-100 flex items-center justify-center mb-4">
-                {achievementPopup.achievement.badge_image ? (
-                  <img
-                    src={achievementPopup.achievement.badge_image}
-                    alt={achievementPopup.achievement.name}
-                    className="w-16 h-16"
-                  />
-                ) : (
-                  <span className="text-4xl">🏆</span>
-                )}
-              </div>
-              <h3 className={`text-2xl font-bold text-center mb-2 ${theme === 'dark' ? 'text-gray-300' : ''}`}>Achievement Unlocked!</h3>
-              <h4 className={`text-xl font-semibold text-blue-600 ${theme === 'dark' ? 'text-gray-400' : ''}`}>{achievementPopup.achievement.name}</h4>
-              <p className={`text-gray-600 ${theme === 'dark' ? 'text-gray-400' : ''} text-center my-2`}>{achievementPopup.achievement.description}</p>
-              <div className={`bg-blue-100 ${theme === 'dark' ? 'bg-gray-700' : ''} text-blue-800 ${theme === 'dark' ? 'text-gray-400' : ''} font-bold py-1 px-3 rounded-full text-sm mt-2`}>
-                +{achievementPopup.achievement.points} points
-              </div>
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
+          <div 
+            className={`rounded-lg transform transition-all ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white'}`}
+            style={{
+              animation: 'scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', 
+              width: '300px', 
+              maxWidth: '300px', 
+              padding: '16px',
+              border: theme === 'dark' ? '1px solid #374151' : '1px solid #e5e7eb',
+              boxShadow: theme === 'dark' ? '0 4px 6px rgba(0, 0, 0, 0.3)' : '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <div className="relative">
+              {/* Close button */}
               <button
                 onClick={closeAchievementPopup}
-                className={`mt-6 ${theme === 'dark' ? 'bg-gray-600' : 'bg-blue-600'} hover:${theme === 'dark' ? 'bg-gray-700' : 'bg-blue-700'} text-white font-bold py-2 px-4 rounded`}
+                className={`absolute top-2 right-2 rounded-full p-1 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+                style={{ fontSize: '0.75rem' }}
               >
-                Awesome!
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
+              
+              <div className="flex flex-col items-center">
+                <div className="mb-3 mt-1">
+                  {achievementPopup.achievement.badge_image ? (
+                    <img
+                      src={achievementPopup.achievement.badge_image}
+                      alt={achievementPopup.achievement.name}
+                      className="w-12 h-12 mx-auto"
+                    />
+                  ) : (
+                    <div className="text-center text-lg font-semibold mt-2 mb-1">
+                      Achievement Unlocked
+                    </div>
+                  )}
+                </div>
+                
+                <div className="w-full text-center">
+                  <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{achievementPopup.achievement.name}</h3>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-3`}>{achievementPopup.achievement.description}</p>
+                  
+                  <div className="mb-4">
+                    <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {achievementPopup.achievement.points} points added to your account
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={closeAchievementPopup}
+                    className={`w-full py-2 px-4 rounded text-sm font-medium transition-all duration-200 ${theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

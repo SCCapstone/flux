@@ -20,7 +20,35 @@ const UserProfile = () => {
   const [following, setFollowing] = useState([]);
   const [loadingFollowers, setLoadingFollowers] = useState(false);
   const [loadingFollowing, setLoadingFollowing] = useState(false);
+  const [userLevel, setUserLevel] = useState(1);
+  const [userPoints, setUserPoints] = useState(0);
+  const [loadingPoints, setLoadingPoints] = useState(false);
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+
+  // Extract gamification data from profile response
+  const extractGamificationData = (profileData) => {
+    if (!profileData) return;
+    
+    try {
+      // Get level data
+      if (profileData.level !== undefined) {
+        console.log(`Setting user level to: ${profileData.level}`);
+        setUserLevel(profileData.level);
+      } else {
+        console.log('No level data found in profile');
+      }
+      
+      // Get points data (API returns as total_points)
+      if (profileData.total_points !== undefined) {
+        console.log(`Setting user points to: ${profileData.total_points}`);
+        setUserPoints(profileData.total_points);
+      } else {
+        console.log('No points data found in profile');
+      }
+    } catch (error) {
+      console.error('Error extracting gamification data:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -39,6 +67,9 @@ const UserProfile = () => {
         console.log('Profile response:', response.data);
         setProfile(response.data);
         setError(null);
+        
+        // Extract level and points from profile data
+        extractGamificationData(response.data);
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError(`Failed to load profile. ${err.response?.data?.error || 'User may not exist.'}`);
@@ -302,7 +333,19 @@ const UserProfile = () => {
               </div>
               
               <div className="profile-info">
-                <h1 className={`profile-username ${theme === 'dark' ? 'text-gray-100' : ''}`}>{profile.username}</h1>
+                <div className="profile-header-top">
+                  <h1 className={`profile-username ${theme === 'dark' ? 'text-gray-100' : ''}`}>{profile.username}</h1>
+                  
+                  {/* Level badge */}
+                  <div className="profile-level-badge-container">
+                    <div className={`profile-level-badge ${theme === 'dark' ? 'profile-dark-level-badge' : ''}`}>
+                      <span className="profile-level-label">Level</span>
+                      <span className="profile-level-value">{userLevel || 1}</span>
+                      <span className="profile-points-value">{userPoints || 0} PTS</span>
+                    </div>
+                  </div>
+                </div>
+                
                 <p className={`profile-bio ${theme === 'dark' ? 'text-gray-300' : ''}`}>{profile.bio || 'No bio available'}</p>
                 
                 <div className="profile-stats">
