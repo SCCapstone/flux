@@ -1,370 +1,380 @@
 /* ChallengeForm.css */
 .challenge-form-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .challenge-form-container.dark-mode {
-    background-color: #1f2937;
-    color: #e5e7eb;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  }
-  
-  .form-title {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #1e3a8a;
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-  
-  .dark-mode .form-title {
-    color: #93c5fd;
-  }
-  
-  .challenge-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .form-group {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .form-group label {
-    margin-bottom: 6px;
-    font-weight: 500;
-    font-size: 0.9rem;
-  }
-  
-  .challenge-form input, 
-  .challenge-form textarea {
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 1rem;
-    background-color: #f9fafb;
-  }
-  
-  .dark-mode .challenge-form input,
-  .dark-mode .challenge-form textarea {
-    background-color: #374151;
-    border-color: #4b5563;
-    color: #e5e7eb;
-  }
-  
-  .challenge-form input:focus,
-  .challenge-form textarea:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-  
-  .input-error {
-    border-color: #ef4444 !important;
-  }
-  
-  .error-message {
-    color: #ef4444;
-    font-size: 0.8rem;
-    margin-top: 4px;
-  }
-  
-  .form-info {
-    background-color: #f3f4f6;
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-  }
-  
-  .dark-mode .form-info {
-    background-color: #374151;
-  }
-  
-  /* Checkbox styling */
-  .checkbox-group {
-    margin: 10px 0;
-  }
-  
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-  }
-  
-  .checkbox-label input[type="checkbox"] {
-    margin-right: 10px;
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-  }
-  
-  .checkbox-help {
-    font-size: 0.8rem;
-    color: #6b7280;
-    margin-top: 4px;
-    margin-left: 28px;
-  }
-  
-  .dark-mode .checkbox-help {
-    color: #9ca3af;
-  }
-  
-  /* Select dropdown styling */
-  .challenge-form select {
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 1rem;
-    background-color: #f9fafb;
-    width: 100%;
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23131313%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px top 50%;
-    background-size: 12px auto;
-  }
-  
-  .dark-mode .challenge-form select {
-    background-color: #374151;
-    border-color: #4b5563;
-    color: #e5e7eb;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e5e7eb%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.challenge-form-container.dark-mode {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.form-title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #1e3a8a;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.dark-mode .form-title {
+  color: #93c5fd;
+}
+
+.challenge-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.challenge-form input, 
+.challenge-form textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: #f9fafb;
+}
+
+.dark-mode .challenge-form input,
+.dark-mode .challenge-form textarea {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.challenge-form input:focus,
+.challenge-form textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.form-info {
+  background-color: #f3f4f6;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.dark-mode .form-info {
+  background-color: #374151;
+}
+
+/* Checkbox styling */
+.checkbox-group {
+  margin: 10px 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.checkbox-help {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 4px;
+  margin-left: 28px;
+}
+
+.dark-mode .checkbox-help {
+  color: #9ca3af;
+}
+
+/* Select dropdown styling */
+.challenge-form select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: #f9fafb;
+  width: 100%;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23131313%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px top 50%;
+  background-size: 12px auto;
+}
+
+.dark-mode .challenge-form select {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e5e7eb%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.form-actions button:active {
+  transform: translateY(1px);
+}
+
+.cancel-button {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+.dark-mode .cancel-button {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.cancel-button:hover {
+  background-color: #e5e7eb;
+}
+
+.dark-mode .cancel-button:hover {
+  background-color: #4b5563;
+}
+
+.save-button {
+  background-color: #3b82f6;
+  border: none;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #2563eb;
+}
+
+/* Modal styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 20px 0;
+}
+
+.modal-container {
+  width: 90%;
+  max-width: 600px;
+  margin: 0 auto;
+  z-index: 1001;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+.challenge-form-container {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+/* Fixed footer for buttons */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0 0 8px 8px;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.dark-mode .form-actions {
+  background-color: #1f2937;
+  border-top-color: #374151;
+}
+
+@media (max-width: 640px) {
+  .challenge-form-container {
+      padding: 16px;
   }
   
   .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 20px;
+      flex-direction: column-reverse;
   }
   
   .form-actions button {
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
-  }
-  
-  .form-actions button:active {
-    transform: translateY(1px);
-  }
-  
-  .cancel-button {
-    background-color: #f3f4f6;
-    border: 1px solid #d1d5db;
-    color: #4b5563;
-  }
-  
-  .dark-mode .cancel-button {
-    background-color: #374151;
-    border-color: #4b5563;
-    color: #e5e7eb;
-  }
-  
-  .cancel-button:hover {
-    background-color: #e5e7eb;
-  }
-  
-  .dark-mode .cancel-button:hover {
-    background-color: #4b5563;
-  }
-  
-  .save-button {
-    background-color: #3b82f6;
-    border: none;
-    color: white;
-  }
-  
-  .save-button:hover {
-    background-color: #2563eb;
-  }
-  
-  /* Modal styling */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    z-index: 1000;
-    overflow-y: auto;
-    padding: 20px 0;
-  }
-  
-  .modal-container {
-    width: 90%;
-    max-width: 600px;
-    margin: 0 auto;
-    z-index: 1001;
-    max-height: calc(100vh - 40px);
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .challenge-form-container {
-    max-height: calc(100vh - 40px);
-    overflow-y: auto;
-  }
-  
-  /* Fixed footer for buttons */
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #ffffff;
-    border-top: 1px solid #e5e7eb;
-    border-radius: 0 0 8px 8px;
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-  }
-  
-  .dark-mode .form-actions {
-    background-color: #1f2937;
-    border-top-color: #374151;
-  }
-  
-  @media (max-width: 640px) {
-    .challenge-form-container {
-      padding: 16px;
-    }
-    
-    .form-actions {
-      flex-direction: column-reverse;
-    }
-    
-    .form-actions button {
       width: 100%;
-    }
   }
+}
 
-  /* Modal overlay for the form */
+/* Modal overlay for the form */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-  
-  .modal-container {
-    width: 90%;
-    max-width: 600px;
-    margin: 0 auto;
-    z-index: 1001;
-  }
-  
-  /* Genre badge styles */
-  .genre-badge {
-    display: inline-flex;
-    align-items: center;
-    background-color: #f3f4f6;
-    padding: 4px 10px;
-    border-radius: 16px;
-    font-size: 0.8rem;
-    margin-top: 8px;
-  }
-  
-  .dark-mode .genre-badge {
-    background-color: #374151;
-  }
-  
-  .genre-label {
-    font-weight: 600;
-    margin-right: 4px;
-    color: #6b7280;
-  }
-  
-  .dark-mode .genre-label {
-    color: #9ca3af;
-  }
-  
-  .genre-value {
-    color: #1e3a8a;
-    font-weight: 500;
-    text-transform: capitalize;
-  }
-  
-  .dark-mode .genre-value {
-    color: #93c5fd;
-  }
-  
-  /* Edit button styles */
-  .edit-button {
-    padding: 8px 16px;
-    background-color: #4b5563;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-right: 10px;
-    transition: background-color 0.2s;
-  }
-  
-  .edit-button:hover {
-    background-color: #374151;
-  }
-  
-  .dark-edit-button {
-    background-color: #6b7280;
-  }
-  
-  .dark-edit-button:hover {
-    background-color: #4b5563;
-  }
-  
-  /* Create Challenge button enhancement */
-  .create-challenge-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-  
-  .create-challenge-btn::before {
-    content: "+";
-    margin-right: 8px;
-    font-size: 1.2em;
-    font-weight: bold;
-  }
-  
-  /* Improved challenge action layout for multiple buttons */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  width: 90%;
+  max-width: 600px;
+  margin: 0 auto;
+  z-index: 1001;
+}
+
+/* Genre badge styles */
+.genre-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  margin-top: 8px;
+}
+
+.dark-mode .genre-badge {
+  background-color: #374151;
+}
+
+.genre-label {
+  font-weight: 600;
+  margin-right: 4px;
+  color: #6b7280;
+}
+
+.dark-mode .genre-label {
+  color: #9ca3af;
+}
+
+.genre-value {
+  color: #1e3a8a;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.dark-mode .genre-value {
+  color: #93c5fd;
+}
+
+/* Improved Edit button styles */
+.edit-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  text-align: center;
+}
+
+.edit-button:hover {
+  background-color: #4338ca;
+}
+
+.dark-edit-button {
+  background-color: #6366f1;
+}
+
+.dark-edit-button:hover {
+  background-color: #4f46e5;
+}
+
+/* Create Challenge button enhancement */
+.create-challenge-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.create-challenge-btn::before {
+  content: "+";
+  margin-right: 8px;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+/* Improved challenge action layout */
+.challenge-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 1.5rem;
+}
+
+/* Make spacing consistent for all buttons */
+.edit-button, 
+.quit-button, 
+.join-button {
+  min-width: 140px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
   .challenge-action {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 15px;
+      flex-direction: column;
   }
   
-  @media (max-width: 640px) {
-    .challenge-action {
-      flex-direction: column;
-    }
-    
-    .edit-button, 
-    .quit-button, 
-    .join-button {
+  .edit-button, 
+  .quit-button, 
+  .join-button {
       width: 100%;
-    }
   }
+}
