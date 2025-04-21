@@ -12,6 +12,10 @@ const Challenges = () => {
   const [activeTab, setActiveTab] = useState('available');
   const [loading, setLoading] = useState(false);
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+  
+  // Get today's date for validation
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparisons
 
   // Sample challenges as fallback
   const sampleAvailableChallenges = [
@@ -168,9 +172,51 @@ const Challenges = () => {
     return genreMatches(genre, 'classics');
   }
 
+  // Date validation helper functions
+  const isDateInPast = (dateString) => {
+    const date = new Date(dateString);
+    date.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
+    return date < today;
+  };
+  
+  const isDateInFuture = (dateString) => {
+    const date = new Date(dateString);
+    date.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
+    return date > today;
+  };
+  
+  const isEndDateAfterStartDate = (startDateString, endDateString) => {
+    const startDate = new Date(startDateString);
+    const endDate = new Date(endDateString);
+    return endDate > startDate;
+  };
+  
+  const validateChallengeDates = (challenge, isNewChallenge = false) => {
+    const errors = {};
+    
+    // For new challenges, start date must not be in the past
+    if (isNewChallenge && isDateInPast(challenge.start_date)) {
+      errors.start_date = 'Start date cannot be in the past for new challenges';
+    }
+    
+    // End date must not be in the past
+    if (isDateInPast(challenge.end_date)) {
+      errors.end_date = 'End date cannot be in the past';
+    }
+    
+    // End date must be after start date
+    if (!isEndDateAfterStartDate(challenge.start_date, challenge.end_date)) {
+      errors.end_date = 'End date must be after start date';
+    }
+    
+    return errors;
+  };
+
   // Function to categorize challenges based on date
   const categorizeChallenges = useCallback((challenges) => {
     const now = new Date();
+    now.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparisons
+    
     const active = [];
     const pending = [];
     const expired = [];
@@ -179,6 +225,8 @@ const Challenges = () => {
     challenges.forEach(challenge => {
       const startDate = new Date(challenge.start_date);
       const endDate = new Date(challenge.end_date);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
       
       if (challenge.progress_percentage >= 100) {
         completed.push(challenge);
@@ -485,11 +533,9 @@ const Challenges = () => {
           }
           
           if (pendingChanged) {
-            // Find challenges that moved from pending to active
-            const newlyActive = pending.filter(p => 
-              !pendingChals.some(oldP => oldP.id === p.id) && 
-              active.some(a => a.id === p.id)
-            );
+            // Check for challenges that moved from pending to active
+            const pendingIds = new Set(pendingChals.map(c => c.id));
+            const newlyActive = active.filter(c => pendingIds.has(c.id));
             
             newlyActive.forEach(challenge => {
               showNotification(`Challenge "${challenge.name}" is now active!`, true);
@@ -723,6 +769,14 @@ const Challenges = () => {
     
     console.log('Found challenge to join:', challengeToJoin);
     
+    // Validate dates before joining
+    const dateErrors = validateChallengeDates(challengeToJoin);
+    if (dateErrors.end_date) {
+      showNotification(`Cannot join challenge: ${dateErrors.end_date}`, false);
+      setLoading(false);
+      return;
+    }
+    
     try {
       // Reset challenge to 0 progress before joining
       const freshChallenge = {
@@ -752,7 +806,7 @@ const Challenges = () => {
         const formattedDate = startDate.toLocaleDateString();
         showNotification(`Joined the "${freshChallenge.name}" challenge! It will activate on ${formattedDate}.`, true);
       } else {
-        // Challenge is already expired
+        // Challenge is already expired (should never get here due to earlier validation)
         showNotification(`Cannot join "${freshChallenge.name}" - this challenge has already ended.`, false);
         setLoading(false);
         return;
@@ -920,8 +974,19 @@ const Challenges = () => {
     }
   };
   
-  // Add function to handle form submission
+  // Add function to handle form submission with date validation
   const handleSaveChallenge = (challengeData) => {
+    // Validate dates before saving
+    const isNewChallenge = !challengeToEdit;
+    const dateErrors = validateChallengeDates(challengeData, isNewChallenge);
+    
+    if (Object.keys(dateErrors).length > 0) {
+      // Show first error message
+      const firstError = Object.values(dateErrors)[0];
+      showNotification(`Cannot save challenge: ${firstError}`, false);
+      return;
+    }
+    
     const now = new Date();
     const startDate = new Date(challengeData.start_date);
     const endDate = new Date(challengeData.end_date);
@@ -972,7 +1037,7 @@ const Challenges = () => {
         // Switch to upcoming tab
         setActiveTab('upcoming');
       } else {
-        // Challenge is now expired - should not happen with editing
+        // Challenge is now expired - should not happen due to validation
         showNotification('Cannot save challenge with end date in the past.', false);
         setShowChallengeForm(false);
         setChallengeToEdit(null);
@@ -1010,7 +1075,7 @@ const Challenges = () => {
         localStorage.setItem('pendingChallenges', JSON.stringify([...pendingChallenges, challengeData]));
         setActiveTab('upcoming');
       } else {
-        // Challenge is expired - should not be allowed
+        // Challenge is expired - should not be allowed due to validation
         showNotification('Cannot create a challenge with end date in the past.', false);
         setShowChallengeForm(false);
         setChallengeToEdit(null);
@@ -1158,7 +1223,8 @@ const Challenges = () => {
 
   const getFilteredChallenges = () => {
     if (activeTab === 'active') {
-      return userChallenges;
+      // Filter out any active challenges with end date in the past
+      return userChallenges.filter(challenge => !isDateInPast(challenge.end_date));
     } else if (activeTab === 'upcoming') {
       return pendingChallenges;
     } else if (activeTab === 'completed') {
@@ -1166,9 +1232,10 @@ const Challenges = () => {
     } else if (activeTab === 'expired') {
       return expiredChallenges;
     } else if (activeTab === 'available') {
-      return availableChallenges;
+      // Filter out any available challenges with end date in the past
+      return availableChallenges.filter(challenge => !isDateInPast(challenge.end_date));
     } else {
-      return []; 
+      return [];
     }
   };
 
