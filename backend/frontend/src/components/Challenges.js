@@ -70,8 +70,10 @@ const Challenges = () => {
   ];
 
   const [userChallenges, setUserChallenges] = useState([]);
+  const [pendingChallenges, setPendingChallenges] = useState([]); // New state for challenges that have been joined but not started
   const [availableChallenges, setAvailableChallenges] = useState(sampleAvailableChallenges);
   const [completedChallenges, setCompletedChallenges] = useState([]);
+  const [expiredChallenges, setExpiredChallenges] = useState([]); // Added state for expired challenges
   
   // Form state
   const [showChallengeForm, setShowChallengeForm] = useState(false);
@@ -98,17 +100,27 @@ const Challenges = () => {
     }, 3000);
   };
 
-  // Helper function to get book genre
+  // IMPROVED HELPER FUNCTIONS FOR GENRE MATCHING
+
+  function normalizeGenre(raw) {
+    if (!raw) return '';
+    return raw.toLowerCase().replace(/[^a-z0-9&]+/g, ' ').trim(); // e.g., "Biography & Autobiography" -> "biography autobiography"
+  }
+  
   function getBookGenre(bookId) {
     try {
-      // Try to find the book in favorites
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      const book = favorites.find(b => b.google_books_id === bookId);
-      
-      if (book && book.genre) {
-        return book.genre;
+      const sources = [
+        JSON.parse(localStorage.getItem('favorites') || '[]'),
+        JSON.parse(localStorage.getItem('finishedBooks') || '[]'),
+        JSON.parse(localStorage.getItem('readingList') || '[]'),
+      ];
+  
+      for (const list of sources) {
+        const book = list.find(b => b.id === bookId || b.google_books_id === bookId);
+        if (book?.genre) return normalizeGenre(book.genre);
+        if (book?.categories?.length) return normalizeGenre(book.categories[0]);
       }
-      
+  
       return null;
     } catch (e) {
       console.warn('Error getting book genre:', e);
@@ -116,23 +128,71 @@ const Challenges = () => {
     }
   }
 
+  // Improved genre matching function
+  function genreMatches(bookGenre, targetGenre) {
+    if (!bookGenre || !targetGenre) return false;
+  
+    const normalizedBook = normalizeGenre(bookGenre);
+    const normalizedTarget = normalizeGenre(targetGenre);
+  
+    if (normalizedBook === normalizedTarget) return true;
+  
+    // Token matching
+    const bookTokens = normalizedBook.split(' ');
+    const targetTokens = normalizedTarget.split(' ');
+    if (targetTokens.every(token => bookTokens.includes(token))) return true;
+  
+    // Canonical genre variations
+    const genreAliases = {
+      'non-fiction': ['nonfiction', 'non fiction', 'biography', 'autobiography', 'memoir', 'business economics', 'history'],
+      'fantasy': ['fantasy', 'epic fantasy', 'high fantasy', 'urban fantasy'],
+      'science fiction': ['sci fi', 'science fiction', 'scifi', 'sci-fi'],
+      'young adult': ['young adult', 'ya', 'teen'],
+      'classics': ['classic', 'classics', 'classic literature', 'literary classics'],
+    };
+  
+    for (const [canonical, variants] of Object.entries(genreAliases)) {
+      if (variants.some(v => normalizedBook.includes(v)) && variants.some(v => normalizedTarget.includes(v))) {
+        return true;
+      }
+    }
+  
+    return false;
+  }
+  
   // Helper function to check if a book is classic literature
   function isClassicLiterature(genre) {
     if (!genre) return false;
     
-    // Check for various ways classics might be categorized
-    const classicsKeywords = [
-      'classic', 
-      'literature', 
-      'literary fiction', 
-      'classics'
-    ];
-    
-    // Check if any of the keywords are in the genre
-    return classicsKeywords.some(keyword => 
-      genre.toLowerCase().includes(keyword.toLowerCase())
-    );
+    // Use the improved genre matching function
+    return genreMatches(genre, 'classics');
   }
+
+  // Function to categorize challenges based on date
+  const categorizeChallenges = useCallback((challenges) => {
+    const now = new Date();
+    const active = [];
+    const pending = [];
+    const expired = [];
+    const completed = [];
+
+    challenges.forEach(challenge => {
+      const startDate = new Date(challenge.start_date);
+      const endDate = new Date(challenge.end_date);
+      
+      if (challenge.progress_percentage >= 100) {
+        completed.push(challenge);
+      } else if (now > endDate) {
+        expired.push(challenge);
+      } else if (now < startDate) {
+        pending.push(challenge);
+      } else {
+        active.push(challenge);
+      }
+    });
+
+    return { active, pending, expired, completed };
+  }, []);
 
   // Function to fetch challenges from the backend
   const fetchChallenges = async () => {
@@ -152,22 +212,65 @@ const Challenges = () => {
         console.warn('Error loading from localStorage:', e);
       }
       
-      // Set user challenges from localStorage immediately for responsiveness
-      setUserChallenges(localUserChallenges);
-
+      // Get pending challenges
+      let storedPendingChallenges = [];
+      try {
+        const pendingChallengesData = localStorage.getItem('pendingChallenges');
+        if (pendingChallengesData) {
+          storedPendingChallenges = JSON.parse(pendingChallengesData);
+        }
+      } catch (e) {
+        console.warn('Error loading pending challenges:', e);
+      }
+      
       // Get completed challenges if they exist
       let storedCompletedChallenges = [];
       try {
         const completedChallengesData = localStorage.getItem('completedChallenges');
         if (completedChallengesData) {
           storedCompletedChallenges = JSON.parse(completedChallengesData);
-          setCompletedChallenges(storedCompletedChallenges);
         }
       } catch (e) {
         console.warn('Error loading completed challenges:', e);
       }
       
-      if (localUserChallenges.length === 0 && storedCompletedChallenges.length === 0) {
+      // Get expired challenges if they exist
+      let storedExpiredChallenges = [];
+      try {
+        const expiredChallengesData = localStorage.getItem('expiredChallenges');
+        if (expiredChallengesData) {
+          storedExpiredChallenges = JSON.parse(expiredChallengesData);
+        }
+      } catch (e) {
+        console.warn('Error loading expired challenges:', e);
+      }
+      
+      // Categorize challenges by date
+      const { active, pending, expired, completed } = categorizeChallenges([
+        ...localUserChallenges,
+        ...storedPendingChallenges
+      ]);
+      
+      // Combine with stored completed and expired challenges
+      const allCompleted = [...completed, ...storedCompletedChallenges];
+      const allExpired = [...expired, ...storedExpiredChallenges];
+      
+      // Update state with categorized challenges
+      setUserChallenges(active);
+      setPendingChallenges(pending);
+      setCompletedChallenges(allCompleted);
+      setExpiredChallenges(allExpired);
+      
+      // Update localStorage with new categorizations
+      localStorage.setItem('userChallenges', JSON.stringify(active));
+      localStorage.setItem('pendingChallenges', JSON.stringify(pending));
+      localStorage.setItem('completedChallenges', JSON.stringify(allCompleted));
+      localStorage.setItem('expiredChallenges', JSON.stringify(allExpired));
+      
+      if (localUserChallenges.length === 0 && 
+          storedPendingChallenges.length === 0 && 
+          storedCompletedChallenges.length === 0 && 
+          storedExpiredChallenges.length === 0) {
         console.log('New user detected, showing sample challenges');
         // Force initialize sample challenges for new users
         setAvailableChallenges(sampleAvailableChallenges);
@@ -214,21 +317,26 @@ const Challenges = () => {
       }
       
       // For new users with no active or completed challenges, ensure sample challenges are shown
-      if (localUserChallenges.length === 0 && storedCompletedChallenges.length === 0) {
+      if (active.length === 0 && 
+          pending.length === 0 && 
+          allCompleted.length === 0 && 
+          allExpired.length === 0) {
         setAvailableChallenges(sampleAvailableChallenges);
         console.log('New user detected, showing sample challenges');
         setLoading(false);
         return; // Skip the filtering for new users
       }
       
-      // Filter out challenges that the user is already participating in
-      const activeAndCompletedNames = new Set([
-        ...localUserChallenges.map(c => c.name),
-        ...storedCompletedChallenges.map(c => c.name)
+      // Filter out challenges that the user is already participating in or has completed
+      const activeAndCompletedAndPendingNames = new Set([
+        ...active.map(c => c.name),
+        ...pending.map(c => c.name),
+        ...allCompleted.map(c => c.name),
+        ...allExpired.map(c => c.name)
       ]);
       
       const filteredAvailableChallenges = availableChallengesData.filter(
-        challenge => !activeAndCompletedNames.has(challenge.name)
+        challenge => !activeAndCompletedAndPendingNames.has(challenge.name)
       );
       
       console.log('Filtered available challenges:', filteredAvailableChallenges);
@@ -287,11 +395,17 @@ const Challenges = () => {
     const loadChallenges = async () => {
       // Check if this is a new user (no challenges in localStorage)
       const hasUserChallenges = localStorage.getItem('userChallenges');
+      const hasPendingChallenges = localStorage.getItem('pendingChallenges');
       const hasCompletedChallenges = localStorage.getItem('completedChallenges');
+      const hasExpiredChallenges = localStorage.getItem('expiredChallenges');
       const hasAvailableChallenges = localStorage.getItem('availableChallenges');
       
       // If new user, initialize with sample challenges
-      if (!hasUserChallenges && !hasCompletedChallenges && !hasAvailableChallenges) {
+      if (!hasUserChallenges && 
+          !hasPendingChallenges && 
+          !hasCompletedChallenges && 
+          !hasExpiredChallenges && 
+          !hasAvailableChallenges) {
         console.log('NEW USER DETECTED - initializing with sample challenges');
         initializeForNewUser();
         return; // Skip regular loading for new users
@@ -309,83 +423,105 @@ const Challenges = () => {
     // Execute the loading function
     loadChallenges();
     
-  }, [user?.token]); 
+  }, [user?.token, categorizeChallenges]); 
 
-  // Check for completed challenges on component mount
+  // Check for challenge status changes periodically
   useEffect(() => {
-    // Check challenge status on component mount
-    const checkCompletedChallenges = () => {
+    const updateChallengeStatuses = () => {
       try {
-        // Get user challenges
-        const storedChallenges = localStorage.getItem('userChallenges');
-        if (!storedChallenges) return;
-        
-        const challenges = JSON.parse(storedChallenges);
-        
-        // Get existing completed challenges
+        // Get user challenges and pending challenges
+        const storedUserChallenges = localStorage.getItem('userChallenges') || '[]';
+        const storedPendingChallenges = localStorage.getItem('pendingChallenges') || '[]';
         const storedCompletedChallenges = localStorage.getItem('completedChallenges') || '[]';
-        const existingCompleted = JSON.parse(storedCompletedChallenges);
+        const storedExpiredChallenges = localStorage.getItem('expiredChallenges') || '[]';
         
-        // Check which challenges are completed (100% progress)
-        const active = [];
-        const newCompleted = [];
+        const userChals = JSON.parse(storedUserChallenges);
+        const pendingChals = JSON.parse(storedPendingChallenges);
+        const completedChals = JSON.parse(storedCompletedChallenges);
+        const expiredChals = JSON.parse(storedExpiredChallenges);
         
-        challenges.forEach(challenge => {
-          // Cap books_read at target value
-          const booksRead = Math.min(challenge.books_read, challenge.target_books);
-          const progress_percentage = Math.min(
-            Math.round((booksRead / challenge.target_books) * 100), 
-            100
-          );
-          
-          const updatedChallenge = {
-            ...challenge,
-            books_read: booksRead,
-            progress_percentage
-          };
-          
-          // Move to appropriate list
-          if (progress_percentage >= 100) {
-            newCompleted.push(updatedChallenge);
-          } else {
-            active.push(updatedChallenge);
-          }
-        });
+        // Categorize all challenges
+        const { active, pending, expired, completed } = categorizeChallenges([
+          ...userChals,
+          ...pendingChals
+        ]);
         
-        // Check if we have any changes to make
-        if (active.length !== challenges.length) {
-          console.log('Moving completed challenges to completed tab');
+        // Combine with existing completed and expired challenges
+        const existingCompletedIds = new Set(completedChals.map(c => c.id));
+        const existingExpiredIds = new Set(expiredChals.map(c => c.id));
+        
+        const newCompleted = completed.filter(c => !existingCompletedIds.has(c.id));
+        const newExpired = expired.filter(c => !existingExpiredIds.has(c.id));
+        
+        const allCompleted = [...completedChals, ...newCompleted];
+        const allExpired = [...expiredChals, ...newExpired];
+        
+        // Check if we have any status changes
+        const activeChanged = JSON.stringify(active) !== storedUserChallenges;
+        const pendingChanged = JSON.stringify(pending) !== storedPendingChallenges;
+        const completedChanged = newCompleted.length > 0;
+        const expiredChanged = newExpired.length > 0;
+        
+        if (activeChanged || pendingChanged || completedChanged || expiredChanged) {
+          console.log('Challenge statuses updated');
           
-          // Combine with existing completed challenges (avoid duplicates)
-          const existingIds = new Set(existingCompleted.map(c => c.id));
-          const uniqueNewCompleted = newCompleted.filter(c => !existingIds.has(c.id));
-          const allCompleted = [...existingCompleted, ...uniqueNewCompleted];
-          
-          // Update state and localStorage
+          // Update states
           setUserChallenges(active);
+          setPendingChallenges(pending);
           setCompletedChallenges(allCompleted);
+          setExpiredChallenges(allExpired);
           
+          // Update localStorage
           localStorage.setItem('userChallenges', JSON.stringify(active));
+          localStorage.setItem('pendingChallenges', JSON.stringify(pending));
           localStorage.setItem('completedChallenges', JSON.stringify(allCompleted));
+          localStorage.setItem('expiredChallenges', JSON.stringify(allExpired));
+          
+          // Show notifications for status changes
+          if (completedChanged) {
+            newCompleted.forEach(challenge => {
+              showNotification(`Challenge Completed: "${challenge.name}"!`, true);
+            });
+          }
+          
+          if (pendingChanged) {
+            // Find challenges that moved from pending to active
+            const newlyActive = pending.filter(p => 
+              !pendingChals.some(oldP => oldP.id === p.id) && 
+              active.some(a => a.id === p.id)
+            );
+            
+            newlyActive.forEach(challenge => {
+              showNotification(`Challenge "${challenge.name}" is now active!`, true);
+            });
+          }
+          
+          if (expiredChanged) {
+            newExpired.forEach(challenge => {
+              showNotification(`Challenge "${challenge.name}" has expired.`, false);
+            });
+          }
         }
       } catch (error) {
-        console.error('Error checking completed challenges:', error);
+        console.error('Error updating challenge statuses:', error);
       }
     };
     
     // Run when component mounts
-    checkCompletedChallenges();
+    updateChallengeStatuses();
     
-    // Also set up an interval to periodically check (every 30 seconds)
-    const intervalId = setInterval(checkCompletedChallenges, 30000);
+    // Set up an interval to periodically check (every 30 seconds)
+    const intervalId = setInterval(updateChallengeStatuses, 30000);
     
     return () => clearInterval(intervalId);
-  }, []);
+  }, [categorizeChallenges, showNotification]);
 
   useEffect(() => {
     // Special check for first-time users
     const isFirstTimeUser = !localStorage.getItem('userChallenges') && 
-                            !localStorage.getItem('completedChallenges');
+                            !localStorage.getItem('pendingChallenges') &&
+                            !localStorage.getItem('completedChallenges') &&
+                            !localStorage.getItem('expiredChallenges');
     
     if (isFirstTimeUser) {
       console.log('First time user detected, initializing sample challenges');
@@ -395,26 +531,23 @@ const Challenges = () => {
     }
   }, []);
 
-  // Listen for finishedBookAdded event
+  // Listen for finishedBookAdded event - UPDATED WITH IMPROVED GENRE MATCHING
   useEffect(() => {
     const handleFinishedBookAdded = (event) => {
       console.log('Finished book added event detected:', event.detail);
-      
+
       try {
-        // Get the book data from the event
         const bookData = event.detail?.book;
         if (!bookData) {
           console.warn('No book data in the event');
           return;
         }
-        
-        // Get current challenges
+
         const storedChallenges = localStorage.getItem('userChallenges');
         if (!storedChallenges) return;
-        
+
         const challenges = JSON.parse(storedChallenges);
-        
-        // Get existing finished books for tracking
+
         let finishedBooksMap = {};
         try {
           const storedMap = localStorage.getItem('challengeBookMap');
@@ -425,97 +558,93 @@ const Challenges = () => {
           console.warn('Error loading challenge book map:', e);
           finishedBooksMap = {};
         }
-        
-        // Try to get book genre information
-        const bookGenre = getBookGenre(bookData);
-        
-        // Process each challenge separately
-        const active = [];
-        const completed = [];
-        
-        challenges.forEach(challenge => {
-          // Initialize tracking for this challenge if needed
-          if (!finishedBooksMap[challenge.id]) {
-            finishedBooksMap[challenge.id] = {
-              bookIds: [],
-              genres: new Set(),
-              classicsCount: 0,
-              challengeName: challenge.name,
-              isGenreSpecific: challenge.is_genre_specific,
-              targetGenre: challenge.genre
-            };
-          }
-          
-          const challengeTracker = finishedBooksMap[challenge.id];
-          
-          // Check if we need to add this book to the challenge
-          let updateNeeded = false;
-          
-          // Only add the book if:
-          // 1. It's a new book (not already counted)
-          // 2. The challenge is active (current date is between start and end dates)
-          // 3. If it's genre-specific, the book must match the target genre
-          const now = new Date();
+
+        const bookId = bookData?.id || bookData?.google_books_id;
+        const bookGenre = getBookGenre(bookId);
+        console.log('Detected book genre:', bookGenre);
+
+        // Only update active challenges
+        const now = new Date();
+        const activeChallenges = challenges.filter(challenge => {
           const startDate = new Date(challenge.start_date);
           const endDate = new Date(challenge.end_date);
-          const isActive = now >= startDate && now <= endDate;
-          
-          // Check if book meets genre requirements for this challenge
-          const meetsGenreRequirement = !challengeTracker.isGenreSpecific || 
-            (bookGenre && bookGenre.toLowerCase().includes(challengeTracker.targetGenre.toLowerCase()));
-          
-          if (isActive && bookData && !challengeTracker.bookIds.includes(bookData) && meetsGenreRequirement) {
-            challengeTracker.bookIds.push(bookData);
-            
-            // Track genre for Genre Explorer
+          return now >= startDate && now <= endDate;
+        });
+
+        const active = [];
+        const completed = [];
+
+        activeChallenges.forEach(challenge => {
+          if (!finishedBooksMap[challenge.id]) {
+            finishedBooksMap[challenge.id] = { 
+              bookIds: [], 
+              genres: new Set(), 
+              classicsCount: 0, 
+              challengeName: challenge.name, 
+              isGenreSpecific: challenge.is_genre_specific, 
+              targetGenre: challenge.genre 
+            };
+          }
+
+          const challengeTracker = finishedBooksMap[challenge.id];
+
+          const meetsGenreRequirement = !challengeTracker.isGenreSpecific ||
+            (bookGenre && genreMatches(bookGenre, challengeTracker.targetGenre));
+
+          console.log(`Checking challenge "${challenge.name}":`, { 
+            isGenreSpecific: challengeTracker.isGenreSpecific,
+            targetGenre: challengeTracker.targetGenre,
+            bookGenre,
+            meetsRequirement: meetsGenreRequirement
+          });
+
+          if (bookId && !challengeTracker.bookIds.includes(bookId) && meetsGenreRequirement) {
+            challengeTracker.bookIds.push(bookId);
+
             if (challenge.name === 'Genre Explorer' && bookGenre) {
-              challengeTracker.genres.add(bookGenre);
+              challengeTracker.genres.add(bookGenre.toLowerCase().trim());
             }
-            
-            // Track classics for Classics Marathon
-            if (challenge.name === 'Classics Marathon' && isClassicLiterature(bookGenre)) {
+
+            if (challenge.name === 'Classics Marathon' && genreMatches(bookGenre, 'classics')) {
               challengeTracker.classicsCount++;
             }
-            
-            updateNeeded = true;
+
+            console.log(`Book added to "${challenge.name}" challenge!`);
           }
-          
-          // Calculate progress based on challenge type
+
           let booksRead = 0;
           if (challenge.name === 'Genre Explorer') {
-            // For Genre Explorer, count unique genres
             booksRead = challengeTracker.genres.size;
           } else if (challenge.name === 'Classics Marathon') {
-            // For Classics Marathon, count classic books
             booksRead = challengeTracker.classicsCount;
           } else {
-            // For other challenges like Summer Reading, count all books that meet requirements
             booksRead = challengeTracker.bookIds.length;
           }
-          
-          // Cap at target and calculate percentage
+
           booksRead = Math.min(booksRead, challenge.target_books);
           const progress_percentage = Math.round((booksRead / challenge.target_books) * 100);
-          
-          // Update challenge with progress
-          const updatedChallenge = {
-            ...challenge,
-            books_read: booksRead,
-            progress_percentage
-          };
-          
-          // Move to completed if 100%
+
+          const updatedChallenge = { ...challenge, books_read: booksRead, progress_percentage };
+
           if (progress_percentage >= 100) {
             completed.push(updatedChallenge);
           } else {
             active.push(updatedChallenge);
           }
         });
-        
-        // Save updated book mapping
+
         localStorage.setItem('challengeBookMap', JSON.stringify(finishedBooksMap));
-        
-        // Get existing completed challenges
+
+        // Get inactive challenges to preserve them
+        const inactiveChallenges = challenges.filter(challenge => {
+          const startDate = new Date(challenge.start_date);
+          const endDate = new Date(challenge.end_date);
+          return now < startDate || now > endDate;
+        });
+
+        // Combine inactive with updated active
+        const updatedUserChallenges = [...inactiveChallenges, ...active];
+
         let existingCompleted = [];
         try {
           const completedData = localStorage.getItem('completedChallenges');
@@ -525,32 +654,35 @@ const Challenges = () => {
         } catch (e) {
           console.warn('Error loading completed challenges:', e);
         }
-        
-        // Combine with existing completed challenges
+
         const existingCompletedIds = existingCompleted.map(c => c.id);
         const newCompleted = completed.filter(c => !existingCompletedIds.includes(c.id));
         const allCompleted = [...existingCompleted, ...newCompleted];
-        
-        // Update state
-        setUserChallenges(active);
+
+        setUserChallenges(updatedUserChallenges);
         setCompletedChallenges(allCompleted);
-        
-        // Save to localStorage
-        localStorage.setItem('userChallenges', JSON.stringify(active));
+
+        localStorage.setItem('userChallenges', JSON.stringify(updatedUserChallenges));
         localStorage.setItem('completedChallenges', JSON.stringify(allCompleted));
-        
+
+        if (newCompleted.length > 0) {
+          newCompleted.forEach(challenge => {
+            showNotification(`Challenge Completed: "${challenge.name}"!`, true);
+          });
+        }
+
         console.log('Updated challenge progress after finishing book');
       } catch (error) {
         console.error('Error updating challenges after book finish:', error);
       }
     };
-    
+
     window.addEventListener('finishedBookAdded', handleFinishedBookAdded);
-    
+
     return () => {
       window.removeEventListener('finishedBookAdded', handleFinishedBookAdded);
     };
-  }, []);
+  }, [showNotification]);
 
   // Listen for general storage changes
   useEffect(() => {
@@ -566,6 +698,7 @@ const Challenges = () => {
     };
   }, []);
 
+  // UPDATED: Handle Join Challenge with proper date validation
   const handleJoinChallenge = (challengeId) => {
     console.log('Join challenge called with ID:', challengeId);
     console.log('Available challenges:', availableChallenges);
@@ -598,18 +731,39 @@ const Challenges = () => {
         progress_percentage: 0
       };
       
-      // Update local state immediately for responsiveness
-      const updatedUserChallenges = [...userChallenges, freshChallenge];
-      setUserChallenges(updatedUserChallenges);
+      const now = new Date();
+      const startDate = new Date(freshChallenge.start_date);
+      const endDate = new Date(freshChallenge.end_date);
+      
+      // Determine if the challenge should be active or pending
+      if (now >= startDate && now <= endDate) {
+        // Challenge is currently active
+        const updatedUserChallenges = [...userChallenges, freshChallenge];
+        setUserChallenges(updatedUserChallenges);
+        localStorage.setItem('userChallenges', JSON.stringify(updatedUserChallenges));
+        showNotification(`Joined the "${freshChallenge.name}" challenge!`, true);
+      } else if (now < startDate) {
+        // Challenge starts in the future
+        const updatedPendingChallenges = [...pendingChallenges, freshChallenge];
+        setPendingChallenges(updatedPendingChallenges);
+        localStorage.setItem('pendingChallenges', JSON.stringify(updatedPendingChallenges));
+        
+        // Format date for display
+        const formattedDate = startDate.toLocaleDateString();
+        showNotification(`Joined the "${freshChallenge.name}" challenge! It will activate on ${formattedDate}.`, true);
+      } else {
+        // Challenge is already expired
+        showNotification(`Cannot join "${freshChallenge.name}" - this challenge has already ended.`, false);
+        setLoading(false);
+        return;
+      }
       
       // Remove from available challenges
       const updatedAvailableChallenges = availableChallenges.filter(c => c.id !== challengeId);
       setAvailableChallenges(updatedAvailableChallenges);
+      localStorage.setItem('availableChallenges', JSON.stringify(updatedAvailableChallenges));
       
-      // Save to localStorage for persistence
-      localStorage.setItem('userChallenges', JSON.stringify(updatedUserChallenges));
-      
-      // Initialize challenge tracking for this challenge
+      // Initialize challenge tracking for this challenge with consistent genre format
       let challengeBookMap = {};
       try {
         const storedMap = localStorage.getItem('challengeBookMap');
@@ -617,14 +771,14 @@ const Challenges = () => {
           challengeBookMap = JSON.parse(storedMap);
         }
         
-        // Initialize tracking for this new challenge
+        // Initialize tracking for this new challenge with consistent genre format
         challengeBookMap[challengeId] = {
           bookIds: [],
           genres: new Set(),
           classicsCount: 0,
           challengeName: freshChallenge.name,
           isGenreSpecific: freshChallenge.is_genre_specific,
-          targetGenre: freshChallenge.genre
+          targetGenre: freshChallenge.genre ? freshChallenge.genre.toLowerCase() : ''
         };
         
         // Save updated challenge tracking
@@ -643,11 +797,12 @@ const Challenges = () => {
         body: JSON.stringify({ challenge_id: challengeId }),
       }).catch(err => console.warn('Backend sync failed, but local changes saved:', err));
       
-      // Show notification
-      showNotification(`Joined the "${freshChallenge.name}" challenge!`, true);
-      
-      // Switch to active tab to show the joined challenge
-      setActiveTab('active');
+      // Switch to appropriate tab based on challenge status
+      if (now >= startDate && now <= endDate) {
+        setActiveTab('active');
+      } else {
+        setActiveTab('upcoming');
+      }
       
       // Dispatch storage event for other components
       window.dispatchEvent(new Event('storage'));
@@ -662,8 +817,10 @@ const Challenges = () => {
   const handleQuitChallenge = (challengeId) => {
     console.log('Quitting challenge with ID:', challengeId);
     
-    // Find the challenge
-    const challenge = userChallenges.find(c => c.id === challengeId);
+    // Find the challenge in active or pending challenges
+    const activeChallenge = userChallenges.find(c => c.id === challengeId);
+    const pendingChallenge = pendingChallenges.find(c => c.id === challengeId);
+    const challenge = activeChallenge || pendingChallenge;
     
     if (!challenge) {
       console.error('Could not find challenge with ID:', challengeId);
@@ -673,10 +830,16 @@ const Challenges = () => {
     console.log('Found challenge to quit:', challenge);
     
     try {
-      // Update user challenges
-      const newUserChallenges = userChallenges.filter(c => c.id !== challengeId);
-      setUserChallenges(newUserChallenges);
-      localStorage.setItem('userChallenges', JSON.stringify(newUserChallenges));
+      // Update appropriate challenge list
+      if (activeChallenge) {
+        const newUserChallenges = userChallenges.filter(c => c.id !== challengeId);
+        setUserChallenges(newUserChallenges);
+        localStorage.setItem('userChallenges', JSON.stringify(newUserChallenges));
+      } else {
+        const newPendingChallenges = pendingChallenges.filter(c => c.id !== challengeId);
+        setPendingChallenges(newPendingChallenges);
+        localStorage.setItem('pendingChallenges', JSON.stringify(newPendingChallenges));
+      }
       
       // Reset the challenge to its original state
       const resetChallenge = {
@@ -724,10 +887,14 @@ const Challenges = () => {
       // Show notification
       showNotification(`Quit the "${challenge.name}" challenge`, false);
       
-      // If this was the last challenge and user is on 'active' tab, maybe suggest switching
-      if (newUserChallenges.length === 0 && activeTab === 'active') {
+      // If this was the last challenge in current tab, maybe suggest switching
+      if (activeTab === 'active' && userChallenges.length <= 1) {
         setTimeout(() => {
           showNotification("No active challenges. Check available challenges to join new ones!", true);
+        }, 2000);
+      } else if (activeTab === 'upcoming' && pendingChallenges.length <= 1) {
+        setTimeout(() => {
+          showNotification("No upcoming challenges. Check available challenges to join new ones!", true);
         }, 2000);
       }
     } catch (error) {
@@ -743,7 +910,10 @@ const Challenges = () => {
   
   // Add new function to handle editing existing challenges
   const handleEditChallenge = (challengeId) => {
-    const challenge = userChallenges.find(c => c.id === challengeId);
+    // Look for the challenge in both active and pending challenges
+    const challenge = userChallenges.find(c => c.id === challengeId) || 
+                      pendingChallenges.find(c => c.id === challengeId);
+    
     if (challenge) {
       setChallengeToEdit(challenge);
       setShowChallengeForm(true);
@@ -752,14 +922,62 @@ const Challenges = () => {
   
   // Add function to handle form submission
   const handleSaveChallenge = (challengeData) => {
+    const now = new Date();
+    const startDate = new Date(challengeData.start_date);
+    const endDate = new Date(challengeData.end_date);
+    
+    // Check if challenge should be active or pending
+    const isActive = now >= startDate && now <= endDate;
+    const isPending = now < startDate;
+    
     // Check if we're editing or creating
     if (challengeToEdit) {
       // Editing existing challenge
-      const updatedUserChallenges = userChallenges.map(c => 
-        c.id === challengeData.id ? challengeData : c
-      );
-      setUserChallenges(updatedUserChallenges);
-      localStorage.setItem('userChallenges', JSON.stringify(updatedUserChallenges));
+      if (isActive) {
+        // Update in active challenges
+        const updatedUserChallenges = userChallenges.map(c => 
+          c.id === challengeData.id ? challengeData : c
+        );
+        
+        // Also remove from pending if it was there before
+        const updatedPendingChallenges = pendingChallenges.filter(c => 
+          c.id !== challengeData.id
+        );
+        
+        setUserChallenges(updatedUserChallenges);
+        setPendingChallenges(updatedPendingChallenges);
+        
+        localStorage.setItem('userChallenges', JSON.stringify(updatedUserChallenges));
+        localStorage.setItem('pendingChallenges', JSON.stringify(updatedPendingChallenges));
+        
+        // Switch to active tab
+        setActiveTab('active');
+      } else if (isPending) {
+        // Update in pending challenges
+        const updatedPendingChallenges = pendingChallenges.map(c => 
+          c.id === challengeData.id ? challengeData : c
+        );
+        
+        // Also remove from active if it was there before
+        const updatedUserChallenges = userChallenges.filter(c => 
+          c.id !== challengeData.id
+        );
+        
+        setPendingChallenges(updatedPendingChallenges);
+        setUserChallenges(updatedUserChallenges);
+        
+        localStorage.setItem('pendingChallenges', JSON.stringify(updatedPendingChallenges));
+        localStorage.setItem('userChallenges', JSON.stringify(updatedUserChallenges));
+        
+        // Switch to upcoming tab
+        setActiveTab('upcoming');
+      } else {
+        // Challenge is now expired - should not happen with editing
+        showNotification('Cannot save challenge with end date in the past.', false);
+        setShowChallengeForm(false);
+        setChallengeToEdit(null);
+        return;
+      }
       
       // Update challenge tracking data with new genre settings if changed
       try {
@@ -769,7 +987,8 @@ const Challenges = () => {
         if (challengeBookMap[challengeData.id]) {
           challengeBookMap[challengeData.id].challengeName = challengeData.name;
           challengeBookMap[challengeData.id].isGenreSpecific = challengeData.is_genre_specific;
-          challengeBookMap[challengeData.id].targetGenre = challengeData.genre;
+          // Store genre in consistent format
+          challengeBookMap[challengeData.id].targetGenre = challengeData.genre ? challengeData.genre.toLowerCase() : '';
           
           localStorage.setItem('challengeBookMap', JSON.stringify(challengeBookMap));
         }
@@ -780,31 +999,43 @@ const Challenges = () => {
       showNotification(`Updated "${challengeData.name}" challenge!`, true);
     } else {
       // Creating new challenge
-      // Add to user challenges
-      setUserChallenges(prev => [...prev, challengeData]);
+      if (isActive) {
+        // Add to active challenges
+        setUserChallenges(prev => [...prev, challengeData]);
+        localStorage.setItem('userChallenges', JSON.stringify([...userChallenges, challengeData]));
+        setActiveTab('active');
+      } else if (isPending) {
+        // Add to pending challenges
+        setPendingChallenges(prev => [...prev, challengeData]);
+        localStorage.setItem('pendingChallenges', JSON.stringify([...pendingChallenges, challengeData]));
+        setActiveTab('upcoming');
+      } else {
+        // Challenge is expired - should not be allowed
+        showNotification('Cannot create a challenge with end date in the past.', false);
+        setShowChallengeForm(false);
+        setChallengeToEdit(null);
+        return;
+      }
       
       // Initialize challenge tracking
       try {
         const storedMap = localStorage.getItem('challengeBookMap') || '{}';
         const challengeBookMap = JSON.parse(storedMap);
         
-        // Initialize tracking for this new challenge
+        // Initialize tracking for this new challenge with consistent genre format
         challengeBookMap[challengeData.id] = {
           bookIds: [],
           genres: new Set(),
           classicsCount: 0,
           challengeName: challengeData.name,
           isGenreSpecific: challengeData.is_genre_specific,
-          targetGenre: challengeData.genre
+          targetGenre: challengeData.genre ? challengeData.genre.toLowerCase() : ''
         };
         
         localStorage.setItem('challengeBookMap', JSON.stringify(challengeBookMap));
       } catch (e) {
         console.warn('Error initializing challenge tracking:', e);
       }
-      
-      // Save to localStorage
-      localStorage.setItem('userChallenges', JSON.stringify([...userChallenges, challengeData]));
       
       // Show notification
       showNotification(`Created "${challengeData.name}" challenge!`, true);
@@ -813,9 +1044,6 @@ const Challenges = () => {
     // Close the form
     setShowChallengeForm(false);
     setChallengeToEdit(null);
-    
-    // Switch to active tab
-    setActiveTab('active');
   };
   
   // Add function to handle form cancellation
@@ -832,85 +1060,52 @@ const Challenges = () => {
       
       // Get current challenges
       const storedChallenges = localStorage.getItem('userChallenges');
-      if (!storedChallenges) {
+      const storedPendingChallenges = localStorage.getItem('pendingChallenges') || '[]';
+      
+      if (!storedChallenges && !storedPendingChallenges) {
         console.warn('No challenges found');
         return;
       }
       
-      const challenges = JSON.parse(storedChallenges);
+      const challenges = JSON.parse(storedChallenges || '[]');
+      const pendingChals = JSON.parse(storedPendingChallenges);
       
-      // Process challenges
-      const active = [];
-      const completed = [];
+      // Recategorize all challenges
+      const { active, pending, expired, completed } = categorizeChallenges([
+        ...challenges,
+        ...pendingChals
+      ]);
       
-      challenges.forEach(challenge => {
-        // Get or initialize tracking for this challenge
-        if (!challengeBookMap[challenge.id]) {
-          challengeBookMap[challenge.id] = {
-            bookIds: [],
-            genres: new Set(),
-            classicsCount: 0
-          };
-        }
-        
-        const tracker = challengeBookMap[challenge.id];
-        
-        // Calculate progress based on challenge type
-        let booksRead = 0;
-        if (challenge.name === 'Genre Explorer') {
-          booksRead = typeof tracker.genres.size === 'number' ? tracker.genres.size : 0;
-        } else if (challenge.name === 'Classics Marathon') {
-          booksRead = tracker.classicsCount || 0;
-        } else {
-          booksRead = tracker.bookIds ? tracker.bookIds.length : 0;
-        }
-        
-        // Force a minimum book count for testing
-        if (booksRead === 0) {
-          if (challenge.name === 'Summer Reading Challenge') {
-            booksRead = 5; // Half of the target
-          } else {
-            booksRead = 2; // Small number for testing
-          }
-        }
-        
-        // Cap at target and calculate percentage
-        booksRead = Math.min(booksRead, challenge.target_books);
-        const progress_percentage = Math.round((booksRead / challenge.target_books) * 100);
-        
-        // Update challenge
-        const updatedChallenge = {
-          ...challenge,
-          books_read: booksRead,
-          progress_percentage
-        };
-        
-        // Add to appropriate list
-        if (progress_percentage >= 100) {
-          completed.push(updatedChallenge);
-        } else {
-          active.push(updatedChallenge);
-        }
-      });
-      
-      // Get existing completed challenges
+      // Get existing completed and expired challenges
       const storedCompletedChallenges = localStorage.getItem('completedChallenges') || '[]';
-      const existingCompleted = JSON.parse(storedCompletedChallenges);
+      const storedExpiredChallenges = localStorage.getItem('expiredChallenges') || '[]';
       
-      // Combine with existing completed challenges
-      const existingCompletedIds = existingCompleted.map(c => c.id);
-      const newCompleted = completed.filter(c => !existingCompletedIds.includes(c.id));
+      const existingCompleted = JSON.parse(storedCompletedChallenges);
+      const existingExpired = JSON.parse(storedExpiredChallenges);
+      
+      // Combine with new completed and expired
+      const existingCompletedIds = new Set(existingCompleted.map(c => c.id));
+      const existingExpiredIds = new Set(existingExpired.map(c => c.id));
+      
+      const newCompleted = completed.filter(c => !existingCompletedIds.has(c.id));
+      const newExpired = expired.filter(c => !existingExpiredIds.has(c.id));
+      
       const allCompleted = [...existingCompleted, ...newCompleted];
+      const allExpired = [...existingExpired, ...newExpired];
       
       // Update state and localStorage
       setUserChallenges(active);
+      setPendingChallenges(pending);
       setCompletedChallenges(allCompleted);
+      setExpiredChallenges(allExpired);
       
       localStorage.setItem('userChallenges', JSON.stringify(active));
+      localStorage.setItem('pendingChallenges', JSON.stringify(pending));
       localStorage.setItem('completedChallenges', JSON.stringify(allCompleted));
+      localStorage.setItem('expiredChallenges', JSON.stringify(allExpired));
       localStorage.setItem('challengeBookMap', JSON.stringify(challengeBookMap));
       
-      alert('Progress bars updated and completed challenges moved to Completed tab');
+      alert('Challenge statuses updated successfully. The page will refresh.');
       window.location.reload();
     } catch (e) {
       console.error('Error fixing progress bar:', e);
@@ -923,7 +1118,9 @@ const Challenges = () => {
     try {
       // Clear any existing challenges
       localStorage.removeItem('userChallenges');
+      localStorage.removeItem('pendingChallenges');
       localStorage.removeItem('completedChallenges');
+      localStorage.removeItem('expiredChallenges');
       
       // Force set available challenges to sample challenges
       setAvailableChallenges(sampleAvailableChallenges);
@@ -962,12 +1159,16 @@ const Challenges = () => {
   const getFilteredChallenges = () => {
     if (activeTab === 'active') {
       return userChallenges;
+    } else if (activeTab === 'upcoming') {
+      return pendingChallenges;
     } else if (activeTab === 'completed') {
       return completedChallenges;
+    } else if (activeTab === 'expired') {
+      return expiredChallenges;
     } else if (activeTab === 'available') {
       return availableChallenges;
     } else {
-      return []; // 'expired' tab
+      return []; 
     }
   };
 
@@ -1000,23 +1201,23 @@ const Challenges = () => {
       )}
       
       {/* Challenge Form Modal */}
-{showChallengeForm && (
-  <div className="modal-overlay" onClick={(e) => {
-    // Close modal when clicking outside the form
-    if (e.target.className === 'modal-overlay') {
-      handleCancelForm();
-    }
-  }}>
-    <div className="modal-container">
-      <ChallengeForm 
-        challenge={challengeToEdit}
-        onSave={handleSaveChallenge}
-        onCancel={handleCancelForm}
-        isEditing={!!challengeToEdit}
-      />
-    </div>
-  </div>
-)}
+      {showChallengeForm && (
+        <div className="modal-overlay" onClick={(e) => {
+          // Close modal when clicking outside the form
+          if (e.target.className === 'modal-overlay') {
+            handleCancelForm();
+          }
+        }}>
+          <div className="modal-container">
+            <ChallengeForm 
+              challenge={challengeToEdit}
+              onSave={handleSaveChallenge}
+              onCancel={handleCancelForm}
+              isEditing={!!challengeToEdit}
+            />
+          </div>
+        </div>
+      )}
       
       <div className={`challenges-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
         <h1 className={`challenges-title ${theme === 'dark' ? 'dark-title' : ''}`}>Reading Challenges</h1>
@@ -1035,6 +1236,12 @@ const Challenges = () => {
             className={`tab-button ${activeTab === 'active' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
           >
             Active Challenges
+          </button>
+          <button
+            onClick={() => setActiveTab('upcoming')}
+            className={`tab-button ${activeTab === 'upcoming' ? 'active' : ''} ${theme === 'dark' ? 'dark-tab' : ''}`}
+          >
+            Upcoming
           </button>
           <button
             onClick={() => setActiveTab('completed')}
@@ -1091,7 +1298,7 @@ const Challenges = () => {
                       </div>
                     )}
                     
-                    {(activeTab === 'active' || activeTab === 'completed') && (
+                    {(activeTab === 'active' || activeTab === 'upcoming' || activeTab === 'completed') && (
                       <div className="progress-container">
                         <div className={`progress-labels ${theme === 'dark' ? 'dark-progress-labels' : ''}`}>
                           <span>Progress: {challenge.books_read} / {challenge.target_books} books</span>
@@ -1129,7 +1336,7 @@ const Challenges = () => {
                       </button>
                     )}
                     
-                    {activeTab === 'active' && (
+                    {(activeTab === 'active' || activeTab === 'upcoming') && (
                       <>
                         <button 
                           onClick={() => handleEditChallenge(challenge.id)}
@@ -1152,6 +1359,7 @@ const Challenges = () => {
               <div className={`empty-state ${theme === 'dark' ? 'dark-empty-state' : ''}`}>
                 <p>
                   {activeTab === 'active' && "You're not participating in any active challenges."}
+                  {activeTab === 'upcoming' && "You don't have any upcoming challenges."}
                   {activeTab === 'completed' && "You haven't completed any challenges yet."}
                   {activeTab === 'expired' && "You don't have any expired challenges."}
                   {activeTab === 'available' && "No available challenges at the moment."}

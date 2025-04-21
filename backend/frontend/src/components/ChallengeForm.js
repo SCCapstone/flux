@@ -48,18 +48,21 @@ const ChallengeForm = ({
   const handleChange = (e) => {
     const { name, value } = e.target;
     let parsedValue = value;
-    
-    // Convert numeric fields to numbers
+  
     if (name === 'target_books') {
       parsedValue = parseInt(value, 10) || 1;
     }
-    
+  
+    // Normalize and lowercase genre input
+    if (name === 'genre' && formData.is_genre_specific) {
+      parsedValue = value.toLowerCase().replace(/[^a-z0-9&]+/g, ' ').trim();
+    }
+  
     setFormData({
       ...formData,
       [name]: parsedValue
     });
-    
-    // Clear any error for this field
+  
     if (errors[name]) {
       setErrors({
         ...errors,

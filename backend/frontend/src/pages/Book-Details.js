@@ -796,67 +796,110 @@ function BookDetails() {
 
       {/* Achievement Popup */}
       {achievementPopup.show && achievementPopup.achievement && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
-          <div 
-            className={`rounded-lg transform transition-all ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white'}`}
-            style={{
-              animation: 'scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', 
-              width: '300px', 
-              maxWidth: '300px', 
-              padding: '16px',
-              border: theme === 'dark' ? '1px solid #374151' : '1px solid #e5e7eb',
-              boxShadow: theme === 'dark' ? '0 4px 6px rgba(0, 0, 0, 0.3)' : '0 4px 6px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <div className="relative">
-              {/* Close button */}
-              <button
-                onClick={closeAchievementPopup}
-                className={`absolute top-2 right-2 rounded-full p-1 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
-                style={{ fontSize: '0.75rem' }}
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              
-              <div className="flex flex-col items-center">
-                <div className="mb-3 mt-1">
-                  {achievementPopup.achievement.badge_image ? (
-                    <img
-                      src={achievementPopup.achievement.badge_image}
-                      alt={achievementPopup.achievement.name}
-                      className="w-12 h-12 mx-auto"
-                    />
-                  ) : (
-                    <div className="text-center text-lg font-semibold mt-2 mb-1">
-                      Achievement Unlocked
-                    </div>
-                  )}
-                </div>
-                
-                <div className="w-full text-center">
-                  <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{achievementPopup.achievement.name}</h3>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-3`}>{achievementPopup.achievement.description}</p>
-                  
-                  <div className="mb-4">
-                    <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {achievementPopup.achievement.points} points added to your account
-                    </p>
-                  </div>
-                  
-                  <button
-                    onClick={closeAchievementPopup}
-                    className={`w-full py-2 px-4 rounded text-sm font-medium transition-all duration-200 ${theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+  <div 
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.6)",
+      zIndex: 1000
+    }}
+  >
+    <div 
+      style={{
+        position: "relative",
+        backgroundColor: theme === 'dark' ? "#1F2937" : "#FFFFFF",
+        borderRadius: "8px",
+        padding: "24px",
+        width: "300px", 
+        maxWidth: "90%",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
+        textAlign: "center"
+      }}
+    >
+      {/* ONLY ONE Close button - with a clearly visible X */}
+      <button
+        onClick={closeAchievementPopup}
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          background: "rgba(0, 0, 0, 0.1)",
+          color: "#000000",
+          width: "30px",
+          height: "30px",
+          borderRadius: "50%",
+          border: "none",
+          fontSize: "16px",
+          fontWeight: "bold",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        X
+      </button>
+
+      <h3
+        style={{
+          fontSize: "18px",
+          fontWeight: "600",
+          color: theme === 'dark' ? "#F9FAFB" : "#111827",
+          marginBottom: "12px"
+        }}
+      >
+        {achievementPopup.achievement.name}
+      </h3>
+      
+      <p
+        style={{
+          fontSize: "14px",
+          color: theme === 'dark' ? "#D1D5DB" : "#4B5563",
+          marginBottom: "16px"
+        }}
+      >
+        {achievementPopup.achievement.description}
+      </p>
+      
+      <div
+        style={{
+          display: "inline-block",
+          padding: "6px 12px",
+          backgroundColor: theme === 'dark' ? "#0EA5E9" : "#DBEAFE",
+          color: theme === 'dark' ? "#FFFFFF" : "#1E40AF",
+          borderRadius: "16px",
+          fontSize: "14px",
+          fontWeight: "600",
+          marginBottom: "16px"
+        }}
+      >
+        +{achievementPopup.achievement.points} points
+      </div>
+      
+      <button
+        onClick={closeAchievementPopup}
+        style={{
+          width: "100%",
+          padding: "8px 16px",
+          backgroundColor: theme === 'dark' ? "#4B5563" : "#E5E7EB",
+          color: theme === 'dark' ? "#FFFFFF" : "#111827",
+          borderRadius: "6px",
+          border: "none",
+          fontWeight: "500",
+          cursor: "pointer"
+        }}
+      >
+        Dismiss
+      </button>
+    </div>
+  </div>
+)}
 
       <div className={`max-w-7xl mx-auto px-4 py-6 ${theme === 'dark' ? 'text-gray-300' : ''}`}>
         <div className={`book-details-container ${theme === 'dark' ? 'dark-container' : ''}`}>
