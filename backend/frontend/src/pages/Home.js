@@ -20,6 +20,12 @@ const Home = () => {
   const [filterType, setFilterType] = useState('title');
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
   
+  // Pagination states
+  const [totalResults, setTotalResults] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const resultsPerPage = 10; // Adjust to match backend page size
+  const [isEstimatingPages, setIsEstimatingPages] = useState(true);
+  
   // Gamification states
   const [notification, setNotification] = useState({
     show: false,
@@ -27,8 +33,7 @@ const Home = () => {
     type: 'success',
     points: 0
   });
-  // Either use showChallenges or comment out the state if it's planned for future use
-  const [showChallenges] = useState(false); // Removed setShowChallenges since it's not being used
+  const [showChallenges] = useState(false);
   const [challenges, setChallenges] = useState([]);
 
   const fetchFavorites = useCallback(async () => {
@@ -47,7 +52,7 @@ const Home = () => {
     } catch (error) {
       console.error('Error fetching favorites:', error);
     }
-  }, [user]);
+  }, [user, apiBaseUrl]);
   
   // Fetch active challenges
   const fetchChallenges = useCallback(async () => {
@@ -68,7 +73,7 @@ const Home = () => {
     } catch (error) {
       console.error('Error fetching challenges:', error);
     }
-  }, [user]);
+  }, [user, apiBaseUrl]);
 
   useEffect(() => {
     fetchFavorites();
@@ -84,19 +89,84 @@ const Home = () => {
         page: pageNumber,
         filterType: filter
       });
-
+  
       const response = await fetch(
         `${apiBaseUrl}/search/?${queryParams.toString()}`
       );
-
+  
       if (!response.ok) {
         throw new Error('Failed to fetch books');
       }
-
+  
       const data = await response.json();
-      setBooks(data.books || []);
+      const booksList = data.books || [];
+      setBooks(booksList);
+      
+      // If API provides pagination info, use it and mark as not estimating
+      if (data.totalResults !== undefined && data.totalPages !== undefined) {
+        setTotalResults(data.totalResults);
+        setTotalPages(data.totalPages);
+        setIsEstimatingPages(false);
+      } else {
+        // We need to estimate - more consistent approach
+        if (pageNumber === 1) {
+          // First query - reset estimation state
+          setIsEstimatingPages(true);
+          
+          if (booksList.length === 0) {
+            // No results
+            setTotalPages(0);
+            setTotalResults(0);
+          } else {
+            // Has results on first page
+            const isFullPage = booksList.length === resultsPerPage;
+            
+            if (isFullPage) {
+              // If we have a full page, set total to a reasonable number that won't change frequently
+              // For example, estimate 5 total pages initially
+              setTotalPages(5);
+              setTotalResults(5 * resultsPerPage);
+            } else {
+              // Partial first page - this is likely all there is
+              setTotalPages(1);
+              setTotalResults(booksList.length);
+              setIsEstimatingPages(false); // We're certain now
+            }
+          }
+        } else {
+          // Not the first page
+          if (booksList.length === 0) {
+            // Empty page - we've reached the end
+            setTotalPages(pageNumber - 1);
+            setTotalResults((pageNumber - 1) * resultsPerPage);
+            setIsEstimatingPages(false); // We're certain now
+            
+            // Go back to last valid page
+            setPage(pageNumber - 1);
+            fetchBooks(searchQuery, pageNumber - 1, filter);
+            return;
+          } else {
+            const isFullPage = booksList.length === resultsPerPage;
+            
+            if (!isFullPage) {
+              // Partial page - this is the last one
+              setTotalPages(pageNumber);
+              setTotalResults((pageNumber - 1) * resultsPerPage + booksList.length);
+              setIsEstimatingPages(false); // We're certain now
+            } else if (pageNumber >= totalPages - 1) {
+              // We're approaching our estimate, expand it
+              // This prevents the "page X of Y" from constantly increasing
+              setTotalPages(pageNumber + 3); // Add a buffer
+            }
+            // Otherwise keep the existing total pages estimate
+          }
+        }
+      }
     } catch (err) {
       setError(err.message);
+      setBooks([]);
+      setTotalResults(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -110,9 +180,11 @@ const Home = () => {
   };
 
   const handleNextPage = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchBooks(query, nextPage, filterType);
+    if (page < totalPages) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchBooks(query, nextPage, filterType);
+    }
   };
 
   const handlePreviousPage = () => {
@@ -345,13 +417,28 @@ const Home = () => {
           user={user}
         />
 
-        <div className="pagination">
-          <button onClick={handlePreviousPage} disabled={page === 1}>
-            Previous
-          </button>
-          <span className="page-number">Page {page}</span>
-          <button onClick={handleNextPage}>Next</button>
-        </div>
+        {/* Modified pagination section */}
+        {(books.length > 0 || totalPages > 0) && (
+  <div className="pagination">
+    <button 
+      onClick={handlePreviousPage} 
+      disabled={page === 1}
+    >
+      Previous
+    </button>
+    <span className="page-number">
+      {isEstimatingPages 
+        ? `Page ${page}` // When estimating, just show current page
+        : `Page ${page} of ${totalPages}`} {/* Show "of X" only when we're certain */}
+    </span>
+    <button 
+      onClick={handleNextPage}
+      disabled={page >= totalPages && !isEstimatingPages}
+    >
+      Next
+    </button>
+  </div>
+)}
       </div>
     </div>
   );
