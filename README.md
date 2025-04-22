@@ -1,4 +1,4 @@
-# Project Name
+# Flux Books
 
 This webapp is designed to allow more social reading as well as to connect readers with more books that they will enjoy and communities that they are a part of.
 
