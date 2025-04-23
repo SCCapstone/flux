@@ -646,7 +646,12 @@ function BookDetails() {
                 {review.user?.username || 'Unknown User'}
               </strong>: 
               <span className={theme === 'dark' ? 'dark-text' : ''}>
-                {review.review_text}
+              {review.review_text.split('\n').map((line, idx) => (
+              <React.Fragment key={idx}>
+              {line}
+              <br />
+              </React.Fragment>
+              ))}
               </span>
             </p>
       
