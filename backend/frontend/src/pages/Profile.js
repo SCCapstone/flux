@@ -135,7 +135,7 @@ const Profile = () => {
       // Fetch reviews
       fetchUserReviews();
     }
-  }, [user]);
+  }, [user?.token]);
   
   // Fetch followers/following when tab changes
   useEffect(() => {
@@ -553,12 +553,6 @@ const Profile = () => {
           email: data.user.email,
           bio: data.user.bio,
           profile_image: data.user.profile_image
-        });
-        handleLogin({
-          ...user,
-          token: data.token,
-          username: data.user.username,
-          email: data.user.email
         });
         setPreviewImage(data.user.profile_image);
         setIsEditing(false);
