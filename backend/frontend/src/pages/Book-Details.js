@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useContext } from 'react';
@@ -612,7 +612,16 @@ function BookDetails() {
     // Add state for editing
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(review.review_text || "");
-  
+
+    const textareaRef = useRef();
+
+    useEffect(() => {
+      if (isEditing && textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+      }
+    }, [isEditing, editText]);
+    
     const handleLocalReplySubmit = () => {
       if (!replyText.trim()) return;
   
@@ -679,6 +688,7 @@ function BookDetails() {
           // Edit view
           <div className={`edit-form ${theme === 'dark' ? 'dark-edit-form' : ''}`}>
             <textarea
+              ref={textareaRef}
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
               className={`edit-textarea ${theme === 'dark' ? 'dark-edit-textarea' : ''}`}
