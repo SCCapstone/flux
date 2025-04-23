@@ -57,7 +57,8 @@ const BestSellers = () => {
           author: book.author,
           description: book.description,
           image: book.image,
-          genre: book.genre
+          genre: book.genre,
+          year: book.year
         }
       } 
     });

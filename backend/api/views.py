@@ -794,7 +794,8 @@ def get_bestsellers(request):
                             'google_books_id': google_data['items'][0]['id'],
                             'description': volume_info.get('description', ''),
                             'categories': volume_info.get('categories', []),
-                            'image': volume_info.get('imageLinks', {}).get('thumbnail', '')
+                            'image': volume_info.get('imageLinks', {}).get('thumbnail', ''),
+                            'year': volume_info.get('publishedDate', 'N/A')[:4] if volume_info.get('publishedDate') else 'N/A'
                         }
                 
                 # Fallback to title+author search only if ISBN search failed or no ISBN
@@ -810,7 +811,8 @@ def get_bestsellers(request):
                             'google_books_id': google_data['items'][0]['id'],
                             'description': volume_info.get('description', ''),
                             'categories': volume_info.get('categories', []),
-                            'image': volume_info.get('imageLinks', {}).get('thumbnail', '')
+                            'image': volume_info.get('imageLinks', {}).get('thumbnail', ''),
+                            'year': volume_info.get('publishedDate', 'N/A')[:4] if volume_info.get('publishedDate') else 'N/A'
                         }
 
                 # Use NYT image if Google Books doesn't have one or has an invalid one
@@ -833,6 +835,7 @@ def get_bestsellers(request):
                     'google_books_id': google_book_info.get('google_books_id', ''),
                     'genre': ', '.join(google_book_info.get('categories', [])),
                     'image': book_image,
+                    'year': google_book_info.get('year', ''),
                     'amazon_link': book['amazon_product_url'],
                     'weeks_on_list': book['weeks_on_list']
                 })
