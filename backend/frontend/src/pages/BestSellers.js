@@ -5,6 +5,27 @@ import { ThemeContext } from '../ThemeContext';
 import ReadlistPopup from '../components/ReadlistPopup';
 import '../styles/BestSellers.css';
 
+function setWithExpiry(key, value, ttl) {
+  const now = new Date();
+  const item = {
+    value: value,
+    expiry: now.getTime() + ttl,
+  };
+  localStorage.setItem(key, JSON.stringify(item));
+}
+
+function getWithExpiry(key) {
+  const itemStr = localStorage.getItem(key);
+  if (!itemStr) return null;
+  const item = JSON.parse(itemStr);
+  const now = new Date();
+  if (now.getTime() > item.expiry) {
+    localStorage.removeItem(key);
+    return null;
+  }
+  return item.value;
+}
+
 const FALLBACK_STYLE = {
   backgroundColor: '#1e293b',
   backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%239ca3af\' stroke-width=\'1\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Crect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\' ry=\'2\'%3E%3C/rect%3E%3Cline x1=\'3\' y1=\'9\' x2=\'21\' y2=\'9\'%3E%3C/line%3E%3Cline x1=\'9\' y1=\'21\' x2=\'9\' y2=\'9\'%3E%3C/line%3E%3C/svg%3E")',
@@ -30,24 +51,35 @@ const BestSellers = () => {
   const [selectedBook, setSelectedBook] = useState(null);
 
   useEffect(() => {
+    const CACHE_KEY = 'nyt_bestsellers';
+    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+  
+    // Check cache first
+    const cached = getWithExpiry(CACHE_KEY);
+    if (cached) {
+      setBestsellers(cached);
+      setLoading(false);
+      return;
+    }
+  
+    // Fetch from API if no cache
     const fetchBestsellers = async () => {
       try {
         const response = await fetch(`${apiBaseUrl}/bestsellers/`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch bestsellers');
-        }
+        if (!response.ok) throw new Error('Failed to fetch bestsellers');
         const data = await response.json();
         setBestsellers(data.books);
+        setWithExpiry(CACHE_KEY, data.books, CACHE_TTL);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchBestsellers();
   }, [apiBaseUrl]);
-
+  
   const handleBookClick = (book) => {
     navigate('/book-details', { 
       state: { 
