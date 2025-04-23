@@ -11,6 +11,22 @@
   z-index: 1000;
 }
 
+.readlist-options label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.readlist-options input[type="checkbox"] {
+  margin-left: 0;      
+  margin-right: 8px;   
+  align-self: flex-start; 
+}
+
+.readlist-options button + button {
+  margin-left: 100px;  
+}
+
 .readlist-popup {
   background: white;
   padding: 20px;
@@ -21,15 +37,14 @@
 }
 
 .readlist-options {
-  list-style: none;
-  padding: 0;
+  padding-left: 0;
 }
 
 .readlist-options li {
   margin: 10px 0;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 
 .readlist-options input {
