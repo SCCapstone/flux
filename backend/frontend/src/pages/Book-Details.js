@@ -914,7 +914,7 @@ function BookDetails() {
                   <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Author:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.author}</span></p>
                 )}
                 {book.year && (
-                  <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Published Date:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.year}</span></p>
+                  <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Published Year:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.year}</span></p>
                 )}
                 {book.description && (
                   <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Description:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.description}</span></p>
