@@ -1,11 +1,15 @@
-import { useContext } from "react"
+import { useContext, useState } from "react"
 import { Link } from "react-router-dom"
 import { ThemeContext } from "../ThemeContext"
-import { ArrowLeft, Github, Linkedin } from 'lucide-react'
+import { ArrowLeft, Github, Linkedin, Sun, Moon } from 'lucide-react'
+import LoginModal from "../components/LoginModal"
+import RegisterModal from "../components/RegisterModal"
 import "../styles/AboutPage.css"
 
 const AboutPage = () => {
-  const { theme } = useContext(ThemeContext)
+  const { theme, toggleTheme } = useContext(ThemeContext)
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const [registerModalOpen, setRegisterModalOpen] = useState(false)
 
   const teamMembers = [
     {
@@ -46,6 +50,21 @@ const AboutPage = () => {
             <ArrowLeft size={18} />
             Back to Home
           </Link>
+          <div className="about-auth-buttons">
+            <button
+              className="theme-toggle about-theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun className="icon" /> : <Moon className="icon" />}
+            </button>
+            <button onClick={() => setLoginModalOpen(true)} className="about-nav-button about-login-button">
+              Login
+            </button>
+            <button onClick={() => setRegisterModalOpen(true)} className="about-nav-button about-register-button">
+              Sign Up
+            </button>
+          </div>
         </nav>
       </header>
 
@@ -138,6 +157,18 @@ const AboutPage = () => {
           </Link>
         </div>
       </footer>
+      
+      {/* Modal Components */}
+      <LoginModal 
+        isOpen={loginModalOpen} 
+        onClose={() => setLoginModalOpen(false)} 
+        openRegister={() => setRegisterModalOpen(true)} 
+      />
+      <RegisterModal 
+        isOpen={registerModalOpen} 
+        onClose={() => setRegisterModalOpen(false)} 
+        openLogin={() => setLoginModalOpen(true)} 
+      />
     </div>
   )
 }

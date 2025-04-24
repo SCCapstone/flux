@@ -1,13 +1,18 @@
-import { useContext } from "react"
+import { useContext, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { AuthContext } from "../AuthContext"
 import { ThemeContext } from "../ThemeContext"
+import { Sun, Moon } from 'lucide-react'
+import LoginModal from "../components/LoginModal"
+import RegisterModal from "../components/RegisterModal"
 import "../styles/LandingPage.css"
 
 const LandingPage = () => {
   const { isLoggedIn } = useContext(AuthContext)
-  const { theme } = useContext(ThemeContext)
+  const { theme, toggleTheme } = useContext(ThemeContext)
   const navigate = useNavigate()
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const [registerModalOpen, setRegisterModalOpen] = useState(false)
 
   // Redirect to home if already logged in
   if (isLoggedIn) {
@@ -35,12 +40,19 @@ const LandingPage = () => {
           >
             GitHub
           </a>
-          <Link to="/login" className="landing-nav-button landing-login">
+          <button 
+            className="theme-toggle landing-theme-toggle" 
+            onClick={toggleTheme} 
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <Sun className="icon" /> : <Moon className="icon" />}
+          </button>
+          <button onClick={() => setLoginModalOpen(true)} className="landing-nav-button landing-login">
             Login
-          </Link>
-          <Link to="/register" className="landing-nav-button landing-register">
+          </button>
+          <button onClick={() => setRegisterModalOpen(true)} className="landing-nav-button landing-register">
             Sign Up
-          </Link>
+          </button>
         </nav>
       </header>
 
@@ -66,7 +78,7 @@ const LandingPage = () => {
             <div className="landing-video-container">
               <iframe
                 className="landing-video"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ" // Replace with actual video URL
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ" // Replace with your actual video URL
                 title="Flux App Demo"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -154,9 +166,9 @@ const LandingPage = () => {
         <section className="landing-cta-section">
           <h2>Ready to Start Your Reading Journey?</h2>
           <p>Join thousands of readers who have already discovered their next favorite book with Flux.</p>
-          <Link to="/register" className="landing-cta-button">
+          <button onClick={() => setRegisterModalOpen(true)} className="landing-cta-button">
             Sign Up Now - It's Free!
-          </Link>
+          </button>
         </section>
       </main>
 
@@ -202,6 +214,18 @@ const LandingPage = () => {
           </p>
         </div>
       </footer>
+      
+      {/* Modal Components */}
+      <LoginModal 
+        isOpen={loginModalOpen} 
+        onClose={() => setLoginModalOpen(false)} 
+        openRegister={() => setRegisterModalOpen(true)} 
+      />
+      <RegisterModal 
+        isOpen={registerModalOpen} 
+        onClose={() => setRegisterModalOpen(false)} 
+        openLogin={() => setLoginModalOpen(true)} 
+      />
     </div>
   )
 }

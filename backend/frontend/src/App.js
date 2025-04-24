@@ -2,8 +2,6 @@
 
 import { useContext, lazy, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
-import Login from "./pages/Login"
-import Register from "./pages/Register"
 import Home from "./pages/Home"
 import BookDetails from "./pages/Book-Details"
 import Profile from "./pages/Profile"
@@ -41,8 +39,8 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={isLoggedIn ? <Home /> : <LandingPage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <Login />} />
-          <Route path="/register" element={isLoggedIn ? <Navigate to="/" replace /> : <Register />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/register" element={<Navigate to="/" replace />} />
 
           {/* Protected Routes */}
           <Route

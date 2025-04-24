@@ -51,7 +51,46 @@
   .about-nav {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1.5rem;
+    width: 100%;
+  }
+  
+  .about-auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  /* Theme toggle button styles */
+  .about-theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: inherit;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .about-light .about-theme-toggle {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .about-dark .about-theme-toggle {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .about-theme-toggle:hover {
+    background-color: rgba(74, 111, 165, 0.2);
+  }
+  
+  .about-theme-toggle .icon {
+    width: 1.25rem;
+    height: 1.25rem;
   }
   
   .about-nav-link {
@@ -73,6 +112,46 @@
   
   .about-nav-link:hover {
     color: #4a6fa5;
+  }
+  
+  .about-nav-button {
+    padding: 0.5rem 1.25rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .about-login-button {
+    border: 1px solid #4a6fa5;
+    color: #4a6fa5;
+    background-color: transparent;
+  }
+  
+  .about-login-button:hover {
+    background-color: rgba(74, 111, 165, 0.1);
+  }
+  
+  .about-register-button {
+    background-color: #4a6fa5;
+    color: white;
+    border: 1px solid #4a6fa5;
+  }
+  
+  .about-register-button:hover {
+    background-color: #3a5a8c;
+    border-color: #3a5a8c;
+  }
+  
+  .about-dark .about-login-button {
+    color: #4a6fa5;
+    background-color: rgba(74, 111, 165, 0.1);
+  }
+  
+  .about-dark .about-register-button {
+    background-color: #4a6fa5;
+    color: white;
   }
   
   .about-back-link {
