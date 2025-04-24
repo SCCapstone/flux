@@ -359,62 +359,63 @@
   }
   
   .landing-screenshots h2 {
-    font-size: 2.25rem;
+    font-size: 2.5rem;
     margin-bottom: 3rem;
     position: relative;
+    color: #2c3e50;
+  }
+  
+  .landing-dark .landing-screenshots h2 {
+    color: #e2e8f0;
   }
   
   .landing-screenshots-carousel {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     justify-content: center;
-    align-items: stretch;
-    gap: 2.5rem;
+    align-items: center;
+    gap: 4rem;
     max-width: 1400px;
     margin: 0 auto;
   }
   
   .landing-screenshot-item {
-    flex: 1;
-    min-width: 300px;
-    max-width: 400px;
+    width: 100%;
+    max-width: 1000px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    transition: transform 0.3s ease;
-  }
-  
-  .landing-screenshot-item:hover {
-    transform: translateY(-5px);
+    align-self: center;
+    margin-bottom: 4rem;
   }
   
   .landing-screenshot-item img {
     width: 100%;
     height: auto;
-    max-height: 400px;
     object-fit: contain;
     border-radius: 12px;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     margin-bottom: 1.5rem;
-    border: 5px solid white;
-    transition: all 0.3s ease;
+    border: 8px solid white;
   }
   
   .landing-dark .landing-screenshot-item img {
-    border: 5px solid #2d3748;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-  }
-  
-  .landing-screenshot-item:hover img {
-    box-shadow: 0 20px 40px rgba(74, 111, 165, 0.25);
+    border: 8px solid #2d3748;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   }
   
   .landing-screenshot-item p {
-    font-size: 1.125rem;
-    font-weight: 500;
-    opacity: 0.9;
+    font-size: 1.5rem;
+    font-weight: 600;
+    opacity: 0.95;
     max-width: 90%;
-    margin: 0 auto;
+    margin: 1.5rem auto 0;
+    color: #4a6fa5;
+    text-align: center;
+  }
+  
+  .landing-dark .landing-screenshot-item p {
+    color: #90cdf4;
   }
   
   /* CTA section */
@@ -522,6 +523,10 @@
   
     .landing-cta-buttons {
       justify-content: center;
+    }
+    
+    .landing-screenshots-carousel {
+      gap: 3rem;
     }
   }
 

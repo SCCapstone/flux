@@ -141,7 +141,7 @@ const LandingPage = () => {
                 className="landing-screenshot"
                 loading="lazy"
               />
-              <p>Discover new books</p>
+              <p>Discover and explore your next favorite books</p>
             </div>
             <div className="landing-screenshot-item">
               <img
@@ -150,16 +150,16 @@ const LandingPage = () => {
                 className="landing-screenshot"
                 loading="lazy"
               />
-              <p>Customize your profile and check your stats</p>
+              <p>Track your reading journey with personalized profiles</p>
             </div>
             <div className="landing-screenshot-item">
               <img
-                src="/connect.png"
-                alt="Flux Social Features"
+                src="/challenges.png"
+                alt="Flux Challenges Page"
                 className="landing-screenshot"
                 loading="lazy"
               />
-              <p>Connect with friends</p>
+              <p>Complete reading challenges and earn points</p>
             </div>
           </div>
         </section>
