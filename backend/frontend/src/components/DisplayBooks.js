@@ -57,7 +57,6 @@ const DisplayBooks = ({ books, loading, error }) => {
             </p>
             <p className={`book-genre ${theme === 'dark' ? 'dark-text' : ''}`}><strong>Genre:</strong> {book.genre}</p>
             <p className={`book-year ${theme === 'dark' ? 'dark-text' : ''}`}>{book.year}</p>
-            <p className={`book-description ${theme === 'dark' ? 'dark-text' : ''}`}>{book.description}</p>
           </div>
           
           {/* New Button: Opens Readlist Popup */}

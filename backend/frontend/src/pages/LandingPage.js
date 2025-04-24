@@ -125,20 +125,21 @@ const LandingPage = () => {
             <div className="landing-feature-card">
               <div className="landing-feature-icon">💯</div>
               <h3>Leaderboards</h3>
-              <p>Compare your reading activity and see how you rank among the Flux community.</p>
+              <p>Compare your points and see how you rank among the Flux community.</p>
             </div>
           </div>
         </section>
 
         {/* App Screenshots */}
         <section className="landing-screenshots">
-          <h2>App Screenshots</h2>
+          <h2>Experience Flux in Action</h2>
           <div className="landing-screenshots-carousel">
             <div className="landing-screenshot-item">
               <img
                 src="/interface.png"
                 alt="Flux Home Screen"
                 className="landing-screenshot"
+                loading="lazy"
               />
               <p>Discover new books</p>
             </div>
@@ -147,6 +148,7 @@ const LandingPage = () => {
                 src="/profile.png"
                 alt="Flux Profile Page"
                 className="landing-screenshot"
+                loading="lazy"
               />
               <p>Customize your profile and check your stats</p>
             </div>
@@ -155,6 +157,7 @@ const LandingPage = () => {
                 src="/connect.png"
                 alt="Flux Social Features"
                 className="landing-screenshot"
+                loading="lazy"
               />
               <p>Connect with friends</p>
             </div>
