@@ -338,7 +338,11 @@ const Home = () => {
                 Reading daily helps you progress faster and earn more achievements.
               </p>
             </div>
-            <button onClick={() => navigate('/challenges')} className="view-challenges-btn">
+            <button 
+              onClick={() => navigate('/challenges')} 
+              className="view-challenges-btn" 
+              style={{ color: 'white' }} /* Explicitly set text color to white to override any other styling */
+            >
               View Challenges
             </button>
           </div>
