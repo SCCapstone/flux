@@ -90,14 +90,15 @@ class Review(models.Model):
 
 class UserBookStatus(models.Model):
     STATUS_CHOICES = [
-        ('WILL_READ', 'Will Read'),
-        ('READING', 'Reading'),
+        ('NOT_STARTED', 'Not Started'),
+        ('READING', 'Currently Reading'),
         ('FINISHED', 'Finished'),
+        ('WANT_TO_READ', 'Want to Read')
     ]
-
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='book_statuses')
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='NOT_STARTED')
+    finished_points_awarded = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'book')

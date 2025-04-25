@@ -537,7 +537,6 @@ def update_review(request, review_id):
                 
                 return replies_data
             
-
             response_data['replies'] = add_replies(review)
         
         return Response(response_data)
@@ -650,7 +649,7 @@ def add_favorite(request):
             achievement_messages = []
 
             # Check each threshold
-            if favorites_count >= 5:
+            if favorites_count == 5:
                 achievement, _ = Achievement.objects.get_or_create(
                     name="Collector",
                     defaults={
@@ -880,7 +879,8 @@ def update_book_status(request, google_books_id):
     if new_status not in dict(UserBookStatus.STATUS_CHOICES).keys():
         return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Get book data from api to create book object for later
+    # Get or create the book object
+    # ... (existing book creation/retrieval logic remains the same) ...
     url = f"https://www.googleapis.com/books/v1/volumes/{google_books_id}?key={GOOGLE_BOOKS_API_KEY}"
     response = requests.get(url)
     if response.status_code != 200:
@@ -904,7 +904,7 @@ def update_book_status(request, google_books_id):
     image_links = volume_info.get('imageLinks', {})
     published_date = volume_info.get('publishedDate', '')
 
-    book, created = Book.objects.update_or_create(
+    book, _ = Book.objects.update_or_create(
         google_books_id=google_books_id,
         defaults={
             'title': title,
@@ -915,99 +915,96 @@ def update_book_status(request, google_books_id):
             'year': published_date[:4] if published_date else 'N/A'
         }
     )
+    # --- End book creation/retrieval ---
 
-    previous_status = None
+    # Get or create the UserBookStatus record
     user_book_status, created = UserBookStatus.objects.get_or_create(
         user=user,
         book=book,
-        defaults={'status': new_status}
+        defaults={'status': new_status, 'finished_points_awarded': False} # Ensure default for flag
     )
 
-    if not created:
-        previous_status = user_book_status.status
-        user_book_status.status = new_status
-        user_book_status.save()
+    # Update status regardless of points logic
+    user_book_status.status = new_status
 
+    # --- Start Points Logic --- 
+    gamification_data = {}
+    response_data = {}
+    
+    # Award points ONLY if changing to FINISHED and points haven't been awarded before
+    if new_status == 'FINISHED' and not user_book_status.finished_points_awarded:
+        # Award base points
+        award_points(user, 10, f"Finished reading: {book.title}")
+        
+        # Check for achievements
+        finished_books_count = UserBookStatus.objects.filter(user=user, status='FINISHED').count()
+        achievement_messages = []
+        total_achievement_points = 0
+        
+        # Beginner Reader (3 books)
+        if finished_books_count == 3:
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Beginner Reader",
+                defaults={"description": "Finished reading 3 books", "points": 15}
+            )
+            user_achievement, created_ua = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            if created_ua:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append(f"🏆 {achievement.name}: {achievement.description}!")
+                total_achievement_points += achievement.points
+        
+        # Avid Reader (10 books)
+        if finished_books_count == 10:
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Avid Reader",
+                defaults={"description": "Finished reading 10 books", "points": 30}
+            )
+            user_achievement, created_ua = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            if created_ua:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append(f"🏆 {achievement.name}: {achievement.description}!")
+                total_achievement_points += achievement.points
+        
+        # Bookworm (25 books)
+        if finished_books_count == 25:
+            achievement, _ = Achievement.objects.get_or_create(
+                name="Bookworm",
+                defaults={"description": "Finished reading 25 books", "points": 75}
+            )
+            user_achievement, created_ua = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+            if created_ua:
+                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
+                achievement_messages.append(f"🏆 {achievement.name}: {achievement.description}!")
+                total_achievement_points += achievement.points
+
+        # Mark points as awarded for this UserBookStatus
+        user_book_status.finished_points_awarded = True
+        
+        # Prepare gamification data for response
+        gamification_data['points_earned'] = 10 + total_achievement_points
+        if achievement_messages:
+            gamification_data['achievements_unlocked'] = achievement_messages
+        response_data['gamification'] = gamification_data
+    # --- End Points Logic ---
+
+    # Save the UserBookStatus object with updated status and potentially the flag
+    user_book_status.save()
+
+    # Add/Remove from 'Done Reading' Readlist
     if new_status == 'FINISHED':
         done_reading, _ = Readlist.objects.get_or_create(
             user=user, name="Done Reading", defaults={"is_favorites": False}
         )
         ReadlistBook.objects.get_or_create(readlist=done_reading, book=book)
     else:
-        #if a book is marked NOT_FINISHED, remove from "Done Reading"
+        # If status is NOT 'FINISHED', remove from 'Done Reading' list if it exists
         done_reading = Readlist.objects.filter(user=user, name="Done Reading").first()
         if done_reading:
             ReadlistBook.objects.filter(readlist=done_reading, book=book).delete()
     
-    # Prepare response
-    response_data = {
-        'status': user_book_status.status,
-    }
+    # Final response preparation
+    response_data['status'] = user_book_status.status
     
-    # Award points for finishing a book
-    gamification_data = {}
-    if new_status == 'FINISHED' and (created or previous_status != 'FINISHED'):
-        # Award 10 points for finishing a book
-        award_points(user, 10, f"Finished reading: {book.title}")
-        
-        # Check for achievements
-        finished_books_count = UserBookStatus.objects.filter(user=user, status='FINISHED').count()
-        achievement_messages = []
-        
-        # Beginner Reader (3 books)
-        if finished_books_count == 3:
-            achievement, _ = Achievement.objects.get_or_create(
-                name="Beginner Reader",
-                defaults={
-                    "description": "Finished reading 3 books",
-                    "points": 15
-                }
-            )
-            user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
-            if created:
-                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
-                achievement_messages.append("🏆 Beginner Reader: Finished reading 3 books!")
-        
-        # Avid Reader (10 books)
-        if finished_books_count == 10:
-            achievement, _ = Achievement.objects.get_or_create(
-                name="Avid Reader",
-                defaults={
-                    "description": "Finished reading 10 books",
-                    "points": 30
-                }
-            )
-            user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
-            if created:
-                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
-                achievement_messages.append("🏆 Avid Reader: Finished reading 10 books!")
-        
-        # Bookworm (25 books)
-        if finished_books_count == 25:
-            achievement, _ = Achievement.objects.get_or_create(
-                name="Bookworm",
-                defaults={
-                    "description": "Finished reading 25 books",
-                    "points": 75
-                }
-            )
-            user_achievement, created = UserAchievement.objects.get_or_create(user=user, achievement=achievement)
-            if created:
-                award_points(user, achievement.points, f"Earned achievement: {achievement.name}")
-                achievement_messages.append("🏆 Bookworm: Finished reading 25 books!")
-        
-        gamification_data = {
-            "notification": {
-                "show": True,
-                "message": f"Finished reading {book.title}! +10 points",
-                "points": 10,
-                "type": "success"
-            },
-            "achievements": achievement_messages
-        }
-        
-        response_data['gamification'] = gamification_data
-
     return Response(response_data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -2071,5 +2068,3 @@ def reorder_books_in_readlist(request):
         ).update(order=idx)
 
     return Response({"message": "Order updated."})
-
-

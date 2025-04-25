@@ -29,7 +29,7 @@ function BookDetails() {
   const [isLoading, setIsLoading] = useState(true);
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
   const statusDisplayMap = {
-    WILL_READ: "Will Read",
+    WANT_TO_READ: "Want to Read",
     READING: "Currently Reading",
     FINISHED: "Finished Reading"
   };
@@ -501,103 +501,104 @@ function BookDetails() {
   };
 
   // Handle updating book reading status
-  const handleUpdateBookStatus = async (status) => {
+  const handleUpdateBookStatus = async (newStatus) => { 
     if (!user?.token || !book) return;
+
+    const previousStatus = bookStatus; 
 
     try {
       const response = await axios.post(
         `${apiBaseUrl}/books/${book.google_books_id}/update-status/`,
-        { status },
+        { status: newStatus }, 
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
-      setBookStatus(status);
+      setBookStatus(newStatus); 
 
-      // If book is marked as FINISHED, update our custom localStorage tracker
-      if (status === 'FINISHED') {
+      // Only run finished book logic if status changes TO FINISHED from something else
+      if (newStatus === 'FINISHED' && previousStatus !== 'FINISHED') {
+        
+        let awardedPointsBooks = [];
         try {
-          // Get current finished books from localStorage
-          let finishedBooks = [];
-          const storedFinishedBooks = localStorage.getItem('fluxFinishedBooks');
-          if (storedFinishedBooks) {
-            finishedBooks = JSON.parse(storedFinishedBooks);
-          }
-          
-          // Check if this book is already in the list
-          const bookExists = finishedBooks.some(b => b.id === book.google_books_id);
-          
-          // If not, add it
-          if (!bookExists) {
-            finishedBooks.push({
-              id: book.google_books_id,
-              title: book.title,
-              author: book.authors ? book.authors.join(', ') : '',
-              date_finished: new Date().toISOString()
-            });
-            
-            // Save back to localStorage
-            localStorage.setItem('fluxFinishedBooks', JSON.stringify(finishedBooks));
-            console.log('Added book to finished books:', book.title);
-            
-            // Dispatch a custom event for other components
-            window.dispatchEvent(new CustomEvent('finishedBookAdded', { 
-              detail: { book: book.google_books_id } 
-            }));
-            
-            // Also update any active challenges directly
-            try {
-              const storedChallenges = localStorage.getItem('userChallenges');
-              if (storedChallenges) {
-                const challenges = JSON.parse(storedChallenges);
-                if (challenges && challenges.length > 0) {
-                  // Update each challenge's progress
-                  const updatedChallenges = challenges.map(challenge => {
-                    // Calculate new book count and progress
-                    const booksRead = (challenge.books_read || 0) + 1;
-                    const progress_percentage = Math.min(
-                      Math.round((booksRead / challenge.target_books) * 100),
-                      100
-                    );
-                    
-                    // Add this book to the challenge's read books
-                    const readBooks = challenge.readBooks || [];
-                    if (!readBooks.includes(book.google_books_id)) {
-                      readBooks.push(book.google_books_id);
-                    }
-                    
-                    // Return updated challenge
-                    return {
-                      ...challenge,
-                      books_read: booksRead,
-                      progress_percentage,
-                      readBooks
-                    };
-                  });
-                  
-                  // Save back to localStorage
-                  localStorage.setItem('userChallenges', JSON.stringify(updatedChallenges));
-                  console.log('Updated challenges progress for new finished book');
-                }
-              }
-            } catch (e) {
-              console.error('Error updating challenges in localStorage:', e);
-            }
+          const storedAwarded = localStorage.getItem('fluxFinishedPointsAwarded');
+          if (storedAwarded) {
+            awardedPointsBooks = JSON.parse(storedAwarded);
           }
         } catch (e) {
-          console.error('Error updating finished books in localStorage:', e);
+          console.error('Error reading awarded points books from localStorage:', e);
+          awardedPointsBooks = [];
+        }
+
+        const alreadyAwarded = awardedPointsBooks.includes(book.google_books_id);
+
+        // Only proceed if points haven't been awarded for this book yet
+        if (!alreadyAwarded) {
+          try {
+            let finishedBooks = [];
+            const storedFinishedBooks = localStorage.getItem('fluxFinishedBooks');
+            if (storedFinishedBooks) {
+              finishedBooks = JSON.parse(storedFinishedBooks);
+            }
+            const bookExists = finishedBooks.some(b => b.id === book.google_books_id);
+            if (!bookExists) {
+              finishedBooks.push({
+                id: book.google_books_id,
+                title: book.title,
+                author: book.authors ? book.authors.join(', ') : '',
+                date_finished: new Date().toISOString()
+              });
+              localStorage.setItem('fluxFinishedBooks', JSON.stringify(finishedBooks));
+              window.dispatchEvent(new CustomEvent('finishedBookAdded', { 
+                detail: { book: book.google_books_id } 
+              }));
+              
+              // Update challenges
+              try {
+                const storedChallenges = localStorage.getItem('userChallenges');
+                if (storedChallenges) {
+                  const challenges = JSON.parse(storedChallenges);
+                  if (challenges && challenges.length > 0) {
+                    const updatedChallenges = challenges.map(challenge => {
+                      const booksRead = (challenge.books_read || 0) + 1;
+                      const progress_percentage = Math.min(Math.round((booksRead / challenge.target_books) * 100), 100);
+                      const readBooks = challenge.readBooks || [];
+                      if (!readBooks.includes(book.google_books_id)) {
+                        readBooks.push(book.google_books_id);
+                      }
+                      return { ...challenge, books_read: booksRead, progress_percentage, readBooks };
+                    });
+                    localStorage.setItem('userChallenges', JSON.stringify(updatedChallenges));
+                  }
+                }
+              } catch (e) {
+                console.error('Error updating challenges in localStorage:', e);
+              }
+            }
+          } catch (e) {
+            console.error('Error updating finished books in localStorage:', e);
+          }
+
+          // Show gamification notification if points were awarded by the backend
+          if (response.data.gamification) {
+            handleGamificationData(response.data.gamification);
+          }
+
+          try {
+            awardedPointsBooks.push(book.google_books_id);
+            localStorage.setItem('fluxFinishedPointsAwarded', JSON.stringify(awardedPointsBooks));
+          } catch (e) {
+            console.error('Error saving awarded points books to localStorage:', e);
+          }
+        } else {
+            console.log('Points already awarded for finishing this book:', book.google_books_id);
         }
       }
 
-      // Show gamification notification if points were earned
-      if (response.data.gamification) {
-        handleGamificationData(response.data.gamification);
-      }
     } catch (error) {
       console.error('Error updating book status:', error);
     }
   };
 
-  // Close achievement popup
   const closeAchievementPopup = () => {
     setAchievementPopup({
       show: false,
@@ -949,9 +950,9 @@ function BookDetails() {
                     <h4 className={`font-semibold mb-3 ${theme === 'dark' ? 'dark-text' : ''}`}>Currently: {statusDisplayMap[bookStatus] || "Book not added"}</h4>
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => handleUpdateBookStatus('WILL_READ')}
+                        onClick={() => handleUpdateBookStatus('WANT_TO_READ')}
                         className={`flex-1 py-2 rounded ${
-                          bookStatus === 'WILL_READ'
+                          bookStatus === 'WANT_TO_READ'
                             ? theme === 'dark' ? 'dark-button-active' : 'bg-gray-600 text-white'
                             : theme === 'dark' ? 'dark-button' : 'bg-gray-200 hover:bg-gray-300'
                         }`}
