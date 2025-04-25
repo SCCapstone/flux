@@ -46,6 +46,26 @@ const Profile = () => {
   const [loadingFollowing, setLoadingFollowing] = useState(false);
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
+  const handleGoToDoneReading = async () => {
+    try {
+      const response = await fetch(`${apiBaseUrl}/readlists/`, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const readlists = await response.json();
+      const doneReading = readlists.find(r => r.name === "Done Reading");
+      if (doneReading) {
+        navigate(`/readlist/${doneReading.id}`);
+      } else {
+        alert("Could not find your 'Done Reading' readlist.");
+      }
+    } catch (error) {
+      alert("Failed to load readlists.");
+    }
+  };
+
   // Function to render collection achievements
   const renderCollectionAchievements = () => {
     const bookCount = favoriteBooks.length;
@@ -810,7 +830,16 @@ const Profile = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className={`${theme === 'dark' ? 'bg-blue-900' : 'bg-blue-50'} rounded-lg p-4 text-center`}>
                   <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`}>{userPoints?.books_read || 0}</div>
-                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Books Read</div>
+                  <button 
+                  className={`text-sm underline cursor-pointer select-none ${theme === 'dark' ? 'text-blue-200 hover:text-blue-400' : 'text-blue-700 hover:text-blue-900'}`}
+                  onClick={handleGoToDoneReading}
+                  title="View Done Reading list"
+                  tabIndex={0}
+                  role="button"
+                  style={{display: "inline-block"}}
+                  >
+                  Books Read
+                </button>
                 </div>
                 <div className={`${theme === 'dark' ? 'bg-purple-900' : 'bg-purple-50'} rounded-lg p-4 text-center`}>
                   <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}`}>{userPoints?.reviews_written || 0}</div>

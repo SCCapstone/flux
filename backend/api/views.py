@@ -927,6 +927,17 @@ def update_book_status(request, google_books_id):
         previous_status = user_book_status.status
         user_book_status.status = new_status
         user_book_status.save()
+
+    if new_status == 'FINISHED':
+        done_reading, _ = Readlist.objects.get_or_create(
+            user=user, name="Done Reading", defaults={"is_favorites": False}
+        )
+        ReadlistBook.objects.get_or_create(readlist=done_reading, book=book)
+    else:
+        #if a book is marked NOT_FINISHED, remove from "Done Reading"
+        done_reading = Readlist.objects.filter(user=user, name="Done Reading").first()
+        if done_reading:
+            ReadlistBook.objects.filter(readlist=done_reading, book=book).delete()
     
     # Prepare response
     response_data = {
@@ -1308,6 +1319,7 @@ def get_readlists(request):
 
     # Ensure "Favorites" always exists for the user
     favorites, created = Readlist.objects.get_or_create(user=user, name="Favorites", is_favorites=True)
+    done_reading, created = Readlist.objects.get_or_create(user=user, name="Done Reading", defaults={"is_favorites": False})
 
     # Fetch all readlists, ensuring "Favorites" is included
     readlists = Readlist.objects.filter(user=user).order_by("is_favorites")  # Ensures "Favorites" appears first
@@ -1330,8 +1342,8 @@ def delete_readlist(request, readlist_id):
     try:
         readlist = Readlist.objects.get(id=readlist_id, user=request.user)
 
-        if readlist.is_favorites:
-            return Response({"error": "Favorites readlist cannot be deleted."}, status=status.HTTP_403_FORBIDDEN)
+        if readlist.is_favorites or readlist.name == "Done Reading":
+            return Response({"error": "This readlist cannot be deleted."}, status=status.HTTP_403_FORBIDDEN)
 
         readlist.delete()
         return Response({"message": "Readlist deleted"}, status=status.HTTP_204_NO_CONTENT)
@@ -1757,6 +1769,9 @@ def update_readlist_books(request):
     # Handle ReadlistBook relationships
     for readlist in Readlist.objects.filter(user=request.user):
         if readlist.id in readlist_ids:
+            if readlist.name == "Done Reading":
+                # Block manual adding to Done Reading
+                continue
             obj, created = ReadlistBook.objects.get_or_create(readlist=readlist, book=book)
             if created:
                 newly_added_readlists.append(readlist.name)
@@ -1765,7 +1780,8 @@ def update_readlist_books(request):
                 else:
                     added_to_regular_readlist = True
         else:
-            ReadlistBook.objects.filter(readlist=readlist, book=book).delete()
+            if readlist.name != "Done Reading" :
+                ReadlistBook.objects.filter(readlist=readlist, book=book).delete()
 
     # Handle gamification logic
     achievement_messages = []
@@ -1861,7 +1877,7 @@ def update_readlist_books(request):
         "message": "Book readlist associations updated",
         "gamification": gamification_data
     }, status=status.HTTP_200_OK)
-
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_readlist_books(request, readlist_id):
