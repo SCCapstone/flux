@@ -1,16 +1,20 @@
 import React, { useState, useContext } from 'react';
+import { AuthContext } from '../AuthContext';
+import { ThemeContext } from '../ThemeContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../AuthContext';
-import '../styles/Login.css'; 
+import '../styles/Modal.css';
 
-const Login = () => {
+const LoginModal = ({ isOpen, onClose, openRegister }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { handleLogin } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+  
+  if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,6 +59,7 @@ const Login = () => {
         // Update context with login handler
         handleLogin(userData);
         
+        onClose();
         navigate('/');
       } else {
         console.error('Invalid login response:', response.data);
@@ -68,30 +73,48 @@ const Login = () => {
     }
   };
 
+  const handleOverlayClick = (e) => {
+    if (e.target.className === 'modal-overlay') {
+      onClose();
+    }
+  };
+
   return (
-    <div className="login-container">
-      <h2>Login</h2>
-      {error && <p className="error-message">{error}</p>}
-      <form className="login-form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Login</button>
-      </form>
-      <p className="register-link">
-        Don't have an account? <a href="/register">Create Account</a>
-      </p>
+    <div className="modal-overlay" onClick={handleOverlayClick}>
+      <div className={`modal-content ${theme === 'dark' ? 'modal-dark' : 'modal-light'}`}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        <h2>Login</h2>
+        {error && <p className="error-message">{error}</p>}
+        <form className="modal-form" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button type="submit" className="modal-button">Login</button>
+        </form>
+        <p className="modal-switch">
+          Don't have an account?{' '}
+          <button 
+            className="modal-link" 
+            onClick={() => {
+              onClose();
+              openRegister();
+            }}
+          >
+            Create Account
+          </button>
+        </p>
+      </div>
     </div>
   );
 };
 
-export default Login;
+export default LoginModal;

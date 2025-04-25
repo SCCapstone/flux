@@ -1,0 +1,428 @@
+/* AboutPage.css */
+/* Using unique class names to avoid conflicts with existing styles */
+
+/* Base styles */
+.about-page {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+      "Helvetica Neue", sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .about-light {
+    background-color: #ffffff;
+    color: #333333;
+  }
+  
+  .about-dark {
+    background-color: #121212;
+    color: #f5f5f5;
+  }
+  
+  /* Header styles */
+  .about-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .about-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .about-logo h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: #4a6fa5;
+  }
+  
+  .about-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    width: 100%;
+  }
+  
+  .about-auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  /* Theme toggle button styles */
+  .about-theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: inherit;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .about-light .about-theme-toggle {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .about-dark .about-theme-toggle {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .about-theme-toggle:hover {
+    background-color: rgba(74, 111, 165, 0.2);
+  }
+  
+  .about-theme-toggle .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  .about-nav-link {
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .about-light .about-nav-link {
+    color: #333333;
+  }
+  
+  .about-dark .about-nav-link {
+    color: #f5f5f5;
+  }
+  
+  .about-nav-link:hover {
+    color: #4a6fa5;
+  }
+  
+  .about-nav-button {
+    padding: 0.5rem 1.25rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .about-login-button {
+    border: 1px solid #4a6fa5;
+    color: #4a6fa5;
+    background-color: transparent;
+  }
+  
+  .about-login-button:hover {
+    background-color: rgba(74, 111, 165, 0.1);
+  }
+  
+  .about-register-button {
+    background-color: #4a6fa5;
+    color: white;
+    border: 1px solid #4a6fa5;
+  }
+  
+  .about-register-button:hover {
+    background-color: #3a5a8c;
+    border-color: #3a5a8c;
+  }
+  
+  .about-dark .about-login-button {
+    color: #4a6fa5;
+    background-color: rgba(74, 111, 165, 0.1);
+  }
+  
+  .about-dark .about-register-button {
+    background-color: #4a6fa5;
+    color: white;
+  }
+  
+  .about-back-link {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+  }
+  
+  .about-light .about-back-link {
+    background-color: rgba(74, 111, 165, 0.1);
+  }
+  
+  .about-dark .about-back-link {
+    background-color: rgba(74, 111, 165, 0.2);
+  }
+  
+  /* Main content styles */
+  .about-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .about-hero {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+  
+  .about-hero h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .about-hero p {
+    font-size: 1.25rem;
+    max-width: 800px;
+    margin: 0 auto;
+    opacity: 0.9;
+  }
+  
+  .about-mission {
+    margin-bottom: 4rem;
+  }
+  
+  .about-mission h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .about-mission p {
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+  }
+  
+  /* Team section */
+  .about-team {
+    margin-bottom: 4rem;
+  }
+  
+  .about-team h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .about-team-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2rem;
+  }
+  
+  .about-team-card {
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .about-light .about-team-card {
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  .about-dark .about-team-card {
+    background-color: #1e1e1e;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .about-team-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .about-light .about-team-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+  
+  .about-dark .about-team-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+  
+  .about-team-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    overflow: hidden;
+  }
+  
+  .about-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #4a6fa5;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+  }
+  
+  .about-team-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Role and bio styles removed */
+  
+  .about-team-social {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .about-social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .about-light .about-social-link {
+    background-color: rgba(74, 111, 165, 0.1);
+    color: #4a6fa5;
+  }
+  
+  .about-dark .about-social-link {
+    background-color: rgba(74, 111, 165, 0.2);
+    color: #4a6fa5;
+  }
+  
+  .about-social-link:hover {
+    transform: translateY(-2px);
+  }
+  
+  .about-light .about-social-link:hover {
+    background-color: #4a6fa5;
+    color: white;
+  }
+  
+  .about-dark .about-social-link:hover {
+    background-color: #4a6fa5;
+    color: white;
+  }
+  
+  /* Project section */
+  .about-project {
+    margin-bottom: 4rem;
+  }
+  
+  .about-project h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .about-project p {
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+  }
+  
+  .about-project-links {
+    margin-top: 2rem;
+  }
+  
+  .about-github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  
+  .about-light .about-github-link {
+    background-color: #333;
+    color: white;
+  }
+  
+  .about-dark .about-github-link {
+    background-color: #333;
+    color: white;
+  }
+  
+  .about-github-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Footer styles */
+  .about-footer {
+    background-color: #2c3e50;
+    color: white;
+    padding: 2rem;
+  }
+  
+  .about-footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .about-footer-link {
+    color: white;
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+  }
+  
+  .about-footer-link:hover {
+    opacity: 1;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 1024px) {
+    .about-team-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .about-header {
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem;
+    }
+  
+    .about-team-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  
+    .about-footer-content {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .about-team-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  

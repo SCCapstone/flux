@@ -14,11 +14,11 @@
   width: 220px;
   background-color: #f0f6ff;
   border: 1px solid #e3e8ee;
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.05);
   transition: all 0.3s ease;
-  padding: 1rem 0.75rem;
+  padding: 0.6rem 0.75rem 0.4rem;
   font-family: 'Inter', sans-serif;
   flex: 0 0 220px;
   min-width: 220px;
@@ -36,11 +36,11 @@
   width: auto;
   max-width: 80%;
   height: auto;
-  max-height: 220px;
+  max-height: 150px;
   object-fit: contain;
   background-color: transparent;
   display: block;
-  margin: 0 auto;
+  margin: 0 auto 0rem;
   padding: 0;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -96,19 +96,21 @@
 }
 
 .book-info {
-  padding: 1rem 0;
+  padding: 0.1rem 0 0.2rem;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   width: 100%;
+  position: relative;
 }
 
 .book-title {
   font-weight: 600;
-  font-size: 1.125rem;
-  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  margin-bottom: 0rem;
+  height: 2.2em;
   color: #0f172a;
-  line-height: 1.4;
+  line-height: 1.1;
   text-align: left;
   cursor: pointer;
   transition: color 0.2s;
@@ -132,7 +134,8 @@
 .book-author {
   font-size: 0.875rem;
   color: #475569;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0rem;
+  height: 1.2em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -146,8 +149,9 @@
 
 .book-author::before {
   content: "✍️";
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
   font-size: 0.875rem;
+  flex-shrink: 0;
 }
 
 .book-author.dark-author {
@@ -166,24 +170,30 @@
 .book-year {
   font-size: 0.875rem;
   color: #64748b;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0rem;
+  height: 1.2em;
   display: flex;
   align-items: center;
   text-align: left;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   max-width: 100%;
 }
 
 .book-genre::before {
   content: "📚";
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
   font-size: 0.875rem;
+  flex-shrink: 0;
 }
 
 .book-year::before {
   content: "📅";
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
   font-size: 0.875rem;
+  flex-shrink: 0;
 }
 
 .book-genre.dark-text, 
@@ -194,11 +204,11 @@
 .book-description {
   font-size: 0.875rem;
   color: #64748b;
-  margin: 0.75rem 0;
+  margin: 0.05rem 0 0.1rem;
   text-align: left;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -224,8 +234,8 @@
 
 .nav-button {
   width: 100%;
-  margin-top: auto;
-  padding: 0.5rem 0.75rem;
+  margin-top: 0;
+  padding: 0.3rem 0.5rem;
   border: none;
   border-radius: 0.5rem;
   font-weight: 500;
@@ -234,7 +244,6 @@
   color: white;
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
