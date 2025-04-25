@@ -75,15 +75,26 @@ const LandingPage = () => {
             </div>
           </div>
           <div className="landing-hero-image">
-            <div className="landing-video-container">
-              <iframe
-                className="landing-video"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ" // Replace with your actual video URL
-                title="Flux App Demo"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+            <div className="landing-video-container" style={{ boxShadow: 'none' }}>
+              <div 
+                className="landing-video placeholder-video"
+                style={{
+                  border: '2px dashed #4a6fa5',
+                  background: 'rgba(74, 111, 165, 0.1)',
+                  boxShadow: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: '2rem',
+                  borderRadius: '8px',
+                  width: '100%',
+                  height: '100%'
+                }}
+              >
+                <h3 style={{ color: '#4a6fa5', margin: '0 0 0.5rem 0' }}>Video Placeholder</h3>
+                <p style={{ margin: 0, opacity: 0.8 }}>Final demo video coming soon!</p>
+              </div>
             </div>
           </div>
         </section>
