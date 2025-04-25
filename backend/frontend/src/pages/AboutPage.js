@@ -14,7 +14,7 @@ const AboutPage = () => {
   const teamMembers = [
     {
       name: "Brendan McNichols",
-      linkedin: "https://linkedin.com/in/brendan-mcnichols",
+      linkedin: "https://www.linkedin.com/in/brendan-mcnichols-14bb0a20b/",
       github: "https://github.com/CSE-BrendanMcNichols",
     },
     {
@@ -81,7 +81,7 @@ const AboutPage = () => {
           <h2>Our Mission</h2>
           <p>
             We believe that reading is both a personal journey and a social experience. Our mission is to create a
-            platform that enhances both aspects of reading by providing personalized book recommendations while
+            platform that enhances both aspects of reading by providing the ability to search for new books while
             facilitating meaningful connections between readers.
           </p>
           <p>
