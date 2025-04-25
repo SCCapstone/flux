@@ -23,8 +23,46 @@ const ShareReadlistModal = ({ isOpen, onClose, onShare, theme }) => {
           className={theme === 'dark' ? 'dark-input' : ''}
         />
         <div className="modal-buttons">
-        <button onClick={() => onShare(username)} className={theme === 'dark' ? 'dark-share-btn' : ''}>Share</button>
-        <button onClick={onClose} className={theme === 'dark' ? 'dark-cancel-btn' : ''}>Cancel</button>
+          <button onClick={() => onShare(username)} className={theme === 'dark' ? 'dark-share-btn' : ''}>Share</button>
+          <button onClick={onClose} className={theme === 'dark' ? 'dark-cancel-btn' : 'cancel-btn'}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Add Readlist Modal Component
+const AddReadlistModal = ({ isOpen, onClose, onAdd, theme }) => {
+  const [readlistName, setReadlistName] = useState("");
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className={`modal-content ${theme === 'dark' ? 'dark-mode' : ''}`}>
+        <h3 className={theme === 'dark' ? 'text-gray-200' : ''}>Create New Readlist</h3>
+        <input
+          type="text"
+          placeholder="Enter readlist name"
+          value={readlistName}
+          onChange={(e) => setReadlistName(e.target.value)}
+          className={theme === 'dark' ? 'dark-input' : ''}
+          autoFocus
+        />
+        <div className="modal-buttons">
+          <button 
+            onClick={() => {
+              if (readlistName.trim()) {
+                onAdd(readlistName.trim());
+                setReadlistName("");
+              }
+            }} 
+            className={theme === 'dark' ? 'dark-create-btn' : 'create-btn'}
+            disabled={!readlistName.trim()}
+          >
+            Create
+          </button>
+          <button onClick={onClose} className={theme === 'dark' ? 'dark-cancel-btn' : 'cancel-btn'}>Cancel</button>
         </div>
       </div>
     </div>
@@ -40,6 +78,7 @@ const Readlist = () => {
   const [sharedReadlists, setSharedReadlists] = useState([]);
   const [selectedReadlistId, setSelectedReadlistId] = useState(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Fetch the user's own readlists
   const fetchReadlists = useCallback(async () => {
@@ -79,10 +118,7 @@ const Readlist = () => {
   }, [fetchReadlists, fetchSharedReadlists]);
 
   // Function to create a new readlist
-  const handleCreateReadlist = async () => {
-    const name = prompt("Enter Readlist Name:");
-    if (!name) return;
-
+  const handleCreateReadlist = async (name) => {
     try {
       const response = await fetch(`${apiBaseUrl}/readlists/create/`, {
         method: "POST",
@@ -92,7 +128,10 @@ const Readlist = () => {
         },
         body: JSON.stringify({ name }),
       });
-      if (response.ok) fetchReadlists();
+      if (response.ok) {
+        fetchReadlists();
+        setIsAddModalOpen(false);
+      }
     } catch (error) {
       console.error("Error creating readlist:", error);
     }
@@ -145,7 +184,7 @@ const Readlist = () => {
       <div className={`page-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
         <header className="readlist-header">
           <h1 className={`readlist-title ${theme === 'dark' ? 'dark-title' : ''}`}>My Readlists</h1>
-          <button className={`add-readlist-button ${theme === 'dark' ? 'dark-add-btn' : ''}`} onClick={handleCreateReadlist}>
+          <button className={`add-readlist-button ${theme === 'dark' ? 'dark-add-btn' : ''}`} onClick={() => setIsAddModalOpen(true)}>
             + Add Readlist
           </button>
         </header>
@@ -154,12 +193,10 @@ const Readlist = () => {
         <div className="readlist-grid">
           {readlists.map((list) => (
             <div key={list.id} className={`readlist-card ${theme === 'dark' ? 'dark-card' : ''}`} onClick={() => navigate(`/readlist/${list.id}`)}>
-              {list.books.length > 0 ? (
-                <img src={list.books[0].image} alt={list.name} className="readlist-cover" />
-              ) : (
-                <div className={`empty-cover ${theme === 'dark' ? 'dark-empty-cover' : ''}`}>No Books</div>
-              )}
-              <h3 className={`readlist-card-title ${theme === 'dark' ? 'dark-card-title' : ''}`}>{list.name}</h3>
+              <div className="readlist-card-content">
+                <h3 className={`readlist-card-title ${theme === 'dark' ? 'dark-card-title' : ''}`}>{list.name}</h3>
+                <div className={`readlist-count ${theme === 'dark' ? 'dark-count' : ''}`}>Books: {list.books.length}</div>
+              </div>
               <div className="readlist-actions">
                 <button
                   className={`share-button ${theme === 'dark' ? 'dark-share-btn' : ''}`}
@@ -190,12 +227,10 @@ const Readlist = () => {
         <div className="readlist-grid">
           {sharedReadlists.map((list) => (
             <div key={list.id} className={`readlist-card ${theme === 'dark' ? 'dark-card' : ''}`} onClick={() => navigate(`/readlist/${list.id}`)}>
-              <h3 className={`readlist-card-title ${theme === 'dark' ? 'dark-card-title' : ''}`}>{list.name} (by {list.owner})</h3>
-              {list.books.length > 0 ? (
-                <img src={list.books[0].image} alt={list.name} className="readlist-cover" />
-              ) : (
-                <div className={`empty-cover ${theme === 'dark' ? 'dark-empty-cover' : ''}`}>No Books</div>
-              )}
+              <div className="readlist-card-content">
+                <h3 className={`readlist-card-title ${theme === 'dark' ? 'dark-card-title' : ''}`}>{list.name} (by {list.owner})</h3>
+                <div className={`readlist-count ${theme === 'dark' ? 'dark-count' : ''}`}>Books: {list.books.length}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -206,6 +241,14 @@ const Readlist = () => {
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         onShare={handleShareReadlist}
+        theme={theme}
+      />
+      
+      {/* Add Readlist Modal */}
+      <AddReadlistModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleCreateReadlist}
         theme={theme}
       />
     </>

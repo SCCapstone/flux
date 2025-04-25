@@ -39,6 +39,9 @@ const ReadlistPage = () => {
       <Navigation />
       <div className={`readlist-container ${theme === 'dark' ? 'dark-mode' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 py-4">
+          <h1 className={`text-2xl font-bold mb-4 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
+            {readlistName}
+          </h1>
           <BookList 
             apiEndpoint={`${apiBaseUrl}/readlists/${readlistId}/`} 
             title={readlistName} 
