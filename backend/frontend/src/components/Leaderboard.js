@@ -108,7 +108,7 @@ const Leaderboard = () => {
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap font-medium ${theme === 'dark' ? 'dark-cell' : ''}`}>{entry.username}</td>
                       <td className={`px-6 py-4 whitespace-nowrap ${theme === 'dark' ? 'dark-cell' : ''}`}>Level {entry.level}</td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${theme === 'dark' ? 'dark-cell' : ''}`}>{entry.points}</td>
+                      <td className={`px-6 py-4 whitespace-nowrap ${theme === 'dark' ? 'dark-cell' : ''}`}>{entry.total_points}</td>
                       <td className={`px-6 py-4 whitespace-nowrap ${theme === 'dark' ? 'dark-cell' : ''}`}>{entry.achievements}</td>
                     </tr>
                   ))}
