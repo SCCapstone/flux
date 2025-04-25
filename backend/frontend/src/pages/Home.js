@@ -341,7 +341,7 @@ const Home = () => {
             <button 
               onClick={() => navigate('/challenges')} 
               className="view-challenges-btn" 
-              style={{ color: 'white' }} /* Explicitly set text color to white to override any other styling */
+              style={{ color: 'white' }}
             >
               View Challenges
             </button>

@@ -647,42 +647,45 @@ function BookDetails() {
         className={`review-item ${theme === 'dark' ? 'dark-review-item' : ''}`} 
         style={{ marginLeft: `${depth * 20}px` }}
       >
+        {/* Display the review */}
         {!isEditing ? (
           // Normal view
           <>
-            <p>
+            <div className="review-header">
               <strong className={theme === 'dark' ? 'dark-strong' : ''}>
                 {review.user?.username || 'Unknown User'}
-              </strong>: 
+              </strong>
+              
+              {/* Only show edit/delete buttons if this is the user's review */}
+              {isUserReview && (
+                <div className="review-actions">
+                  <button 
+                    onClick={() => setIsEditing(true)}
+                    className={`action-btn edit-btn ${theme === 'dark' ? 'dark-edit-btn' : ''}`}
+                    aria-label="Edit review"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => handleReviewDelete(review.id)}
+                    className={`action-btn delete-btn ${theme === 'dark' ? 'dark-delete-btn' : ''}`}
+                    aria-label="Delete review"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="review-content">
               <span className={theme === 'dark' ? 'dark-text' : ''}>
-              {review.review_text.split('\n').map((line, idx) => (
-              <React.Fragment key={idx}>
-              {line}
-              <br />
-              </React.Fragment>
-              ))}
+                {review.review_text.split('\n').map((line, idx) => (
+                  <React.Fragment key={idx}>
+                    {line}
+                    <br />
+                  </React.Fragment>
+                ))}
               </span>
-            </p>
-      
-            {/* Only show edit/delete buttons if this is the user's review */}
-            {isUserReview && (
-              <div className="review-actions">
-                <button 
-                  onClick={() => setIsEditing(true)} 
-                  className={`edit-button ${theme === 'dark' ? 'dark-edit-button' : ''}`}
-                  style={{ width: '65px', maxWidth: '65px' }}
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => handleReviewDelete(review.id)} 
-                  className={`delete-button ${theme === 'dark' ? 'dark-delete-button' : ''}`}
-                  style={{ width: '65px', maxWidth: '65px' }}
-                >
-                  Delete
-                </button>
-              </div>
-            )}
+            </div>
           </>
         ) : (
           // Edit view
@@ -798,12 +801,10 @@ function BookDetails() {
             </div>
             <button 
               onClick={() => setNotification(prev => ({...prev, show: false}))}
-              className={`ml-2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white`}
               aria-label="Close notification"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              &times;
             </button>
           </div>
         </div>
