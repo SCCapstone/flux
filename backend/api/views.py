@@ -2068,3 +2068,26 @@ def reorder_books_in_readlist(request):
         ).update(order=idx)
 
     return Response({"message": "Order updated."})
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def remove_book_from_readlist(request):
+    readlist_id = request.data.get('readlist_id')
+    book_id = request.data.get('book_id')  # Should be google_books_id
+
+    if not readlist_id or not book_id:
+        return Response({"error": "readlist_id and book_id are required"}, status=400)
+
+    try:
+        readlist = Readlist.objects.get(id=readlist_id, user=request.user)
+        book = Book.objects.get(google_books_id=book_id)
+        rb = ReadlistBook.objects.filter(readlist=readlist, book=book)
+        if rb.exists():
+            rb.delete()
+            return Response({"message": "Book removed from readlist"}, status=200)
+        else:
+            return Response({"error": "Book not in this readlist"}, status=404)
+    except Readlist.DoesNotExist:
+        return Response({"error": "Readlist not found"}, status=404)
+    except Book.DoesNotExist:
+        return Response({"error": "Book not found"}, status=404)

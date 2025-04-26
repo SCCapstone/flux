@@ -58,15 +58,15 @@ const BookList = ({ apiEndpoint, title, allowRemove = false, handleRemove, handl
 
     if (readlistId) {
       try {
-        const response = await fetch(`${apiBaseUrl}/readlists/update/`, {
-          method: "POST",
+        const response = await fetch(`${apiBaseUrl}/readlists/remove_book/`, {
+          method: "DELETE",
           headers: {
             Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            readlist_id: readlistId,
             book_id: book.google_books_id,
-            readlist_ids: [], // remove from this readlist
           }),
         });
   

@@ -68,4 +68,6 @@ urlpatterns = [
     path('readlists/rename/', views.rename_readlist, name='rename_readlist'),
 
     path('readlists/reorder-books/', views.reorder_books_in_readlist, name='reorder_books_in_readlist'),
+
+    path('readlists/remove_book/', views.remove_book_from_readlist, name='remove_book_from_readlist'),
 ]
