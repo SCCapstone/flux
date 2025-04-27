@@ -64,27 +64,22 @@
   color: var(--text-primary);
 }
 
-.badge-container {
+.profile-badge-container {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
-.badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+.profile-badge {
   font-size: 0.875rem;
   font-weight: 500;
-}
-
-.level-badge {
-  background-color: var(--background-secondary);
-  color: var(--primary-color);
-}
-
-.points-badge {
-  background-color: var(--background-secondary);
-  color: var(--primary-color);
+  color: white;
+  background-color: #4a5568;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.25rem;
+  min-width: 80px;
+  text-align: center;
 }
 
 .streak-badge {
@@ -195,6 +190,11 @@
 .dark-mode .level-labels span,
 .dark-mode .review-book-title {
   color: var(--text-primary);
+}
+
+.dark-mode .profile-badge {
+  color: white;
+  background-color: #4a5568;
 }
 
 .dark-mode p,

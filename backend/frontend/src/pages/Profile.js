@@ -219,14 +219,19 @@ const Profile = () => {
           
           console.log("Processed achievements data:", achievementsData);
           
+          // Filter out any API achievements that match our collection achievement names
+          // This prevents duplicates of the same achievement with different IDs
+          const filteredApiAchievements = achievementsData.filter(apiAchievement => 
+            !['Collector', 'Enthusiast', 'Book Lover'].includes(apiAchievement.name)
+          );
+          
           // Generate collection achievements
           const collectionAchievements = renderCollectionAchievements();
           console.log('Generated collection achievements:', collectionAchievements);
           
-          // Combine API achievements with collection achievements
-          const existingIds = achievementsData.map(a => a.id);
-          const newCollectionAchievements = collectionAchievements.filter(a => !existingIds.includes(a.id));
-          const combinedAchievements = [...achievementsData, ...newCollectionAchievements];
+          // Combine filtered API achievements with collection achievements
+          // This way we only use our locally generated collection achievements
+          const combinedAchievements = [...filteredApiAchievements, ...collectionAchievements];
           
           setAchievements(combinedAchievements);
           localStorage.setItem('userAchievements', JSON.stringify(combinedAchievements));
@@ -691,12 +696,20 @@ const Profile = () => {
           
           {/* Other Achievements Section */}
           {achievements.length > 0 && 
-            achievements.filter(a => !['collector', 'enthusiast', 'booklover'].includes(a.id)).length > 0 ? (
+            achievements.filter(a => {
+              // Exclude collection achievements by ID and name to catch any duplicates
+              return !['collector', 'enthusiast', 'booklover'].includes(a.id) && 
+                     !['Collector', 'Enthusiast', 'Book Lover'].includes(a.name);
+            }).length > 0 ? (
             <>
               <h3 className="text-xl font-bold mb-4">Other Achievements</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {achievements
-                  .filter(a => !['collector', 'enthusiast', 'booklover'].includes(a.id))
+                  .filter(a => {
+                    // Exclude collection achievements by ID and name to catch any duplicates
+                    return !['collector', 'enthusiast', 'booklover'].includes(a.id) && 
+                           !['Collector', 'Enthusiast', 'Book Lover'].includes(a.name);
+                  })
                   .map((achievement) => (
                   <div key={achievement.id} className={`${theme === 'dark' ? 'bg-gradient-to-r from-gray-700 to-gray-800' : 'bg-gradient-to-r from-blue-50 to-purple-50'} rounded-lg p-4 shadow`}>
                     <div className="flex items-center">
@@ -831,22 +844,33 @@ const Profile = () => {
                 <div className={`${theme === 'dark' ? 'bg-blue-900' : 'bg-blue-50'} rounded-lg p-4 text-center`}>
                   <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`}>{userPoints?.books_read || 0}</div>
                   <button 
-                  className={`text-sm underline cursor-pointer select-none ${theme === 'dark' ? 'text-blue-200 hover:text-blue-400' : 'text-blue-700 hover:text-blue-900'}`}
-                  onClick={handleGoToDoneReading}
-                  title="View Done Reading list"
-                  tabIndex={0}
-                  role="button"
-                  style={{display: "inline-block"}}
+                    className={`text-sm underline cursor-pointer select-none ${theme === 'dark' ? 'text-blue-200 hover:text-blue-400' : 'text-blue-700 hover:text-blue-900'}`}
+                    onClick={handleGoToDoneReading}
+                    title="View Done Reading list"
+                    tabIndex={0}
+                    role="button"
+                    style={{display: "inline-block"}}
                   >
-                  Books Read
-                </button>
+                    Books Read
+                  </button>
                 </div>
                 <div className={`${theme === 'dark' ? 'bg-purple-900' : 'bg-purple-50'} rounded-lg p-4 text-center`}>
                   <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}`}>{userPoints?.reviews_written || 0}</div>
                   <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Reviews</div>
                 </div>
                 <div className={`${theme === 'dark' ? 'bg-green-900' : 'bg-green-50'} rounded-lg p-4 text-center`}>
-                  <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-green-300' : 'text-green-600'}`}>{achievements.length}</div>
+                  <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-green-300' : 'text-green-600'}`}>
+                    {achievements.filter(a => {
+                      // For collection achievements, check if progress meets the target
+                      if (['collector', 'enthusiast', 'booklover'].includes(a.id)) {
+                        const bookCount = favoriteBooks.length;
+                        const collDef = renderCollectionAchievements().find(c => c.id === a.id);
+                        return collDef && bookCount >= collDef.target;
+                      }
+                      // For other achievements, consider them completed if they exist
+                      return true;
+                    }).length}
+                  </div>
                   <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Achievements</div>
                 </div>
                 <div className={`${theme === 'dark' ? 'bg-orange-900' : 'bg-orange-50'} rounded-lg p-4 text-center`}>
@@ -1102,16 +1126,9 @@ const Profile = () => {
             </div>
             <div className="summary-info">
               <h1 className="summary-username">{profile.username}</h1>
-              <div className="badge-container">
-                <span className="badge level-badge">
-                  Level {userPoints?.level || 1}
-                </span>
-                <span className="badge points-badge">
-                  {userPoints?.total_points || 0} Points
-                </span>
-                <span className="badge streak-badge">
-                  {readingStreak?.current_streak || 0} Day Streak
-                </span>
+              <div className="profile-badge-container">
+                <span className="profile-badge">Level {userPoints?.level || 1}</span>
+                <span className="profile-badge">{userPoints?.total_points || 0} Points</span>
               </div>
             </div>
           </div>
