@@ -28,48 +28,40 @@ const Challenges = () => {
       start_date: '2025-06-01',
       end_date: '2025-08-31',
       days_remaining: 90,
-      progress_percentage: 0,
-      is_genre_specific: false,
-      genre: ''
+      progress_percentage: 0
     },
     {
       id: 'sample2',
       name: 'Genre Explorer',
-      description: 'Read books from 5 different genres',
+      description: 'Read 5 books of your choice',
       target_books: 5,
       books_read: 0,
       start_date: '2025-03-01',
       end_date: '2025-04-30',
       days_remaining: 60,
-      progress_percentage: 0,
-      is_genre_specific: false,
-      genre: ''
+      progress_percentage: 0
     },
     {
       id: 'sample3',
-      name: 'Classics Marathon',
-      description: 'Read 3 classic literature books',
+      name: 'Reading Marathon',
+      description: 'Read 3 books of your choice',
       target_books: 3,
       books_read: 0,
       start_date: '2025-02-01',
       end_date: '2025-05-01',
       days_remaining: 45,
-      progress_percentage: 0,
-      is_genre_specific: true,
-      genre: 'classics'
+      progress_percentage: 0
     },
     {
       id: 'sample4',
-      name: 'Fantasy Adventures',
-      description: 'Explore magical worlds and epic quests',
+      name: 'Book Adventures',
+      description: 'Explore new worlds through reading',
       target_books: 6,
       books_read: 0,
       start_date: '2025-01-15',
       end_date: '2025-07-15',
       days_remaining: 180,
-      progress_percentage: 0,
-      is_genre_specific: true,
-      genre: 'fantasy'
+      progress_percentage: 0
     }
   ];
 
@@ -104,72 +96,19 @@ const Challenges = () => {
     }, 3000);
   };
 
-  // IMPROVED HELPER FUNCTIONS FOR GENRE MATCHING
-
-  function normalizeGenre(raw) {
-    if (!raw) return '';
-    return raw.toLowerCase().replace(/[^a-z0-9&]+/g, ' ').trim(); // e.g., "Biography & Autobiography" -> "biography autobiography"
-  }
-  
+  // Book-related helper functions
+  // Simplified getBookGenre function - will no longer be used for genre matching
+  // but kept for backward compatibility with existing code structure
   function getBookGenre(bookId) {
-    try {
-      const sources = [
-        JSON.parse(localStorage.getItem('favorites') || '[]'),
-        JSON.parse(localStorage.getItem('finishedBooks') || '[]'),
-        JSON.parse(localStorage.getItem('readingList') || '[]'),
-      ];
-  
-      for (const list of sources) {
-        const book = list.find(b => b.id === bookId || b.google_books_id === bookId);
-        if (book?.genre) return normalizeGenre(book.genre);
-        if (book?.categories?.length) return normalizeGenre(book.categories[0]);
-      }
-  
-      return null;
-    } catch (e) {
-      console.warn('Error getting book genre:', e);
-      return null;
-    }
+    return '';
   }
 
-  // Improved genre matching function
-  function genreMatches(bookGenre, targetGenre) {
-    if (!bookGenre || !targetGenre) return false;
-  
-    const normalizedBook = normalizeGenre(bookGenre);
-    const normalizedTarget = normalizeGenre(targetGenre);
-  
-    if (normalizedBook === normalizedTarget) return true;
-  
-    // Token matching
-    const bookTokens = normalizedBook.split(' ');
-    const targetTokens = normalizedTarget.split(' ');
-    if (targetTokens.every(token => bookTokens.includes(token))) return true;
-  
-    // Canonical genre variations
-    const genreAliases = {
-      'non-fiction': ['nonfiction', 'non fiction', 'biography', 'autobiography', 'memoir', 'business economics', 'history'],
-      'fantasy': ['fantasy', 'epic fantasy', 'high fantasy', 'urban fantasy'],
-      'science fiction': ['sci fi', 'science fiction', 'scifi', 'sci-fi'],
-      'young adult': ['young adult', 'ya', 'teen'],
-      'classics': ['classic', 'classics', 'classic literature', 'literary classics'],
-    };
-  
-    for (const [canonical, variants] of Object.entries(genreAliases)) {
-      if (variants.some(v => normalizedBook.includes(v)) && variants.some(v => normalizedTarget.includes(v))) {
-        return true;
-      }
-    }
-  
-    return false;
+  function genreMatches() {
+    return true; // Always return true since genre matching is removed
   }
   
-  // Helper function to check if a book is classic literature
-  function isClassicLiterature(genre) {
-    if (!genre) return false;
-    
-    // Use the improved genre matching function
-    return genreMatches(genre, 'classics');
+  function isClassicLiterature() {
+    return false;
   }
 
   // Date validation helper functions
@@ -248,7 +187,41 @@ const Challenges = () => {
     
     setLoading(true);
     try {
-      // Get local data first
+      // First try to fetch user challenges from server (this is the MAIN change)
+      let serverUserChallenges = [];
+      let serverCompletedChallenges = [];
+      
+      try {
+        // Get user challenges from server
+        const userChallengesResponse = await fetch(`${apiBaseUrl}/challenges/user/`, {
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (userChallengesResponse.ok) {
+          serverUserChallenges = await userChallengesResponse.json();
+          console.log('Fetched user challenges from server:', serverUserChallenges);
+        }
+        
+        // Also try to get completed challenges from server
+        const completedChallengesResponse = await fetch(`${apiBaseUrl}/challenges/completed/`, {
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (completedChallengesResponse.ok) {
+          serverCompletedChallenges = await completedChallengesResponse.json();
+          console.log('Fetched completed challenges from server:', serverCompletedChallenges);
+        }
+      } catch (serverError) {
+        console.warn('Error fetching challenges from server, falling back to localStorage:', serverError);
+      }
+      
+      // Get local data as fallback
       let localUserChallenges = [];
       try {
         const storedChallenges = localStorage.getItem('userChallenges');
@@ -293,14 +266,52 @@ const Challenges = () => {
         console.warn('Error loading expired challenges:', e);
       }
       
-      // Categorize challenges by date
-      const { active, pending, expired, completed } = categorizeChallenges([
-        ...localUserChallenges,
-        ...storedPendingChallenges
-      ]);
+      // Merge server data with local data, prioritizing server data
+      const combinedUserChallenges = [];
       
-      // Combine with stored completed and expired challenges
-      const allCompleted = [...completed, ...storedCompletedChallenges];
+      // Create a map of existing challenge IDs
+      const existingChallengeIds = new Set();
+      
+      // First add all server challenges
+      if (serverUserChallenges.length > 0) {
+        serverUserChallenges.forEach(challenge => {
+          combinedUserChallenges.push(challenge);
+          existingChallengeIds.add(challenge.id);
+        });
+      }
+      
+      // Then add local challenges that aren't already included
+      [...localUserChallenges, ...storedPendingChallenges].forEach(challenge => {
+        if (!existingChallengeIds.has(challenge.id)) {
+          combinedUserChallenges.push(challenge);
+          existingChallengeIds.add(challenge.id);
+        }
+      });
+      
+      // Do the same for completed challenges
+      const combinedCompletedChallenges = [];
+      const existingCompletedIds = new Set();
+      
+      // First add server completed challenges
+      if (serverCompletedChallenges.length > 0) {
+        serverCompletedChallenges.forEach(challenge => {
+          combinedCompletedChallenges.push(challenge);
+          existingCompletedIds.add(challenge.id);
+        });
+      }
+      
+      // Then add local completed challenges
+      [...storedCompletedChallenges].forEach(challenge => {
+        if (!existingCompletedIds.has(challenge.id)) {
+          combinedCompletedChallenges.push(challenge);
+        }
+      });
+      
+      // Categorize merged challenges by date
+      const { active, pending, expired, completed } = categorizeChallenges(combinedUserChallenges);
+      
+      // Combine with stored expired challenges and merged completed challenges
+      const allCompleted = [...completed, ...combinedCompletedChallenges];
       const allExpired = [...expired, ...storedExpiredChallenges];
       
       // Update state with categorized challenges
@@ -315,10 +326,11 @@ const Challenges = () => {
       localStorage.setItem('completedChallenges', JSON.stringify(allCompleted));
       localStorage.setItem('expiredChallenges', JSON.stringify(allExpired));
       
-      if (localUserChallenges.length === 0 && 
-          storedPendingChallenges.length === 0 && 
-          storedCompletedChallenges.length === 0 && 
-          storedExpiredChallenges.length === 0) {
+      // Check if this is a new user with no challenges
+      if (active.length === 0 && 
+          pending.length === 0 && 
+          allCompleted.length === 0 && 
+          allExpired.length === 0) {
         console.log('New user detected, showing sample challenges');
         // Force initialize sample challenges for new users
         setAvailableChallenges(sampleAvailableChallenges);
@@ -577,7 +589,7 @@ const Challenges = () => {
     }
   }, []);
 
-  // Listen for finishedBookAdded event - UPDATED WITH IMPROVED GENRE MATCHING
+  // Listen for finishedBookAdded event
   useEffect(() => {
     const handleFinishedBookAdded = (event) => {
       console.log('Finished book added event detected:', event.detail);
@@ -606,8 +618,6 @@ const Challenges = () => {
         }
 
         const bookId = bookData?.id || bookData?.google_books_id;
-        const bookGenre = getBookGenre(bookId);
-        console.log('Detected book genre:', bookGenre);
 
         // Only update active challenges
         const now = new Date();
@@ -624,48 +634,23 @@ const Challenges = () => {
           if (!finishedBooksMap[challenge.id]) {
             finishedBooksMap[challenge.id] = { 
               bookIds: [], 
-              genres: new Set(), 
-              classicsCount: 0, 
-              challengeName: challenge.name, 
-              isGenreSpecific: challenge.is_genre_specific, 
-              targetGenre: challenge.genre 
+              challengeName: challenge.name
             };
           }
 
           const challengeTracker = finishedBooksMap[challenge.id];
 
-          const meetsGenreRequirement = !challengeTracker.isGenreSpecific ||
-            (bookGenre && genreMatches(bookGenre, challengeTracker.targetGenre));
-
           console.log(`Checking challenge "${challenge.name}":`, { 
-            isGenreSpecific: challengeTracker.isGenreSpecific,
-            targetGenre: challengeTracker.targetGenre,
-            bookGenre,
-            meetsRequirement: meetsGenreRequirement
+            bookId
           });
 
-          if (bookId && !challengeTracker.bookIds.includes(bookId) && meetsGenreRequirement) {
+          if (bookId && !challengeTracker.bookIds.includes(bookId)) {
             challengeTracker.bookIds.push(bookId);
-
-            if (challenge.name === 'Genre Explorer' && bookGenre) {
-              challengeTracker.genres.add(bookGenre.toLowerCase().trim());
-            }
-
-            if (challenge.name === 'Classics Marathon' && genreMatches(bookGenre, 'classics')) {
-              challengeTracker.classicsCount++;
-            }
 
             console.log(`Book added to "${challenge.name}" challenge!`);
           }
 
-          let booksRead = 0;
-          if (challenge.name === 'Genre Explorer') {
-            booksRead = challengeTracker.genres.size;
-          } else if (challenge.name === 'Classics Marathon') {
-            booksRead = challengeTracker.classicsCount;
-          } else {
-            booksRead = challengeTracker.bookIds.length;
-          }
+          let booksRead = challengeTracker.bookIds.length;
 
           booksRead = Math.min(booksRead, challenge.target_books);
           const progress_percentage = Math.round((booksRead / challenge.target_books) * 100);
@@ -730,22 +715,31 @@ const Challenges = () => {
     };
   }, [showNotification]);
 
-  // Listen for general storage changes
+  // Listen for general storage changes and periodically refresh from server
   useEffect(() => {
     const handleStorageChange = () => {
       console.log('Storage changed, refreshing challenges');
       fetchChallenges();
     };
     
+    // Set up a periodic refresh from server to keep devices in sync
+    const serverRefreshInterval = setInterval(() => {
+      if (user?.token) {
+        console.log('Periodic server refresh of challenges');
+        fetchChallenges();
+      }
+    }, 60000); // Refresh every minute
+    
     window.addEventListener('storage', handleStorageChange);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      clearInterval(serverRefreshInterval);
     };
-  }, []);
+  }, [user?.token]);
 
-  // UPDATED: Handle Join Challenge with proper date validation
-  const handleJoinChallenge = (challengeId) => {
+  // Handle Join Challenge with proper date validation and cross-device synchronization
+  const handleJoinChallenge = async (challengeId) => {
     console.log('Join challenge called with ID:', challengeId);
     console.log('Available challenges:', availableChallenges);
     
@@ -817,39 +811,46 @@ const Challenges = () => {
       setAvailableChallenges(updatedAvailableChallenges);
       localStorage.setItem('availableChallenges', JSON.stringify(updatedAvailableChallenges));
       
-      // Initialize challenge tracking for this challenge with consistent genre format
-      let challengeBookMap = {};
+      // Initialize challenge tracking for this challenge
       try {
-        const storedMap = localStorage.getItem('challengeBookMap');
-        if (storedMap) {
-          challengeBookMap = JSON.parse(storedMap);
-        }
+        const storedMap = localStorage.getItem('challengeBookMap') || '{}';
+        const challengeBookMap = JSON.parse(storedMap);
         
-        // Initialize tracking for this new challenge with consistent genre format
+        // Initialize tracking for this new challenge
         challengeBookMap[challengeId] = {
           bookIds: [],
-          genres: new Set(),
-          classicsCount: 0,
-          challengeName: freshChallenge.name,
-          isGenreSpecific: freshChallenge.is_genre_specific,
-          targetGenre: freshChallenge.genre ? freshChallenge.genre.toLowerCase() : ''
+          challengeName: freshChallenge.name
         };
         
-        // Save updated challenge tracking
         localStorage.setItem('challengeBookMap', JSON.stringify(challengeBookMap));
       } catch (e) {
         console.warn('Error initializing challenge tracking:', e);
       }
       
-      // Try to save to backend (can ignore failures)
-      fetch(`${apiBaseUrl}/challenges/join/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ challenge_id: challengeId }),
-      }).catch(err => console.warn('Backend sync failed, but local changes saved:', err));
+      // Save to backend for cross-device synchronization
+      try {
+        const response = await fetch(`${apiBaseUrl}/challenges/join/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            challenge_id: challengeId,
+            challenge_data: freshChallenge,
+            start_date: freshChallenge.start_date,
+            end_date: freshChallenge.end_date
+          })
+        });
+        
+        if (!response.ok) {
+          console.warn('Backend sync received non-OK response, but local changes saved:', response.status);
+        } else {
+          console.log('Successfully synchronized challenge with server for cross-device access');
+        }
+      } catch (syncError) {
+        console.warn('Backend sync failed, but local changes saved:', syncError);
+      }
       
       // Switch to appropriate tab based on challenge status
       if (now >= startDate && now <= endDate) {
@@ -868,7 +869,7 @@ const Challenges = () => {
     }
   };
 
-  const handleQuitChallenge = (challengeId) => {
+  const handleQuitChallenge = async (challengeId) => {
     console.log('Quitting challenge with ID:', challengeId);
     
     // Find the challenge in active or pending challenges
@@ -936,6 +937,29 @@ const Challenges = () => {
         }
       } catch (e) {
         console.warn('Error removing challenge from book map:', e);
+      }
+      
+      // Sync with server for cross-device consistency
+      try {
+        const response = await fetch(`${apiBaseUrl}/challenges/quit/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            challenge_id: challengeId,
+            challenge_name: challenge.name
+          })
+        });
+        
+        if (!response.ok) {
+          console.warn('Backend sync for challenge quit received non-OK response:', response.status);
+        } else {
+          console.log('Successfully synchronized challenge quit with server for cross-device access');
+        }
+      } catch (syncError) {
+        console.warn('Backend sync failed when quitting challenge, but local changes saved:', syncError);
       }
       
       // Show notification
@@ -1051,9 +1075,6 @@ const Challenges = () => {
         
         if (challengeBookMap[challengeData.id]) {
           challengeBookMap[challengeData.id].challengeName = challengeData.name;
-          challengeBookMap[challengeData.id].isGenreSpecific = challengeData.is_genre_specific;
-          // Store genre in consistent format
-          challengeBookMap[challengeData.id].targetGenre = challengeData.genre ? challengeData.genre.toLowerCase() : '';
           
           localStorage.setItem('challengeBookMap', JSON.stringify(challengeBookMap));
         }
@@ -1087,14 +1108,10 @@ const Challenges = () => {
         const storedMap = localStorage.getItem('challengeBookMap') || '{}';
         const challengeBookMap = JSON.parse(storedMap);
         
-        // Initialize tracking for this new challenge with consistent genre format
+        // Initialize tracking for this new challenge
         challengeBookMap[challengeData.id] = {
           bookIds: [],
-          genres: new Set(),
-          classicsCount: 0,
-          challengeName: challengeData.name,
-          isGenreSpecific: challengeData.is_genre_specific,
-          targetGenre: challengeData.genre ? challengeData.genre.toLowerCase() : ''
+          challengeName: challengeData.name
         };
         
         localStorage.setItem('challengeBookMap', JSON.stringify(challengeBookMap));
@@ -1356,14 +1373,6 @@ const Challenges = () => {
                       <span className={`stat-label ${theme === 'dark' ? 'dark-label' : ''}`}>Goal</span>
                       <span className={`stat-value ${theme === 'dark' ? 'dark-value' : ''}`}>Read {challenge.target_books} books</span>
                     </div>
-                    
-                    {/* Add genre badge if challenge is genre-specific */}
-                    {challenge.is_genre_specific && (
-                      <div className="genre-badge">
-                        <span className="genre-label">Genre:</span>
-                        <span className="genre-value">{challenge.genre}</span>
-                      </div>
-                    )}
                     
                     {(activeTab === 'active' || activeTab === 'upcoming' || activeTab === 'completed') && (
                       <div className="progress-container">

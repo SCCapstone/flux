@@ -23,9 +23,7 @@ const ChallengeForm = ({
     start_date: today,
     end_date: sixMonthsLaterFormatted,
     days_remaining: 180,
-    progress_percentage: 0,
-    is_genre_specific: false,
-    genre: ''
+    progress_percentage: 0
   };
 
   // Initialize with either provided challenge or default values
@@ -70,11 +68,6 @@ const ChallengeForm = ({
   
     if (name === 'target_books') {
       parsedValue = parseInt(value, 10) || 1;
-    }
-  
-    // Normalize and lowercase genre input
-    if (name === 'genre' && formData.is_genre_specific) {
-      parsedValue = value.toLowerCase().replace(/[^a-z0-9&]+/g, ' ').trim();
     }
   
     setFormData({
@@ -148,11 +141,6 @@ const ChallengeForm = ({
     // Validate end date is after start date
     if (endDate <= startDate) {
       newErrors.end_date = 'End date must be after start date';
-    }
-    
-    // Validate genre if genre-specific challenge is selected
-    if (formData.is_genre_specific && !formData.genre) {
-      newErrors.genre = 'Please select a genre for your challenge';
     }
     
     setErrors(newErrors);
@@ -245,58 +233,6 @@ const ChallengeForm = ({
           />
           {errors.end_date && <div className="error-message">{errors.end_date}</div>}
         </div>
-        
-        <div className="form-group checkbox-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              name="is_genre_specific"
-              checked={formData.is_genre_specific}
-              onChange={(e) => setFormData({
-                ...formData,
-                is_genre_specific: e.target.checked,
-                genre: e.target.checked ? formData.genre : ''
-              })}
-            />
-            <span>Genre-specific challenge</span>
-          </label>
-          <div className="checkbox-help">
-            If checked, books must match the selected genre to count toward the challenge
-          </div>
-        </div>
-        
-        {formData.is_genre_specific && (
-          <div className="form-group">
-            <label htmlFor="genre">Select Genre</label>
-            <select
-              id="genre"
-              name="genre"
-              value={formData.genre}
-              onChange={handleChange}
-              className={errors.genre ? 'input-error' : ''}
-            >
-              <option value="">Select a genre...</option>
-              <option value="fiction">Fiction</option>
-              <option value="non-fiction">Non-Fiction</option>
-              <option value="science-fiction">Science Fiction</option>
-              <option value="fantasy">Fantasy</option>
-              <option value="mystery">Mystery</option>
-              <option value="thriller">Thriller</option>
-              <option value="romance">Romance</option>
-              <option value="horror">Horror</option>
-              <option value="historical-fiction">Historical Fiction</option>
-              <option value="biography">Biography</option>
-              <option value="classics">Classics</option>
-              <option value="young-adult">Young Adult</option>
-              <option value="childrens">Children's Books</option>
-              <option value="poetry">Poetry</option>
-              <option value="self-help">Self-Help</option>
-              <option value="business">Business & Economics</option>
-              <option value="science">Science</option>
-            </select>
-            {errors.genre && <div className="error-message">{errors.genre}</div>}
-          </div>
-        )}
         
         <div className="form-info">
           <p>Duration: {formData.days_remaining} days</p>

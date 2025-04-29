@@ -65,7 +65,6 @@ function BookDetails() {
         setNotification(prev => ({...prev, show: false}));
       }, 3000);
     } 
-    // Old format just had points_earned directly
     else if (data.points_earned) {
       setNotification({
         show: true,
