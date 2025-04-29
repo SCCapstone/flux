@@ -1900,6 +1900,7 @@ def get_readlist_books(request, readlist_id):
                 "genre": book.genre,
                 "year": book.year,
                 "image": book.image,
+                "description": book.description,
             }
             for book in books
         ]
@@ -1930,6 +1931,7 @@ def get_shared_readlists(request):
                     "genre": book.genre,
                     "year": book.year,
                     "image": book.image,
+                    "description": book.description,
                 }
                 for book in readlist.books.all()
             ],
