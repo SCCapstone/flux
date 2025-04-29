@@ -133,6 +133,13 @@ selenium-side-runner /path/to/test/file.side
 
 Replace /path/to/test/file.side with the file location for where the test file is on your computer. It should be inside of the tests folder of the flux directory.
 
+
+Python testing is accomplished by running the following command inside of the directory that contains the manage.py file:
+
+python manage.py test
+
+
+
 # Authors
 
 Dhruv Patel dhruvbp@email.sc.edu
