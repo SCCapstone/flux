@@ -503,8 +503,29 @@ const Profile = () => {
       if (response.ok) {
         const data = await response.json();
         if (data.recent_reviews) {
-          setRecentReviews(data.recent_reviews || []);
+          // Ensure each book in recent reviews has all required fields
+          const processedReviews = (data.recent_reviews || []).map(review => {
+            // Make sure all required properties exist
+            if (review.book) {
+              review.book = {
+                ...review.book,
+                // Ensure these fields exist, using fallbacks if missing
+                id: review.book.id || review.book.google_books_id,
+                google_books_id: review.book.google_books_id || review.book.id,
+                description: review.book.description || '',
+                genre: review.book.genre || '',
+                year: review.book.year || ''
+              };
+            }
+            return review;
+          });
+          
+          setRecentReviews(processedReviews);
+        } else {
+          setRecentReviews([]);
         }
+      } else {
+        setRecentReviews([]);
       }
     } catch (error) {
       console.error('Error fetching user reviews:', error);
@@ -595,17 +616,10 @@ const Profile = () => {
   };
   
   const handleBookClick = (book) => {
+    // Navigate to book details with the complete book object
     navigate('/book-details', { 
       state: { 
-        book: {
-          google_books_id: book.google_books_id,
-          title: book.title,
-          author: book.author,
-          image: book.image,
-          description: book.description,
-          genre: book.genre,
-          year: book.year
-        }
+        book: book
       } 
     });
   };
