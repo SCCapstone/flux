@@ -42,7 +42,7 @@ pipenv install
 
 React Dependencies
 For the React frontend, you need to install the required JavaScript libraries. After cloning the repository, navigate to the frontend directory and run:
-npm install
+npm install .
 
 This will install React and any dependencies listed in the package.json file.
 
@@ -54,17 +54,31 @@ pip install -r requirements.txt
 
 ## Running
 
-To run the website on a local host type in the following command
+To run the app, you will need to run the debug servers for the React frontend and Django backend. To do this,
+enter the backend directory which contains the manage.py file. Inside of this directory, open a command prompt and run the following 3 commands:
+
+python manage.py makemigrations
+
+python manage.py migrate
 
 python manage.py runserver
 
-Once it is running the local address which is http://127.0.0.1:8000/ is where the page is running from
+This will setup the database for the app and then run it.
 
-Click on the link and this will load on a browser
+After running the django server, you will need to run the React frontend by opening the backend/frontend directory.
+If this is your first time running the app, you will first need to run:
+
+npm install .
+
+After this is completed, you can start the frontend by running:
+
+npm start
+
+At this point, the flux app should be accessible at the address http://localhost:3000
 
 # Deployment
 
-The website will be deployed using Heroku at a later date
+The website is deployed at https://fluxbooks.app using Oracle's Cloud Compute platform.
 
 # Testing
 
