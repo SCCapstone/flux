@@ -97,13 +97,31 @@ function BookDetails() {
     }
   };
 
-  // Modified to handle both state and URL parameter cases
+  // Modified to handle various ways to navigate to book details
   useEffect(() => {
     const fetchBookData = async (bookId) => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${apiBaseUrl}/books/${bookId}/`);
-        setBook(response.data);
+        console.log(`Fetching complete book data from Google Books API for ID: ${bookId}`);
+        // Use the Google Books API directly to fetch book details
+        const response = await axios.get(`https://www.googleapis.com/books/v1/volumes/${bookId}`);
+        console.log('Book data fetched successfully from Google Books API:', response.data);
+        
+        // Process the Google Books API response to match the expected format
+        const volumeInfo = response.data.volumeInfo || {};
+        const processedBook = {
+          id: response.data.id,
+          google_books_id: response.data.id,
+          title: volumeInfo.title || 'Unknown Title',
+          author: (volumeInfo.authors && volumeInfo.authors.length > 0) ? volumeInfo.authors.join(', ') : 'Unknown Author',
+          description: volumeInfo.description || '',
+          image: volumeInfo.imageLinks?.thumbnail || '',
+          genre: (volumeInfo.categories && volumeInfo.categories.length > 0) ? volumeInfo.categories.join(', ') : '',
+          year: volumeInfo.publishedDate ? volumeInfo.publishedDate.substring(0, 4) : '',
+        };
+        
+        console.log('Processed book data:', processedBook);
+        setBook(processedBook);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching book details:", error);
@@ -111,20 +129,38 @@ function BookDetails() {
       }
     };
 
+    // Get query parameters from URL
+    const queryParams = new URLSearchParams(locationRouter.search);
+    const queryBookId = queryParams.get('id');
+    
     console.log("Location state in BookDetails:", locationRouter.state);
-    if (locationRouter.state?.book) {
-      // If we have the book in state, use it
-      setBook(locationRouter.state.book);
-      setIsLoading(false);
-    } else if (params.bookId) {
-      // If we have a book ID in the URL, fetch the book data
-      console.log("Fetching book data for ID:", params.bookId);
+    console.log("URL query parameters in BookDetails:", { id: queryBookId });
+    console.log("URL path parameters in BookDetails:", params);
+    
+    if (queryBookId) {
+      console.log("Found book ID in query params, fetching full details");
+      fetchBookData(queryBookId);
+    }
+    else if (params.bookId) {
+      console.log("Found book ID in URL path params, fetching full details");
       fetchBookData(params.bookId);
-    } else {
-      // No book data and no book ID, redirect
-      console.warn("Book data missing and no ID in URL. Redirecting...");
+    }
+    else if (locationRouter.state?.book) {
+      const receivedBook = locationRouter.state.book;
+      console.log("Book from state:", receivedBook);
+      
+      if (receivedBook.google_books_id && (!receivedBook.description || !receivedBook.genre || !receivedBook.year)) {
+        console.log("Book is missing fields, fetching complete data");
+        fetchBookData(receivedBook.google_books_id);
+      } else {
+        console.log("Using complete book data from state");
+        setBook(receivedBook);
+        setIsLoading(false);
+      }
+    } 
+    else {
+      console.error("No book ID or state data available");
       setIsLoading(false);
-      navigate("/");
     }
   }, [locationRouter, navigate, params, apiBaseUrl]);
 
@@ -934,10 +970,12 @@ function BookDetails() {
                   <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Published Year:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.year}</span></p>
                 )}
                 {book.description && (
-                  <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Description:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.description}</span></p>
-                )}
-                {book.pageCount && (
-                  <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Pages:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.pageCount}</span></p>
+                  <p>
+                    <strong className={theme === 'dark' ? 'dark-strong' : ''}>Description:</strong> 
+                    <span className={theme === 'dark' ? 'dark-text' : ''}>
+                      {book.description.replace(/<[^>]*>/g, '')}
+                    </span>
+                  </p>
                 )}
                 {book.genre && (
                   <p><strong className={theme === 'dark' ? 'dark-strong' : ''}>Genres:</strong> <span className={theme === 'dark' ? 'dark-text' : ''}>{book.genre}</span></p>
