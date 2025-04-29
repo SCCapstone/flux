@@ -6,6 +6,7 @@ from .models import (
     Achievement, UserAchievement, ReadingChallenge, UserChallenge,
     UserPoints, PointsHistory, ReadingStreak
 )
+from django.utils import timezone
 from rest_framework.test import APIClient
 from rest_framework import status
 from datetime import datetime, timedelta, date
@@ -618,3 +619,109 @@ class ReadingStreakModelTest(TestCase):
         self.assertEqual(self.reading_streak.current_streak, 1)
         self.assertEqual(self.reading_streak.longest_streak, 2)  # Longest streak remains 2
         self.assertEqual(self.reading_streak.last_read_date, today)
+
+class ReviewModelTest(TestCase):
+    def setUp(self):
+        # Create test users
+        self.user1 = User.objects.create_user(username='testuser1', password='12345')
+        self.user2 = User.objects.create_user(username='testuser2', password='12345')
+        
+        # Create a test book
+        self.book = Book.objects.create(
+            title='Test Book',
+            # Add other required fields based on your Book model
+        )
+        
+        # Create a parent review
+        self.parent_review = Review.objects.create(
+            user=self.user1,
+            book=self.book,
+            review_text='Parent review text'
+        )
+        
+        # Create a reply to the parent review
+        self.reply = Review.objects.create(
+            user=self.user2,
+            book=self.book,
+            review_text='Reply text',
+            parent=self.parent_review
+        )
+
+    def test_review_creation(self):
+        """Test that a review is created correctly"""
+        self.assertEqual(self.parent_review.user.username, 'testuser1')
+        self.assertEqual(self.parent_review.book.title, 'Test Book')
+        self.assertEqual(self.parent_review.review_text, 'Parent review text')
+        self.assertIsNone(self.parent_review.parent)
+
+    def test_review_str_representation(self):
+        """Test the string representation of a review"""
+        expected_str = f"Test Book review by testuser1"
+        self.assertEqual(str(self.parent_review), expected_str)
+
+    def test_reply_relationship(self):
+        """Test that replies are correctly associated with parent reviews"""
+        self.assertEqual(self.reply.parent, self.parent_review)
+        self.assertTrue(self.parent_review.replies.filter(id=self.reply.id).exists())
+
+    def test_get_replies(self):
+        """Test the get_replies method returns correct structure"""
+        replies = self.parent_review.get_replies()
+        self.assertEqual(len(replies), 1)
+        reply_data = replies[0]
+        
+        # Check reply structure
+        self.assertEqual(reply_data['id'], self.reply.id)
+        self.assertEqual(reply_data['user']['username'], 'testuser2')
+        self.assertEqual(reply_data['review_text'], 'Reply text')
+        self.assertEqual(reply_data['parent'], self.parent_review.id)
+        self.assertEqual(reply_data['replies'], [])  # No nested replies
+
+    def test_nested_replies(self):
+        """Test nested replies functionality"""
+        # Create a nested reply
+        nested_reply = Review.objects.create(
+            user=self.user1,
+            book=self.book,
+            review_text='Nested reply text',
+            parent=self.reply
+        )
+        
+        # Get the complete reply structure
+        parent_replies = self.parent_review.get_replies()
+        first_reply_replies = parent_replies[0]['replies']
+        
+        # Verify the structure
+        self.assertEqual(len(first_reply_replies), 1)
+        self.assertEqual(first_reply_replies[0]['review_text'], 'Nested reply text')
+
+    def test_to_dict_method(self):
+        """Test the to_dict method returns correct structure"""
+        review_dict = self.parent_review.to_dict()
+        
+        # Check basic fields
+        self.assertEqual(review_dict['id'], self.parent_review.id)
+        self.assertEqual(review_dict['user']['username'], 'testuser1')
+        self.assertEqual(review_dict['review_text'], 'Parent review text')
+        self.assertIsNone(review_dict['parent'])
+        
+        # Check replies
+        self.assertEqual(len(review_dict['replies']), 1)
+        self.assertEqual(review_dict['replies'][0]['review_text'], 'Reply text')
+
+    def test_timestamps(self):
+        """Test that timestamps are automatically set"""
+        review = Review.objects.create(
+            user=self.user1,
+            book=self.book,
+            review_text='Test timestamp'
+        )
+        
+        self.assertIsNotNone(review.added_date)
+        self.assertIsNotNone(review.updated_at)
+        
+        # Test updated_at changes on update
+        original_updated_at = review.updated_at
+        review.review_text = 'Updated text'
+        review.save()
+        self.assertGreater(review.updated_at, original_updated_at)
