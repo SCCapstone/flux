@@ -74,25 +74,6 @@ const LandingPage = () => {
               </a>
             </div>
           </div>
-          <div className="landing-hero-image">
-            <div className="landing-video-container">
-              <div className="landing-video">
-                <iframe
-                  width="100%"
-                  height="315"
-                  src="https://www.youtube.com/embed/WvaMPLUd4O0"
-                  title="Flux - Book Discovery Platform Demo"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{
-                    borderRadius: '8px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-                  }}
-                ></iframe>
-              </div>
-            </div>
-          </div>
         </section>
 
 
