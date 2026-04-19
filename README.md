@@ -82,6 +82,8 @@ The website is deployed at https://fluxbooks.app using Oracle's Cloud Compute pl
 
 # Testing
 
+All the behavior testing is done with Selenium.
+
 To run the test, you will need selenium-side-runner which is a command-line tool used for running selenium tests. To install this, you will first need
 node.js and npm which you can download here: https://nodejs.org/en/download
 
@@ -131,14 +133,12 @@ selenium-side-runner /path/to/test/file.side
 
 Replace /path/to/test/file.side with the file location for where the test file is on your computer. It should be inside of the tests folder of the flux directory.
 
-## Testing Technology
 
-TBD
+Python testing is accomplished by running the following command inside of the directory that contains the manage.py file:
 
-## Running Tests
-To run all unit tests: `python manage.py test`
+python manage.py test
 
-TBD
+
 
 # Authors
 
