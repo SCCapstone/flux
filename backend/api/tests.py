@@ -1,15 +1,13 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from django.urls import reverse
 from .models import (
     Book, Favorite, Rating, Review, UserBookStatus, 
     Achievement, UserAchievement, ReadingChallenge, UserChallenge,
     UserPoints, PointsHistory, ReadingStreak
 )
-from django.utils import timezone
-from rest_framework.test import APIClient
-from rest_framework import status
-from datetime import datetime, timedelta, date
+import time
+from datetime import timedelta, date
+from django.utils.timezone import now as tz_now
 
 
 class BookModelTest(TestCase):
@@ -188,7 +186,7 @@ class ReadingChallengeModelTest(TestCase):
         # Mark as completed when target is reached
         if user_challenge.books_read >= small_challenge.target_books:
             user_challenge.completed = True
-            user_challenge.completed_date = date.today()
+            user_challenge.completed_date = tz_now()
         
         user_challenge.save()
         
@@ -260,8 +258,7 @@ class AchievementModelTest(TestCase):
     
         self.assertEqual(user_achievement.user, self.user)
         self.assertEqual(user_achievement.achievement, self.book_achievement)
-        # Compare just the date part of the datetime
-        self.assertEqual(user_achievement.date_earned.date(), date.today())
+        self.assertEqual(user_achievement.date_earned.date(), tz_now().date())
     
     def test_earning_points_for_achievement(self):
         """Test earning points when an achievement is earned"""
@@ -656,7 +653,7 @@ class ReviewModelTest(TestCase):
 
     def test_review_str_representation(self):
         """Test the string representation of a review"""
-        expected_str = f"Test Book review by testuser1"
+        expected_str = "Test Book review by testuser1"
         self.assertEqual(str(self.parent_review), expected_str)
 
     def test_reply_relationship(self):
@@ -680,7 +677,7 @@ class ReviewModelTest(TestCase):
     def test_nested_replies(self):
         """Test nested replies functionality"""
         # Create a nested reply
-        nested_reply = Review.objects.create(
+        Review.objects.create(
             user=self.user1,
             book=self.book,
             review_text='Nested reply text',
@@ -722,6 +719,7 @@ class ReviewModelTest(TestCase):
         
         # Test updated_at changes on update
         original_updated_at = review.updated_at
+        time.sleep(0.05)
         review.review_text = 'Updated text'
         review.save()
         self.assertGreater(review.updated_at, original_updated_at)

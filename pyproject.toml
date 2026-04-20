@@ -1,0 +1,8 @@
+[tool.ruff]
+line-length = 120
+exclude = [
+    "*/migrations/*",
+    "*/__pycache__/*",
+    ".git",
+    "*/node_modules/*",
+]

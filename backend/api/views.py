@@ -1,12 +1,10 @@
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.core.files.storage import default_storage
 from django.db import models
 from django.shortcuts import get_object_or_404
-import json
 from django.db.models import Q
 
 import requests
@@ -24,7 +22,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 from .models import (
-    Profile, Rating, Book, Favorite, Review, UserBookStatus, UserFollow,
+    Profile, Rating, Book, Review, UserBookStatus, UserFollow,
     Readlist, ReadlistBook, Achievement, UserAchievement, ReadingChallenge,
     UserChallenge, UserPoints, PointsHistory, ReadingStreak
 )
@@ -363,7 +361,7 @@ def create_book_review(request):
         )
         
         # Award 5 points for creating a review
-        user_points = award_points(request.user, 5, "Created a book review")
+        award_points(request.user, 5, "Created a book review")
         
         # Check for review count achievements
         reviews_count = Review.objects.filter(user=request.user, parent_review=None).count()
@@ -758,11 +756,11 @@ def verify_token(request):
             return Response({'error': 'No token found in the authorization header.'}, status=status.HTTP_401_UNAUTHORIZED)
         
         validated_token = jwt_auth.get_validated_token(raw_token)
-        user = jwt_auth.get_user(validated_token)
-        
+        jwt_auth.get_user(validated_token)
+
         return Response({'message': 'Token is valid.'}, status=status.HTTP_200_OK)
     
-    except (InvalidToken, TokenError) as e:
+    except (InvalidToken, TokenError):
         return Response({'error': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['GET'])
@@ -1490,7 +1488,7 @@ def join_challenge(request):
                             status=status.HTTP_400_BAD_REQUEST)
         
         # Enroll user
-        user_challenge = UserChallenge.objects.create(
+        UserChallenge.objects.create(
             user=user,
             challenge=challenge,
             books_read=0,
