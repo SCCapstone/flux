@@ -28,7 +28,7 @@ from .models import (
 )
 from .serializers import ReadlistSerializer
 
-GOOGLE_BOOKS_API_KEY = 'AIzaSyAOo9-IH2Ox7xDLtPt58X-I7J6_174tA5s'
+GOOGLE_BOOKS_API_KEY = settings.GOOGLE_BOOKS_API_KEY
 
 @api_view(['POST'])
 def register_user(request):
